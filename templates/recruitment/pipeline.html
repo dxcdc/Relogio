@@ -890,7 +890,7 @@ function openInterviewModal(candidateId, name, phone, email, fromStage, jobTitle
         const fullPhone = cleanPhone.startsWith('55') ? cleanPhone : '55' + cleanPhone;
         const stageNames = { 'interview': 'entrevista', 'psych_test': 'teste psicológico', 'practical_test': 'teste prático' };
         const stageName = stageNames[targetStage] || 'entrevista';
-        const msg = encodeURIComponent(`Olá ${name}! Somos da equipe de RH da Netline Telecom. Gostaríamos de convidá-lo(a) para a etapa de ${stageName} referente à vaga que você se candidatou. Podemos conversar sobre os próximos passos?`);
+        const msg = encodeURIComponent(`Olá ${name}! Somos da equipe de RH da Centro de Desenvolvimento e Cidadania - CDC. Gostaríamos de convidá-lo(a) para a etapa de ${stageName} referente à vaga que você se candidatou. Podemos conversar sobre os próximos passos?`);
         waBtn.href = `https://wa.me/${fullPhone}?text=${msg}`;
         document.getElementById('ivModalPhone').textContent = phone;
         waBtn.style.opacity = '1';

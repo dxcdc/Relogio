@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 class OrangeUser(AbstractUser):
-    """Usuário do sistema NetlineRH"""
+    """Usuário do sistemo CDC"""
     ROLE_ADMIN = 'Admin'
     ROLE_HR = 'HR'
     ROLE_ESS = 'ESS'
@@ -156,7 +156,7 @@ from django.contrib import messages
 @receiver(user_logged_in)
 def trigger_birthday_notification(sender, user, request, **kwargs):
     """
-    Automação Netline: Quando o usuário faz login, verifica se é o aniversário 
+    Automação CDC: Quando o usuário faz login, verifica se é o aniversário 
     dele e gera uma notificação in-app + mensagem flash.
     """
     try:
@@ -174,7 +174,7 @@ def trigger_birthday_notification(sender, user, request, **kwargs):
             ).exists()
             
             if not already_notified:
-                msg = f'Feliz Aniversário, {employee.first_name}! A Netline lhe deseja um excelente dia!'
+                msg = f'Feliz Aniversário, {employee.first_name}! O CDC lhe deseja um excelente dia!'
                 
                 Notification.objects.create(
                     user=user,
@@ -192,7 +192,7 @@ def trigger_birthday_notification(sender, user, request, **kwargs):
                         employee_id='SYS-0000',
                         defaults={
                             'first_name': 'Sistema', 
-                            'last_name': 'Netline',
+                            'last_name': 'CDC',
                             'work_email': 'sistema@netline.com',
                             'is_time_tracking_exempt': True
                         }
@@ -232,7 +232,7 @@ def trigger_birthday_notification(sender, user, request, **kwargs):
                     send_push(
                         user,
                         "Feliz Aniversário",
-                        f"A Netline lhe deseja um excelente dia e um próspero novo ciclo, {employee.first_name}.",
+                        f"O CDC lhe deseja um excelente dia e um próspero novo ciclo, {employee.first_name}.",
                         data={'route': '/pim/my-info/'}
                     )
                     
@@ -370,7 +370,7 @@ def create_buzz_post_for_announcement(sender, instance, created, **kwargs):
                     employee_id='SYS-0000',
                     defaults={
                         'first_name': 'Sistema', 
-                        'last_name': 'Netline',
+                        'last_name': 'CDC',
                         'work_email': 'sistema@netline.com',
                         'is_time_tracking_exempt': True
                     }

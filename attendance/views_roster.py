@@ -617,10 +617,10 @@ def roster_calendar_feed(request, signed_token):
     lines = []
     lines.append("BEGIN:VCALENDAR")
     lines.append("VERSION:2.0")
-    lines.append("PRODID:-//Netline RH//Roster Feed//PT")
+    lines.append("PRODID:-//CDC Core//Roster Feed//PT")
     lines.append("CALSCALE:GREGORIAN")
     lines.append("METHOD:PUBLISH")
-    lines.append(f"X-WR-CALNAME:Netline RH - {employee.full_name}")
+    lines.append(f"X-WR-CALNAME:CDC Core - {employee.full_name}")
     lines.append("X-WR-TIMEZONE:America/Sao_Paulo")
 
     # 1. Adicionar exceções de turno
@@ -663,7 +663,7 @@ def roster_calendar_feed(request, signed_token):
                 lines.append(f"DTSTART:{start_str}")
                 lines.append(f"DTEND:{end_str}")
                 lines.append(f"SUMMARY:{summary}")
-                lines.append(f"DESCRIPTION:Escala de trabalho agendada no Netline RH. Turno: {ov.entry_time.strftime('%H:%M')} ate {ov.exit_time.strftime('%H:%M')}. Motivo: {ov.reason or 'Nao informado'}")
+                lines.append(f"DESCRIPTION:Escala de trabalho agendada no CDC Core. Turno: {ov.entry_time.strftime('%H:%M')} ate {ov.exit_time.strftime('%H:%M')}. Motivo: {ov.reason or 'Nao informado'}")
                 lines.append("STATUS:CONFIRMED")
                 lines.append("END:VEVENT")
         

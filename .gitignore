@@ -74,3 +74,7 @@ dist/
 scratch/
 *.tmp
 *.bak
+
+# ------ Templates Django (não versionar) ------
+templates/
+!templates/.gitkeep

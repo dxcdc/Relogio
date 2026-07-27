@@ -153,7 +153,7 @@ class ForgotPasswordRequestView(APIView):
                                                     <h2 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 700;">Recuperação de Acesso!</h2>
                                                 </td>
                                                 <td align="right">
-                                                    <img src="{logo_url}" alt="Netline" style="height: 32px; display: block; border: 0; outline: none; text-decoration: none;">
+                                                    <img src="{logo_url}" alt="CDC" style="height: 32px; display: block; border: 0; outline: none; text-decoration: none;">
                                                 </td>
                                             </tr>
                                         </table>
@@ -195,7 +195,7 @@ class ForgotPasswordRequestView(APIView):
                                 <!-- Footer Banner (Dark Blue) -->
                                 <tr>
                                     <td style="background-color: #020066; padding: 35px 0; text-align: center;">
-                                        <img src="{logo_url}" alt="Netline" style="height: 28px; display: inline-block; border: 0; outline: none; text-decoration: none;">
+                                        <img src="{logo_url}" alt="CDC" style="height: 28px; display: inline-block; border: 0; outline: none; text-decoration: none;">
                                     </td>
                                 </tr>
                                 
@@ -218,7 +218,7 @@ class ForgotPasswordRequestView(APIView):
                 sent = send_custom_email('password_reset', context_data, recipient)
                 if not sent:
                     send_mail(
-                        subject='Código de Redefinição de Senha — Netline RH',
+                        subject='Código de Redefinição de Senha — CDC Core',
                         message=f'Seu código de acesso é: {code}', 
                         html_message=html_content,
                         from_email=dj_settings.DEFAULT_FROM_EMAIL,

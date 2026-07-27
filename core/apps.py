@@ -27,9 +27,9 @@ def populate_default_roles(sender, **kwargs):
                     password=password,
                     role=OrangeUser.ROLE_ADMIN
                 )
-                print(f"\n[NetlineRH] Administrador '{username}' criado automaticamente com sucesso!")
+                print(f"\n[CDC] Administrador '{username}' criado automaticamente com sucesso!")
     except Exception as e:
-        print(f"\n[NetlineRH] Erro ao criar administrador automático: {e}")
+        print(f"\n[CDC] Erro ao criar administrador automático: {e}")
 
 
 class CoreConfig(AppConfig):

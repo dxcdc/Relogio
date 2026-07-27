@@ -96,7 +96,7 @@ def sync_shift_override_to_google(override):
             display_reason = override.reason.replace("Escala Viva - ", "").replace("Turno via Excel", "Turno")
             event_body['summary'] = f"Turno: {display_reason} ({override.entry_time.strftime('%H:%M')}-{override.exit_time.strftime('%H:%M')})"
             
-        event_body['description'] = f"Escala de trabalho agendada no Netline RH.\nTurno: {override.entry_time.strftime('%H:%M')} ate {override.exit_time.strftime('%H:%M')}.\nMotivo: {override.reason or 'Nao informado'}"
+        event_body['description'] = f"Escala de trabalho agendada no CDC Core.\nTurno: {override.entry_time.strftime('%H:%M')} ate {override.exit_time.strftime('%H:%M')}.\nMotivo: {override.reason or 'Nao informado'}"
         event_body['start'] = {
             'dateTime': dt_start.isoformat(),
             'timeZone': 'America/Sao_Paulo'
@@ -392,7 +392,7 @@ def sync_corporate_event_to_google(event):
         description += f"\n\nParticipantes: {', '.join(participants_desc)}"
     if event.meeting_link:
         description += f"\n\nLink da Reuniao: {event.meeting_link}"
-    description += f"\n\n[Sincronizado automaticamente pelo NetlineRH]"
+    description += f"\n\n[Sincronizado automaticamente pelo CDC]"
 
     # Cor do evento no Google Calendar (mapeamento aproximado)
     COLOR_MAP = {

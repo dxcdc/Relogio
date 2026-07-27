@@ -64,8 +64,8 @@ class Command(BaseCommand):
                         f"Vamos todos desejar muita saúde, sucesso e realizações para mais este novo ciclo.\n"
                         f"Deixe seus parabéns nos comentários!"
                     )
-                    personal_msg = f"A Netline lhe deseja um excelente dia e um próspero novo ciclo, {employee.first_name}."
-                    in_app_msg = f'Feliz Aniversário, {employee.first_name}! A Netline lhe deseja um excelente dia!'
+                    personal_msg = f"O CDC lhe deseja um excelente dia e um próspero novo ciclo, {employee.first_name}."
+                    in_app_msg = f'Feliz Aniversário, {employee.first_name}! O CDC lhe deseja um excelente dia!'
                 else:
                     msg_title = "Aniversariante (Fim de Semana)"
                     msg_body = f"Dia {date_fmt} foi o aniversário de {employee.first_name}, {job_title}. Deixe suas felicitações atrasadas no Netgram."
@@ -74,8 +74,8 @@ class Command(BaseCommand):
                         f"Ainda dá tempo de desejar muita saúde, sucesso e realizações para mais este novo ciclo.\n"
                         f"Deixe seus parabéns nos comentários!"
                     )
-                    personal_msg = f"A Netline lhe deseja um próspero novo ciclo, {employee.first_name}. Esperamos que tenha tido um excelente aniversário!"
-                    in_app_msg = f'Feliz Aniversário atrasado, {employee.first_name}! A Netline lhe deseja um excelente ano!'
+                    personal_msg = f"O CDC lhe deseja um próspero novo ciclo, {employee.first_name}. Esperamos que tenha tido um excelente aniversário!"
+                    in_app_msg = f'Feliz Aniversário atrasado, {employee.first_name}! O CDC lhe deseja um excelente ano!'
 
                 # 1. Notificação in-app para o aniversariante
                 Notification.objects.create(
@@ -89,7 +89,7 @@ class Command(BaseCommand):
                     employee_id='SYS-0000',
                     defaults={
                         'first_name': 'Sistema', 
-                        'last_name': 'Netline',
+                        'last_name': 'CDC',
                         'work_email': 'sistema@netline.com',
                         'is_time_tracking_exempt': True
                     }

@@ -151,7 +151,7 @@
 
 {% block content %}
 <div class="print-header-block">
-    <img src="{% static 'img/netline_logo_color.png' %}" alt="Netline" style="height: 55px; margin-bottom: 12px;">
+    <img src="{% static 'img/netline_logo_color.png' %}" alt="CDC" style="height: 55px; margin-bottom: 12px;">
     <h2 style="font-weight: 800; color: #0f172a; margin: 0; font-size: 22px;">Resumo Analítico - Ponto da Equipe</h2>
     <div style="color: #64748b; font-size: 12px; margin-top: 6px; font-weight: 500;">
         Filtro Ativo: {% if q %}Busca: "{{ q }}"{% else %}Todos os colaboradores{% endif %} | Referência: {% if month_val %}{{ month_val }}{% else %}Mês Atual{% endif %}

@@ -537,7 +537,7 @@ class OnboardingAPIView(APIView):
             if not email_sent:
                 html_content = render_to_string('email/welcome_onboarding.html', context)
                 email_msg = EmailMultiAlternatives(
-                    subject="Bem-vindo(a) ao NetlineRH. Suas credenciais de acesso",
+                    subject="Bem-vindo(a) ao CDC. Suas credenciais de acesso",
                     body=f"Olá, {first_name}! Seu usuário é {username} e sua senha é {temp_password}.",
                     from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@netlineplay.com.br'),
                     to=[email],

@@ -155,7 +155,7 @@ def send_event_invitation_emails(event, participants, is_update=False):
     import logging
     logger = logging.getLogger(__name__)
 
-    organizer_name = f"{event.organizer.first_name} {event.organizer.last_name}" if event.organizer else "Netline RH"
+    organizer_name = f"{event.organizer.first_name} {event.organizer.last_name}" if event.organizer else "CDC Core"
 
     # Formata a data/hora de exibição
     start_str = event.start_date.strftime("%d/%m/%Y às %H:%M")
@@ -831,7 +831,7 @@ def export_event_ics(request, event_id):
         dtend = event.end_date.strftime('%Y%m%dT%H%M%S')
         dtstamp = dtstart
 
-    organizer_name = f"{event.organizer.first_name} {event.organizer.last_name}" if event.organizer else "Netline RH"
+    organizer_name = f"{event.organizer.first_name} {event.organizer.last_name}" if event.organizer else "CDC Core"
     location_parts = []
     if event.location:
         location_parts.append(event.location.name)
@@ -845,7 +845,7 @@ def export_event_ics(request, event_id):
     lines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
-        "PRODID:-//Netline RH//Agenda Corporativa//PT",
+        "PRODID:-//CDC Core//Agenda Corporativa//PT",
         "CALSCALE:GREGORIAN",
         "METHOD:REQUEST",
         "BEGIN:VEVENT",
@@ -926,7 +926,7 @@ def cancel_event(request, event_id):
                 f"O evento '{event.title}' agendado para {start_fmt} foi CANCELADO.\n\n"
                 f"Motivo: {reason}\n\n"
                 f"Em caso de duvidas, entre em contato com o organizador.\n\n"
-                f"-- Sistema NetlineRH"
+                f"-- Sistemo CDC"
             )
             from emails.utils import send_custom_email
             

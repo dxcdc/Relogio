@@ -622,7 +622,7 @@ def send_content_report_email(report):
                 if not sent:
                     html_admin = render_to_string('email/content_report_status.html', context_admin)
                     msg = EmailMultiAlternatives(
-                        subject=f"[NetlineRH] Nova denúncia de conteúdo #{report.id}",
+                        subject=f"[CDC] Nova denúncia de conteúdo #{report.id}",
                         body=f"Uma nova denúncia (#{report.id}) de {report_type_display.lower()} foi recebida e requer moderação.",
                         from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@netlineplay.com.br'),
                         to=admin_hr_emails

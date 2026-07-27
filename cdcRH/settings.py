@@ -1,5 +1,5 @@
 """
-Django settings for NetlineRH Django Edition
+Django settings for CDC Django Edition
 """
 
 from pathlib import Path
@@ -98,7 +98,7 @@ MIDDLEWARE = [
     'core.middleware.DailyTaskMiddleware',
 ]
 
-ROOT_URLCONF = 'NetlineRH.urls'
+ROOT_URLCONF = 'cdcRH.urls'
 
 TEMPLATES = [
     {
@@ -119,7 +119,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'NetlineRH.wsgi.application'
+WSGI_APPLICATION = 'cdcRH.wsgi.application'
 
 DB_NAME = os.environ.get('DB_NAME')
 if DB_NAME:
@@ -194,7 +194,7 @@ CLOUDINARY_STORAGE = {
 }
 
 
-# Motor de Mídia Definitivo da NetlineHR (Roteador S3 / Cloudinary)
+# Motor de Mídia Definitivo do CDC Core (Roteador S3 / Cloudinary)
 DEFAULT_FILE_STORAGE = 'core.storage.MasterStorageRouter'
 
 
@@ -382,8 +382,8 @@ LOGGING = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Netline RH API',
-    'DESCRIPTION': 'Documentação das APIs do Sistema de Recursos Humanos da Netline',
+    'TITLE': 'CDC Core API',
+    'DESCRIPTION': 'Documentação das APIs do Sistema Operacional CDC',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,

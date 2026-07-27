@@ -148,7 +148,7 @@ def google_login_callback(request):
                 user = OrangeUser.objects.filter(employee=employee, is_active=True, is_deleted=False).first()
 
         if not user:
-            messages.error(request, f"A conta Google '{email}' não está associada a nenhum funcionário ativo no Netline RH.")
+            messages.error(request, f"A conta Google '{email}' não está associada a nenhum funcionário ativo no CDC Core.")
             return redirect('login')
             
         # Loga o usuário no Django
@@ -194,8 +194,8 @@ def google_login_callback(request):
         if not calendar_exists:
             # Cria uma agenda exclusiva
             calendar_body = {
-                'summary': 'Netline RH - Escala de Trabalho',
-                'description': 'Agenda sincronizada automaticamente em tempo real com as escalas de trabalho e folgas do portal Netline RH.',
+                'summary': 'CDC Core - Escala de Trabalho',
+                'description': 'Agenda sincronizada automaticamente em tempo real com as escalas de trabalho e folgas do portal CDC Core.',
                 'timeZone': 'America/Sao_Paulo'
             }
             new_calendar = calendar_service.calendars().insert(body=calendar_body).execute()
@@ -209,7 +209,7 @@ def google_login_callback(request):
             except Exception as ex:
                 logger.error("Erro ao popular agenda criada: %s", ex)
                 
-            # messages.success(request, f"Integração Google Calendar ativada com sucesso! Criamos a agenda 'Netline RH - Escala de Trabalho' no seu Google Agenda.")
+            # messages.success(request, f"Integração Google Calendar ativada com sucesso! Criamos a agenda 'CDC Core - Escala de Trabalho' no seu Google Agenda.")
         else:
             # messages.success(request, f"Conexão com a conta Google '{email}' ativa e sincronizada com sucesso!")
             pass

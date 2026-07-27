@@ -737,7 +737,7 @@ def password_reset_request(request):
                 if not sent:
                     # Fallback de segurança se o template tiver sido apagado
                     send_mail(
-                        subject='Código de Redefinição de Senha — Netline RH',
+                        subject='Código de Redefinição de Senha — CDC Core',
                         message=f'Seu código de acesso é: {code}', 
                         from_email=dj_settings.DEFAULT_FROM_EMAIL,
                         recipient_list=[user.email],

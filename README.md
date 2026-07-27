@@ -13,7 +13,7 @@ Sistema central da **CDC** — plataforma Django multi-app para automação de o
 | `attendance` | Registro e espelho de ponto eletrônico | ✅ Ativo |
 | `time_tracking` | Banco de horas e rastreamento de jornada | ✅ Ativo |
 | `leave` | Folgas, licenças e ausências | ✅ Ativo |
-| `buzz` | Feed de comunicação interna (Netgram) | ✅ Ativo |
+| `buzz` | Feed de comunicação interna | ✅ Ativo |
 | `agenda` | Agendamento de salas, veículos e eventos | ✅ Ativo |
 | `claim` | Reembolsos e despesas corporativas | ✅ Ativo |
 | `payroll` | Folha de pagamento | ✅ Ativo |
@@ -80,7 +80,7 @@ python manage.py runserver
 
 ```text
 Core/
-├── NetlineRH/          # Settings, URLs raiz, WSGI/ASGI
+├── CDC/          # Settings, URLs raiz, WSGI/ASGI
 ├── core/               # App base: usuários, auth, middleware
 ├── pim/                # Informações pessoais
 ├── attendance/         # Ponto eletrônico

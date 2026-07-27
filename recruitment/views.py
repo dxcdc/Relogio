@@ -605,7 +605,7 @@ def send_onboard_email(request, candidate_id):
             sent = send_custom_email('onboard_welcome', context, candidate.email)
             if not sent:
                 email_msg = EmailMultiAlternatives(
-                    subject='Boas-vindas! Suas credenciais de acesso ao NetlineRH',
+                    subject='Boas-vindas! Suas credenciais de acesso ao CDC',
                     body=text_content,
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[candidate.email],
