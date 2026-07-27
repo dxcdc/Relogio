@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}KPIs{% endblock %}
+{% block breadcrumb %}
+<span style="color: var(--text-secondary); font-size: 13px;">Desempenho / KPIs</span>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><i class="bi bi-graph-up text-orange"></i> Indicadores de Desempenho (KPIs)</h1>
+        <p class="page-subtitle">{{ kpis|length }} indicador(es) encontrado(s)</p>
+    </div>
+    <div>
+        <a href="{% url 'review_list' %}" class="btn btn-outline-secondary me-2"><i class="bi bi-arrow-left"></i> Voltar</a>
+        <a href="{% url 'kpi_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Novo KPI</a>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Título do Indicador</th>
+                <th>Cargo Específico</th>
+                <th>Nota Mínima</th>
+                <th>Nota Máxima</th>
+                <th>Padrão?</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for kpi in kpis %}
+            <tr>
+                <td style="font-weight: 500;">{{ kpi.title }}</td>
+                <td>{{ kpi.job_title|default:"Todos os Cargos" }}</td>
+                <td>{{ kpi.min_rating }}</td>
+                <td>{{ kpi.max_rating }}</td>
+                <td>
+                    {% if kpi.is_default %}
+                    <span class="badge bg-success">Sim</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Não</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'kpi_edit' kpi.pk %}" class="btn btn-icon btn-icon-secondary me-1" title="Editar"><i class="bi bi-pencil"></i></a>
+                    <a href="{% url 'kpi_delete' kpi.pk %}" class="btn btn-icon btn-icon-danger" onclick="return confirm('Deseja excluir este KPI?')" title="Excluir"><i class="bi bi-trash"></i></a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">
+                    <div class="empty-state py-5">
+                        <div class="empty-state-icon"><i class="bi bi-clipboard-data"></i></div>
+                        <div class="empty-state-title">Nenhum KPI cadastrado</div>
+                        <p class="text-muted mt-2">Cadastre os indicadores que servirão de base para avaliar a sua equipe.</p>
+                        <a href="{% url 'kpi_create' %}" class="btn btn-primary mt-2"><i class="bi bi-plus-lg me-1"></i> Adicionar KPI</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

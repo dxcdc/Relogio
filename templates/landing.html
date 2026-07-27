@@ -1,0 +1,1916 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Netline RH — Sistema Corporativo para Provedoras</title>
+<link rel="icon" type="image/png" href="/static/img/netline_icon.png">
+<meta name="description" content="Netline RH — Gestão de pessoas para o ritmo 24/7 das provedoras de internet.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style>
+/* ═══ TOKENS ═════════════════════════════════════ */
+:root {
+  --bg:    #f0f0f0;
+  --bg-2:  #e8e8e8;
+  --ink:   #0a0a0a;
+  --ink2:  rgba(10,10,10,.45);
+  --ink3:  rgba(10,10,10,.18);
+  --green: #00AA45;
+  --navy:  #020066;
+  --glow:  rgba(0,170,69,.5);
+  --radius: 20px;
+}
+
+/* ═══ RESET ══════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  overflow-x: hidden;
+  max-width: 100vw;
+  cursor: none;
+}
+a { text-decoration: none; color: inherit; }
+
+/* ═══ CURSOR ═════════════════════════════════════ */
+.cursor {
+  position: fixed; pointer-events: none; z-index: 9999;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--green); mix-blend-mode: multiply;
+  transform: translate(-50%,-50%);
+  transition: width .2s, height .2s;
+}
+body:hover .cursor { opacity: 1; }
+
+/* ═══ WEBGL CANVAS ═══════════════════════════════ */
+#hero-canvas {
+  position: absolute; inset: 0; z-index: 1;
+  pointer-events: none; width: 100%; height: 100%;
+}
+
+/* ═══ NAV ════════════════════════════════════════ */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 800;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 28px 60px;
+  transition: background .6s, padding .5s;
+}
+nav.sc {
+  background: rgba(240,240,240,.88);
+  backdrop-filter: blur(24px) saturate(160%);
+  border-bottom: 1px solid var(--ink3);
+  padding: 16px 60px;
+}
+.nav-brand {
+  font-size: 15px; font-weight: 700; letter-spacing: -.3px;
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-mark {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--navy);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 900; color: var(--green);
+  letter-spacing: 0;
+}
+.nav-links {
+  display: flex; gap: 40px;
+  font-size: 12px; font-weight: 400; letter-spacing: .5px;
+  color: var(--ink2);
+}
+.nav-links a { 
+  display: flex; align-items: center; gap: 8px;
+  transition: color 0.2s ease; 
+  position: relative;
+  padding-bottom: 4px;
+}
+.nav-links a::after {
+  content: ''; position: absolute; left: 0; bottom: 0;
+  width: 0%; height: 2px;
+  background-color: var(--green);
+  transition: width 0.3s ease; border-radius: 2px;
+}
+.nav-links a i { font-size: 14px; opacity: 0.8; transition: transform .3s; }
+.nav-links a:hover { color: var(--green); }
+.nav-links a:hover::after { width: 100%; }
+.nav-links a:hover i { transform: scale(1.15); }
+.nav-cta {
+  font-size: 12px; font-weight: 600; letter-spacing: .5px;
+  padding: 12px 28px; border-radius: 100px;
+  background: var(--navy); color: #fff;
+  display: flex; align-items: center; gap: 7px;
+  transition: background .3s, transform .3s;
+}
+.nav-cta:hover { background: var(--green); transform: translateY(-1px); }
+
+/* ═══ HERO ═══════════════════════════════════════ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  background: var(--bg);
+}
+
+/* Left text panel */
+.hero-left {
+  position: relative; z-index: 10;
+  display: flex; flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 0 80px 60px;
+  width: 42%;
+  flex-shrink: 0;
+}
+.hero-eyebrow {
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink2); margin-bottom: 28px; font-weight: 400;
+  opacity: 0; transform: translateY(16px);
+  animation: up .8s .1s cubic-bezier(.23,1,.32,1) forwards;
+}
+.hero-h1 {
+  font-size: clamp(52px, 6.5vw, 90px);
+  font-weight: 900; line-height: .88;
+  letter-spacing: -5px;
+  margin-bottom: 36px;
+}
+.hero-h1 .w { display: block; overflow: hidden; }
+.hero-h1 .w span {
+  display: block;
+  transform: translateY(100%);
+  animation: wipeUp 1s cubic-bezier(.23,1,.32,1) forwards;
+}
+.hero-h1 .w:nth-child(1) span { animation-delay: .25s; }
+.hero-h1 .w:nth-child(2) span { animation-delay: .4s; color: var(--navy); }
+.hero-h1 .w:nth-child(3) span { animation-delay: .55s; color: var(--green); }
+@keyframes wipeUp { to { transform: translateY(0); } }
+
+.hero-sub {
+  font-size: 14px; font-weight: 300; line-height: 1.85;
+  color: var(--ink2); max-width: 360px; margin-bottom: 44px;
+  opacity: 0; transform: translateY(16px);
+  animation: up .9s .7s cubic-bezier(.23,1,.32,1) forwards;
+}
+.hero-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 18px 44px; border-radius: 100px;
+  border: 1.5px solid var(--ink); color: var(--ink);
+  position: relative; overflow: hidden;
+  transition: color .4s; width: fit-content;
+  opacity: 0; animation: up .9s .85s cubic-bezier(.23,1,.32,1) forwards;
+}
+.hero-btn::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: var(--navy);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .5s cubic-bezier(.23,1,.32,1);
+  z-index: 0;
+}
+.hero-btn:hover::before { transform: scaleX(1); }
+.hero-btn:hover { color: #fff; border-color: var(--navy); }
+.hero-btn span, .hero-btn i { position: relative; z-index: 1; }
+
+/* Right = canvas takes remaining space */
+.hero-canvas-wrap {
+  flex: 1; position: relative;
+}
+
+/* Status pill */
+.hero-pill {
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 12px 20px; border-radius: 100px;
+  background: rgba(255,255,255,.75);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--ink3);
+  font-size: 12px; font-weight: 400; color: var(--ink2);
+  margin-top: 28px; width: fit-content;
+  opacity: 0; animation: up .9s 1.05s cubic-bezier(.23,1,.32,1) forwards;
+}
+.pill-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); flex-shrink:0; animation: blink 1.6s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+.pill-sep { width: 1px; height: 16px; background: var(--ink3); flex-shrink:0; }
+
+/* Scroll hint */
+.scroll-txt {
+  position: fixed; right: 28px; top: 50%; transform: translateY(-50%) rotate(90deg);
+  font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--ink3);
+  display: flex; align-items: center; gap: 10px; z-index: 100;
+  opacity: 0; animation: up .9s 1.4s forwards;
+}
+.scroll-txt::before { content: ''; width: 40px; height: 1px; background: var(--ink3); }
+
+/* ═══ TICKER ════════════════════════════════════ */
+.ticker {
+  position: relative; z-index: 2; overflow: hidden;
+  padding: 18px 0;
+  border-top: 1px solid var(--ink3); border-bottom: 1px solid var(--ink3);
+  background: var(--bg);
+}
+.ticker-track {
+  display: inline-flex; gap: 56px; white-space: nowrap;
+  animation: tickAnim 40s linear infinite;
+}
+@keyframes tickAnim { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.ti { display: flex; align-items: center; gap: 12px; font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--ink3); font-weight: 400; }
+.ti-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--green); }
+
+/* ═══ SECTION SHELL ══════════════════════════════ */
+section { position: relative; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 140px 60px; }
+
+.s-label {
+  font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+  color: var(--ink3); margin-bottom: 18px; font-weight: 400;
+}
+.s-title {
+  font-size: clamp(40px, 5vw, 68px);
+  font-weight: 900; letter-spacing: -3.5px; line-height: .9;
+}
+.s-title em { color: var(--green); font-style: normal; }
+.s-body {
+  font-size: 15px; font-weight: 300; color: var(--ink2); line-height: 1.9; max-width: 480px;
+}
+
+/* reveal */
+[rv] {
+  opacity: 0; transform: translateY(40px);
+  transition: opacity 1s cubic-bezier(.23,1,.32,1), transform 1s cubic-bezier(.23,1,.32,1);
+}
+[rv].show { opacity: 1; transform: translateY(0); }
+
+/* ═══ FEATURES — Editorial grid ═════════════════ */
+.feats-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 80px; }
+.feats-header-right { max-width: 320px; }
+
+.feats-grid { display: grid; grid-template-columns: repeat(3,1fr); }
+.feat {
+  padding: 48px 40px;
+  border-top: 1px solid var(--ink3);
+  border-right: 1px solid var(--ink3);
+  position: relative; overflow: hidden;
+  transition: background .5s;
+}
+.feat:nth-child(3n) { border-right: none; }
+.feat::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 0;
+  background: var(--navy);
+  transition: height .6s cubic-bezier(.23,1,.32,1);
+}
+.feat:hover::after { height: 3px; }
+.feat-num { font-size: 11px; letter-spacing: 2px; color: var(--ink3); margin-bottom: 36px; font-weight: 400; }
+.feat-icon-wrap {
+  width: 52px; height: 52px; border-radius: 14px;
+  border: 1px solid var(--ink3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 21px; color: var(--ink);
+  margin-bottom: 24px;
+  transition: border-color .3s, background .3s, color .3s;
+}
+.feat:hover .feat-icon-wrap { border-color: var(--green); color: var(--green); background: rgba(0,170,69,.06); }
+.feat-title { font-size: 18px; font-weight: 700; letter-spacing: -.5px; margin-bottom: 12px; }
+.feat-desc { font-size: 13px; font-weight: 300; color: var(--ink2); line-height: 1.8; }
+
+/* ═══ PRODUCT SECTION ════════════════════════════ */
+.product-sec { background: var(--navy); }
+
+.product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+
+.product-screen {
+  border-radius: 20px; overflow: hidden;
+  box-shadow: 0 60px 120px rgba(0,0,0,.5);
+  border: 1px solid rgba(255,255,255,.08);
+}
+.ps-bar {
+  background: rgba(255,255,255,.04); padding: 14px 20px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.ps-dots { display: flex; gap: 6px; }
+.psd { width: 10px; height: 10px; border-radius: 50%; }
+.psd:nth-child(1){background:#ff5f57} .psd:nth-child(2){background:#febc2e} .psd:nth-child(3){background:#28c840}
+.ps-url { flex:1; background:rgba(255,255,255,.04); border-radius:6px; padding:5px 14px; font-size:10px; color:rgba(255,255,255,.25); font-family:monospace; }
+.ps-body { background: #050030; padding: 28px; }
+.ps-toprow { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+.ps-title { font-size: 14px; font-weight: 700; color: rgba(255,255,255,.85); }
+.ps-live { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--green); }
+.ps-livdot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: blink 1.4s ease-in-out infinite; }
+.ps-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 22px; }
+.ps-stat {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06);
+  border-radius: 14px; padding: 16px 14px;
+}
+.ps-stat-v { font-size: 24px; font-weight: 800; color: #fff; }
+.ps-stat-l { font-size: 10px; color: rgba(255,255,255,.3); margin-top: 3px; font-weight: 300; }
+.ps-rows { display: flex; flex-direction: column; gap: 8px; }
+.ps-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 12px;
+  background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.05);
+}
+.ps-av { width: 34px; height: 34px; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0; }
+.ps-meta { flex:1; }
+.ps-name { font-size: 12px; font-weight: 600; color: rgba(255,255,255,.75); }
+.ps-dept { font-size: 10px; color: rgba(255,255,255,.28); margin-top: 1px; }
+.ps-chips { display: flex; gap: 4px; }
+.chip { font-size: 9px; font-weight: 600; padding: 3px 8px; border-radius: 20px; font-family: monospace; }
+.ci { background:rgba(0,170,69,.12); color:var(--green); border:1px solid rgba(0,170,69,.2); }
+.co { background:rgba(255,255,255,.05); color:rgba(255,255,255,.3); border:1px solid rgba(255,255,255,.08); }
+.ps-h { text-align:right; font-size:13px; font-weight:700; color:#fff; }
+.ps-hs { font-size:9px; color:rgba(255,255,255,.28); }
+
+/* right text */
+.product-right { color: #fff; }
+.product-right .s-label { color: rgba(255,255,255,.3); }
+.product-right .s-title { color: #fff; }
+.product-right .s-title em { color: var(--green); }
+.product-right .s-body { color: rgba(255,255,255,.4); margin-top: 20px; margin-bottom: 40px; }
+.feat-list { display: flex; flex-direction: column; gap: 16px; margin-top: 40px; }
+.fl-item {
+  display: flex; align-items: center; gap: 14px; padding: 16px 20px;
+  border: 1px solid rgba(255,255,255,.07); border-radius: 14px;
+  transition: border-color .3s, background .3s; cursor: default;
+}
+.fl-item:hover { border-color: rgba(0,170,69,.3); background: rgba(0,170,69,.05); }
+.fl-ico { font-size: 16px; color: var(--green); width: 24px; text-align: center; }
+.fl-txt { font-size: 13px; font-weight: 400; color: rgba(255,255,255,.6); }
+.fl-tx2 { font-size: 11px; color: rgba(255,255,255,.25); margin-top: 2px; }
+
+/* Accent btn for dark bg */
+.btn-dark {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 18px 44px; border-radius: 100px;
+  border: 1.5px solid rgba(255,255,255,.2); color: #fff;
+  position: relative; overflow: hidden;
+  transition: color .4s, border-color .4s;
+}
+.btn-dark::before {
+  content: ''; position: absolute; inset: 0; background: var(--green);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .5s cubic-bezier(.23,1,.32,1); z-index: 0;
+}
+.btn-dark:hover::before { transform: scaleX(1); }
+.btn-dark:hover { color: #00001a; border-color: var(--green); }
+.btn-dark span, .btn-dark i { position: relative; z-index: 1; }
+
+/* ═══ METRICS ════════════════════════════════════ */
+.metrics {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  border-top: 1px solid var(--ink3); border-bottom: 1px solid var(--ink3);
+}
+.met {
+  padding: 80px 60px; text-align: center;
+  border-right: 1px solid var(--ink3);
+  transition: background .4s;
+}
+.met:last-child { border-right: none; }
+.met:hover { background: rgba(0,170,69,.04); }
+.met-v {
+  font-size: clamp(44px,5vw,70px); font-weight: 900; letter-spacing: -4px; line-height: 1;
+}
+.met-v.g { color: var(--green); }
+.met-v.n { color: var(--navy); }
+.met-l { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--ink3); margin-top: 10px; }
+
+/* ═══ TESTIMONIALS ═══════════════════════════════ */
+.test-sec { background: var(--bg-2); }
+.test-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 1px; background: var(--ink3); border: 1px solid var(--ink3); border-radius: 24px; overflow: hidden; margin-top: 80px; }
+.test-card {
+  background: var(--bg-2); padding: 48px 44px;
+  transition: background .4s;
+}
+.test-card:hover { background: var(--bg); }
+.test-stars { color: #f59e0b; font-size: 11px; letter-spacing: 3px; margin-bottom: 22px; }
+.test-q { font-size: 15px; font-weight: 300; color: var(--ink2); line-height: 1.9; margin-bottom: 32px; font-style: italic; }
+.test-person { display: flex; align-items: center; gap: 14px; }
+.test-av { width: 46px; height: 46px; border-radius: 14px; background: var(--navy); display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; color:var(--green); flex-shrink:0; }
+.test-name { font-size: 14px; font-weight: 600; letter-spacing: -.2px; }
+.test-role { font-size: 11px; color: var(--ink3); margin-top: 3px; font-weight: 300; }
+
+/* ═══ CTA ════════════════════════════════════════ */
+.cta-sec {
+  background: var(--navy); text-align: center;
+  overflow: hidden; position: relative;
+}
+.cta-bg-text {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: clamp(100px,18vw,280px); font-weight: 900; letter-spacing: -12px;
+  color: rgba(255,255,255,.02); white-space: nowrap; z-index: 0; user-select: none;
+  animation: textDrift 12s ease-in-out infinite alternate;
+}
+@keyframes textDrift { from{transform:translateX(-3%)} to{transform:translateX(3%)} }
+.cta-inner { position: relative; z-index: 2; }
+.cta-title {
+  font-size: clamp(52px, 8vw, 110px); font-weight: 900;
+  letter-spacing: -6px; line-height: .88; color: #fff;
+  margin-bottom: 24px;
+}
+.cta-title span { color: var(--green); display: block; }
+.cta-sub { font-size: 15px; font-weight: 300; color: rgba(255,255,255,.4); margin: 0 auto 52px; max-width: 400px; line-height: 1.8; }
+
+/* ═══ FOOTER ═════════════════════════════════════ */
+.lfooter {
+  background: #080808; color: rgba(255,255,255,.55);
+  padding: 56px 60px 0;
+  position: relative; z-index: 10;
+}
+.lfoot-inner {
+  display: flex; justify-content: space-between;
+  gap: 60px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.lfoot-logo { height: 36px; object-fit: contain; margin-bottom: 20px; display: block; }
+.lfoot-desc {
+  font-size: 13.5px; font-weight: 300;
+  color: rgba(255,255,255,.5); line-height: 1.85;
+  margin-bottom: 28px;
+}
+.lfoot-contact { display: flex; flex-direction: column; gap: 12px; }
+.lfoot-contact-item {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 400; color: rgba(255,255,255,.65);
+  text-decoration: none; transition: color .2s;
+}
+.lfoot-contact-item i { color: var(--green); font-size: 14px; flex-shrink: 0; }
+.lfoot-contact-item:hover { color: #fff; }
+.lfoot-social-block { display: flex; flex-direction: column; gap: 16px; padding-top: 8px; align-items: flex-start; }
+.lfoot-social-title { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,.28); }
+.lfoot-socials { display: flex; gap: 10px; }
+.lfoot-soc {
+  width: 38px; height: 38px; border-radius: 11px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; color: rgba(255,255,255,.5); text-decoration: none; transition: all .2s;
+}
+.lfoot-soc:hover { color: var(--green); border-color: rgba(0,170,69,.35); background: rgba(0,170,69,.07); }
+.lfoot-reset-link {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--green); transition: opacity .2s;
+  text-decoration: none;
+}
+.lfoot-reset-link:hover { opacity: .75; }
+.lfoot-bottom {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 0;
+  font-size: 12px; font-weight: 300; color: rgba(255,255,255,.28);
+}
+
+/* ═══ KEYFRAMES ══════════════════════════════════ */
+@keyframes up { to { opacity: 1; transform: translateY(0); } }
+
+/* ═══ RESPONSIVE ═════════════════════════════════ */
+@media(max-width:1024px) {
+  nav { padding: 20px 32px; }
+  nav.sc { padding: 14px 32px; }
+  .nav-links { display: none; }
+  .hero-left { padding: 0 0 80px 32px; }
+  .hero-pill { left: 32px; }
+  .wrap { padding: 100px 32px; }
+  .feat { padding: 36px 28px; }
+  .feats-grid { grid-template-columns: 1fr 1fr; }
+  .feat:nth-child(3n) { border-right: 1px solid var(--ink3); }
+  .feat:nth-child(2n) { border-right: none; }
+  .product-grid { grid-template-columns: 1fr; }
+  .metrics { grid-template-columns: repeat(2,1fr); }
+  .met:nth-child(2) { border-right: none; }
+  .lfoot-inner { flex-direction: column; gap: 40px; }
+}
+@media(max-width:900px) {
+  /* DARK HERO FALLBACK PARA MOBILE */
+  .hero-canvas-wrap { display: none !important; }
+  .hero { background: var(--navy); overflow: hidden; }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 70% 30%, rgba(0,170,69,.25) 0%, transparent 50%),
+                radial-gradient(circle at 20% 80%, rgba(96,165,250,.2) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .hero-eyebrow { color: rgba(255,255,255,.5); }
+  .hero-h1 { color: #fff; font-size: clamp(36px, 11vw, 64px); letter-spacing: -3px; }
+  .hero-h1 .w:nth-child(2) span { color: #fff; } /* EQUIPE em branco */
+  .hero-h1 .w:nth-child(1) span { color: #fff; } /* SUA em branco */
+  .hero-h1 .w:nth-child(3) span { color: var(--green); } /* CONECTADA verde */
+  .hero-sub { color: rgba(255,255,255,.6); }
+  .hero-btn { border-color: rgba(255,255,255,.2); color: #fff; }
+  .hero-btn:hover { border-color: var(--green); }
+  
+  nav { padding: 16px 20px; }
+  nav.sc { padding: 12px 20px; }
+  .nav-brand { font-size: 13px; color: #fff; }
+  .nav-brand span { color: #fff; opacity: 0.7; }
+  .nav-brand img { width: 28px !important; height: 28px !important; }
+  .nav-cta { padding: 8px 16px; font-size: 11px; background: #fff !important; color: var(--navy) !important; }
+  
+  /* State when scrolled */
+  nav.sc .nav-brand { color: var(--ink); }
+  nav.sc .nav-brand span { color: var(--ink2); opacity: 0.5; }
+  nav.sc .nav-cta { background: var(--navy) !important; color: #fff !important; }
+}
+@media(max-width:640px) {
+  .hero-left { width: 100%; padding: 0 20px 60px 20px; }
+  .hero-h1 { letter-spacing: -3px; }
+  .feats-grid { grid-template-columns: 1fr; }
+  .feat { border-right: none !important; }
+  .test-grid { grid-template-columns: 1fr; }
+  .metrics { grid-template-columns: 1fr; }
+  .met { border-right: none !important; border-bottom: 1px solid var(--ink3); padding: 50px 20px; }
+  .met:last-child { border-bottom: none; }
+  .lfoot-inner { flex-direction: column; gap: 32px; }
+  .scroll-txt { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="C"></div>
+<div class="scroll-txt">Scroll</div>
+
+
+{% include 'components/public_nav.html' %}
+
+
+<section class="hero">
+  <canvas id="hero-canvas"></canvas>
+
+  <div class="hero-left">
+    <div class="hero-eyebrow">— Sistema de RH para Provedoras de Internet</div>
+    <h1 class="hero-h1">
+      <div class="w"><span>SUA</span></div>
+      <div class="w"><span>EQUIPE</span></div>
+      <div class="w"><span id="heroWord">CONECTADA</span></div>
+    </h1>
+    <p class="hero-sub">Plataforma de RH corporativo feita para o ritmo ininterrupto das provedoras de internet. Controle de ponto inteligente, licenças, performance e muito mais.</p>
+    <a href="/login/" class="hero-btn">
+      <span>Começar agora</span>
+      <i class="bi bi-arrow-right"></i>
+    </a>
+
+  </div>
+
+  <div class="hero-canvas-wrap" id="hero-3d"></div>
+</section>
+
+
+<section class="cta-sec">
+  <div class="wrap cta-inner" rv>
+    <div class="cta-bg-text">NETLINE</div>
+    <h2 class="cta-title">Pronto para<span>começar?</span></h2>
+    <p class="cta-sub">Faça login agora e transforme a gestão de pessoas da sua provedora de internet.</p>
+    <a href="/login/" class="btn-dark" style="margin:0 auto;font-size:13px;padding:20px 60px">
+      <i class="bi bi-box-arrow-in-right"></i>
+      <span>Entrar no Sistema</span>
+    </a>
+  </div>
+</section>
+
+
+<div class="ticker">
+  <div class="ticker-track">
+    <span class="ti"><span class="ti-dot"></span>Controle de Ponto</span>
+    <span class="ti"><span class="ti-dot"></span>GPS em Tempo Real</span>
+    <span class="ti"><span class="ti-dot"></span>Atestados & Licenças</span>
+    <span class="ti"><span class="ti-dot"></span>Banco de Horas</span>
+    <span class="ti"><span class="ti-dot"></span>Multi-Filiais</span>
+    <span class="ti"><span class="ti-dot"></span>Relatórios Excel</span>
+    <span class="ti"><span class="ti-dot"></span>Recrutamento Ágil</span>
+    <span class="ti"><span class="ti-dot"></span>Performance RH</span>
+    <span class="ti"><span class="ti-dot"></span>Troca de Turno</span>
+    <span class="ti"><span class="ti-dot"></span>Controle de Ponto</span>
+    <span class="ti"><span class="ti-dot"></span>GPS em Tempo Real</span>
+    <span class="ti"><span class="ti-dot"></span>Atestados & Licenças</span>
+    <span class="ti"><span class="ti-dot"></span>Banco de Horas</span>
+    <span class="ti"><span class="ti-dot"></span>Multi-Filiais</span>
+    <span class="ti"><span class="ti-dot"></span>Relatórios Excel</span>
+    <span class="ti"><span class="ti-dot"></span>Recrutamento Ágil</span>
+    <span class="ti"><span class="ti-dot"></span>Performance RH</span>
+    <span class="ti"><span class="ti-dot"></span>Troca de Turno</span>
+  </div>
+</div>
+
+
+
+
+
+
+<style>
+/* ── MODULES FULL ──────────────────────────────── */
+.modules-section { background: var(--bg); }
+
+/* Dashboard hero preview */
+.dash-preview {
+  position: relative; border-radius: 24px; overflow: hidden;
+  border: 1px solid var(--ink3);
+  box-shadow: 0 60px 120px rgba(0,0,0,.1);
+  margin-bottom: 100px; background: #fff;
+}
+.dash-chrome {
+  background: #f5f5f7; padding: 14px 20px;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid rgba(0,0,0,.07);
+}
+.dash-chrome-dots { display:flex;gap:6px; }
+.dcd { width:11px;height:11px;border-radius:50%; }
+.dcd:nth-child(1){background:#ff5f57}.dcd:nth-child(2){background:#febc2e}.dcd:nth-child(3){background:#28c840}
+.dash-chrome-url { background:#e8e8ea; border-radius:8px; padding:5px 14px; font-size:11px; color:#666; font-family:monospace; }
+
+/* Dashboard body layout */
+.dash-body {
+  display: grid; grid-template-columns: 220px 1fr;
+  min-height: 480px;
+}
+/* Sidebar */
+.dash-sidebar {
+  background: var(--navy); padding: 20px 0;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.ds-brand { display:flex;align-items:center;gap:10px;padding:8px 20px 20px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:8px; }
+.ds-brand-mark { width:30px;height:30px;border-radius:8px;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#00001a; }
+.ds-brand-name { font-size:12px;font-weight:700;color:#fff; }
+.ds-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px; font-size: 12px; font-weight: 400;
+  color: rgba(255,255,255,.4); cursor: pointer; transition: all .2s;
+  position: relative;
+}
+.ds-item.active { color: #fff; background: rgba(255,255,255,.06); }
+.ds-item.active::before { content:''; position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);border-radius:0 2px 2px 0; }
+.ds-item:hover { color: rgba(255,255,255,.7); }
+.ds-item i { font-size:14px; width:18px; text-align:center; }
+.ds-sep { height:1px;background:rgba(255,255,255,.06);margin:8px 16px; }
+.ds-section-label { font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.2);padding:4px 20px 6px;font-weight:500; }
+
+/* Dashboard main */
+.dash-main { background:#f8f8fa; padding:24px; overflow:hidden; }
+.dm-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:20px; }
+.dm-title { font-size:16px;font-weight:700;color:#111; }
+.dm-live { display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);font-weight:500; }
+.dm-live-dot { width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.4s ease-in-out infinite; }
+
+/* KPI cards row */
+.dm-kpis { display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px; }
+.dm-kpi {
+  background:#fff;border-radius:14px;padding:16px;
+  border:1px solid rgba(0,0,0,.06);
+  transition:transform .3s;
+}
+.dm-kpi:hover { transform:translateY(-2px); }
+.dm-kpi-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px; }
+.dm-kpi-label { font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#999;font-weight:500; }
+.dm-kpi-icon { width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px; }
+.dm-kpi-val { font-size:26px;font-weight:800;line-height:1; }
+.dm-kpi-sub { font-size:10px;color:#999;margin-top:4px; }
+
+/* Chart + table row */
+.dm-grid2 { display:grid;grid-template-columns:1fr 1.4fr;gap:12px; }
+.dm-card { background:#fff;border-radius:14px;padding:18px;border:1px solid rgba(0,0,0,.06); }
+.dm-card-title { font-size:12px;font-weight:600;color:#111;margin-bottom:14px; }
+
+/* Mini bar chart */
+.mini-chart { display:flex;align-items:flex-end;gap:5px;height:64px; }
+.mc-bar { flex:1;border-radius:4px 4px 0 0;transition:height .8s cubic-bezier(.23,1,.32,1); }
+.mc-bar.g { background: linear-gradient(180deg, var(--green) 0%, rgba(0,170,69,.3) 100%); }
+.mc-bar.b { background: linear-gradient(180deg, #60a5fa 0%, rgba(96,165,250,.3) 100%); }
+
+/* Mini table */
+.mini-table { width:100%;border-collapse:collapse;font-size:11px; }
+.mini-table th { text-align:left;padding:6px 8px;color:#bbb;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500; }
+.mini-table td { padding:8px 8px;border-top:1px solid rgba(0,0,0,.04);color:#444; }
+.mt-av { width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800; }
+.mt-badge { font-size:9px;padding:2px 8px;border-radius:20px;font-weight:600; }
+.mt-in { background:rgba(0,170,69,.1);color:var(--green); }
+.mt-late { background:rgba(245,158,11,.1);color:#d97706; }
+.mt-ab { background:rgba(239,68,68,.1);color:#ef4444; }
+/* Sidebar active cycling */
+.ds-item { transition: all .3s; }
+
+/* ── MODULE CARDS GRID ──────────────────────────── */
+.modules-header { display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:70px; margin-top: 160px; }
+@media(max-width:900px) {
+  .modules-header { flex-direction: column; align-items: flex-start; gap: 24px; margin-bottom: 40px; margin-top: 100px; }
+}
+.modules-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.mod-card {
+  padding: 32px 28px; border-radius: 20px;
+  border: 1px solid var(--ink3); background: #fff;
+  position: relative; overflow: hidden;
+  transition: all .4s cubic-bezier(.23,1,.32,1);
+  cursor: default;
+}
+.mod-card::before {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 0;
+  transition: height .4s cubic-bezier(.23,1,.32,1);
+  border-radius: 0;
+}
+.mod-card:hover { transform: translateY(-6px); box-shadow: 0 24px 64px rgba(0,0,0,.1); }
+.mod-card:hover::before { height: 3px; }
+/* color accents per card */
+.mc-green::before { background: var(--green); }
+.mc-navy::before  { background: var(--navy); }
+.mc-amber::before { background: #f59e0b; }
+.mc-blue::before  { background: #60a5fa; }
+.mc-purple::before{ background: #a78bfa; }
+.mc-rose::before  { background: #f43f5e; }
+.mc-teal::before  { background: #14b8a6; }
+.mc-indigo::before{ background: #6366f1; }
+.mc-orange::before{ background: #f97316; }
+.mc-cyan::before  { background: #06b6d4; }
+
+.mod-num { font-size:10px;letter-spacing:2px;color:#ccc;margin-bottom:20px;font-weight:400; }
+.mod-icon {
+  width:48px;height:48px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;margin-bottom:18px;
+  transition: transform .3s, box-shadow .3s;
+}
+.mod-card:hover .mod-icon { transform: scale(1.1); }
+.mi-green  { background:rgba(0,170,69,.1); color:var(--green); }
+.mi-navy   { background:rgba(2,0,102,.1);  color:var(--navy); }
+.mi-amber  { background:rgba(245,158,11,.1); color:#d97706; }
+.mi-blue   { background:rgba(96,165,250,.1); color:#3b82f6; }
+.mi-purple { background:rgba(167,139,250,.1);color:#7c3aed; }
+.mi-rose   { background:rgba(244,63,94,.1);  color:#e11d48; }
+.mi-teal   { background:rgba(20,184,166,.1); color:#0d9488; }
+.mi-indigo { background:rgba(99,102,241,.1); color:#4f46e5; }
+.mi-orange { background:rgba(249,115,22,.1); color:#ea580c; }
+.mi-cyan   { background:rgba(6,182,212,.1);  color:#0891b2; }
+
+.mod-title { font-size:15px;font-weight:700;letter-spacing:-.3px;margin-bottom:8px;color:#111; }
+.mod-desc  { font-size:12px;font-weight:300;color:#888;line-height:1.8; }
+.mod-tags  { display:flex;flex-wrap:wrap;gap:5px;margin-top:14px; }
+.mod-tag   { font-size:9px;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:20px;font-weight:500; }
+.mt-g { background:rgba(0,170,69,.08);color:var(--green); }
+.mt-n { background:rgba(2,0,102,.08);color:var(--navy); }
+.mt-a { background:rgba(245,158,11,.08);color:#d97706; }
+
+@media(max-width:1200px) { .modules-grid { grid-template-columns:repeat(3,1fr); } }
+@media(max-width:900px)  { .modules-grid { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:600px)  { .modules-grid { grid-template-columns:1fr; } .dm-kpis{grid-template-columns:repeat(2,1fr);} .dm-grid2{grid-template-columns:1fr;} .dash-body{grid-template-columns:1fr;} .dash-sidebar{display:none;} }
+</style>
+
+<section id="features" class="modules-section">
+  <div class="wrap">
+
+    
+    <style>
+    /* ── REAL DASHBOARD MOCK ─────────────────────────── */
+    .rdash-wrap {
+      border-radius: 20px; overflow: hidden;
+      border: 1px solid var(--ink3);
+      box-shadow: 0 60px 140px rgba(0,0,0,.13);
+      background: #f4f5f7; font-family: 'Inter', sans-serif;
+    }
+    /* Topbar */
+    .rdash-top {
+      background: #fff; display: flex; align-items: center; gap: 16px;
+      padding: 10px 20px; border-bottom: 1px solid rgba(0,0,0,.07);
+      font-size: 12px;
+    }
+    .rdash-top-title { font-weight: 600; color: #111; flex: 1; }
+    .rdash-top-pill {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 8px;
+      background: var(--green); color: #fff;
+      font-size: 10px; font-weight: 700; letter-spacing: .5px;
+    }
+    .rdash-top-clock { font-family: monospace; font-size: 11px; color: #555; }
+    .rdash-top-user { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; color: #444; }
+    .rdash-top-av { width: 26px; height: 26px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; }
+
+    /* Layout: sidebar + main */
+    .rdash-body { display: grid; grid-template-columns: 200px 1fr; min-height: 520px; }
+
+    /* Sidebar */
+    .rdash-sidebar {
+      background: var(--navy); padding: 14px 0; overflow: hidden;
+      display: flex; flex-direction: column; gap: 1px;
+    }
+    .rdash-logo { display: flex; align-items: center; gap: 8px; padding: 4px 16px 16px; border-bottom: 1px solid rgba(255,255,255,.06); margin-bottom: 6px; }
+    .rdash-logo img { width: 28px; height: 28px; object-fit: contain; }
+    .rdash-logo-name { font-size: 13px; font-weight: 800; color: #fff; letter-spacing: -.3px; }
+    .rds-label { font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,.22); padding: 8px 16px 4px; font-weight: 500; }
+    .rds-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 16px; font-size: 11px; color: rgba(255,255,255,.45);
+      position: relative; transition: all .2s; cursor: default;
+    }
+    .rds-item.act { color: #fff; background: rgba(255,255,255,.07); }
+    .rds-item.act::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background: var(--green); border-radius:0 2px 2px 0; }
+    .rds-item i { font-size: 13px; width: 16px; text-align: center; }
+    .rds-sep { height: 1px; background: rgba(255,255,255,.06); margin: 6px 14px; }
+    .rds-user { display: flex; align-items: center; gap: 8px; padding: 10px 16px 4px; margin-top: auto; }
+    .rds-user-av { width: 24px; height: 24px; border-radius: 50%; background: var(--green); color: #001; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .rds-user-name { font-size: 10px; color: rgba(255,255,255,.6); font-weight: 500; }
+
+    /* Main content */
+    .rdash-main { background: #f4f5f7; padding: 20px 20px 0; overflow: hidden; }
+    .rdash-page-title { font-size: 20px; font-weight: 800; color: #111; margin-bottom: 16px; letter-spacing: -.5px; }
+
+    /* Welcome card */
+    .rdash-welcome {
+      background: linear-gradient(120deg, #4f46e5, var(--navy) 60%, #020066);
+      border-radius: 14px; padding: 18px 22px; margin-bottom: 16px;
+      color: #fff; position: relative; overflow: hidden;
+    }
+    .rdash-welcome::after { content: ''; position: absolute; right: -20px; top: -20px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,.06); }
+    .rdash-welcome-badge { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; opacity: .6; margin-bottom: 4px; }
+    .rdash-welcome-msg { font-size: 16px; font-weight: 700; }
+
+    /* 3-column grid */
+    .rdash-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .rdash-col { display: flex; flex-direction: column; gap: 12px; }
+
+    .rdash-card { background: #fff; border-radius: 12px; border: 1px solid rgba(0,0,0,.06); padding: 16px; }
+    .rdash-card-title { font-size: 11px; font-weight: 600; color: #111; display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+    .rdash-card-title i { color: var(--green); }
+
+    /* Team avatars */
+    .rdash-team-avs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .rdash-av { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.1); }
+
+    /* Notifications */
+    .rdash-notifs { display: flex; flex-direction: column; gap: 8px; }
+    .rdash-notif { display: flex; gap: 10px; align-items: flex-start; }
+    .rdash-notif-av { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+    .rdash-notif-body { flex: 1; }
+    .rdash-notif-title { font-size: 10px; font-weight: 600; color: #111; }
+    .rdash-notif-sub { font-size: 9px; color: #aaa; margin-top: 1px; }
+    .rdash-notif-badge { font-size: 8px; padding: 2px 7px; border-radius: 20px; font-weight: 600; }
+    .nb-ok { background: rgba(0,170,69,.1); color: var(--green); }
+
+    /* Ausências rows */
+    .rdash-aus-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,.04); font-size: 11px; }
+    .rdash-aus-row:last-child { border-bottom: none; }
+    .rdash-aus-label { color: #888; }
+    .rdash-aus-val { font-size: 18px; font-weight: 800; color: #111; }
+    .rdash-aus-unit { font-size: 10px; color: #aaa; margin-left: 3px; }
+
+    /* Jornada */
+    .rdash-jorn-bar { height: 6px; background: #eee; border-radius: 3px; overflow: hidden; margin: 10px 0; }
+    .rdash-jorn-fill { height: 100%; background: linear-gradient(90deg, var(--green), #00cc53); border-radius: 3px; width: 0; transition: width 1.6s 0.5s cubic-bezier(.23,1,.32,1); }
+    .rdash-jorn-schedule { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #888; padding: 8px 12px; background: #f8f8fa; border-radius: 8px; border: 1px solid rgba(0,0,0,.05); }
+
+    /* Comunicados empty */
+    .rdash-cmn-empty { display: flex; flex-direction: column; align-items: center; padding: 20px; text-align: center; color: #bbb; gap: 6px; }
+    .rdash-cmn-empty i { font-size: 28px; }
+    .rdash-cmn-empty p { font-size: 11px; line-height: 1.4; }
+    .rdash-cmn-btn { font-size: 10px; color: var(--green); font-weight: 600; cursor: pointer; margin-top: 4px; }
+
+    @media(max-width:768px) {
+      .rdash-wrap { overflow: hidden; }
+      .rdash-body { grid-template-columns: 1fr; }
+      .rdash-sidebar { display: none; }
+      .rdash-grid3 { grid-template-columns: 1fr; gap: 12px; }
+      .rdash-top { gap: 8px; flex-wrap: wrap; justify-content: space-between; }
+      .rdash-top-clock, .rdash-top-user { display: none; }
+
+      /* Ponto: hide overflow ruler, make rows fit via grid columns */
+      .rd-panel { overflow-x: hidden; padding-bottom: 12px; }
+      #rdp-pnt > div:nth-child(2) { display: none; }
+      #rdp-pnt > div:nth-child(3) > div {
+        display: grid !important;
+        grid-template-columns: 72px 46px 1fr !important;
+      }
+      #rdp-pnt > div:nth-child(3) > div > div:first-child { width: auto !important; min-width: 0 !important; }
+      #rdp-pnt > div:nth-child(3) > div > div:nth-child(2) { width: auto !important; min-width: 0 !important; }
+
+      /* Calendario: shrink cells */
+      #rdp-cal > div:nth-child(2) > div,
+      #rdp-cal > div:nth-child(3) > div { min-height: 36px !important; padding: 3px !important; font-size: 7px !important; }
+
+      /* Ausencias: 6-col mini-cal grid -> 2-col, hide sidebar filters */
+      #rdp-aus > div:last-child { grid-template-columns: 1fr !important; }
+      #rdp-aus > div:last-child > div:first-child {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
+      }
+      #rdp-aus > div:last-child > div:last-child { display: none !important; }
+      #rdp-aus > div:first-child > span { font-size: 9px !important; padding: 5px 10px !important; }
+
+      /* Netgram: collapse sidebar */
+      #rdp-net > div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+      }
+      #rdp-net > div[style*="grid-template-columns"] > div:last-child { display: none !important; }
+    }
+    </style>
+
+    <div rv style="margin-bottom:16px">
+      <p class="s-label">Dashboard</p>
+      <h2 class="s-title">Demonstração<br><em>do sistema real</em></h2>
+    </div>
+    <p class="s-body" rv style="margin-bottom:60px">Tudo o que seu colaborador precisa em uma única tela: de solicitações de troca a justificativas, de forma simples e rápida.</p>
+
+    <div class="rdash-wrap" rv>
+      
+      <div class="rdash-top">
+        <i class="bi bi-list" style="font-size:16px;color:#666"></i>
+        <div class="rdash-top-title">Dashboard</div>
+        <i class="bi bi-bell" style="color:#aaa;font-size:14px"></i>
+        <i class="bi bi-headset" style="color:#aaa;font-size:14px"></i>
+        <div class="rdash-top-clock">00:00:00 / 08:00:00</div>
+        <div class="rdash-top-pill"><i class="bi bi-play-fill"></i> Iniciar</div>
+        <div class="rdash-top-user">
+          <div class="rdash-top-av">JE</div>
+          JULIA ETIENE
+        </div>
+      </div>
+
+      <div class="rdash-body">
+        
+        <div class="rdash-sidebar">
+          <div class="rdash-logo">
+            <img src="{% static 'img/netline_icon.png' %}" alt="Netline">
+            <div class="rdash-logo-name">Netline</div>
+          </div>
+
+          <div class="rds-label">Principal</div>
+          <div class="rds-item act" id="rdsi-dash"><i class="bi bi-grid-1x2"></i>Dashboard</div>
+          <div class="rds-item" id="rdsi-net"><i class="bi bi-broadcast"></i>Netgram</div>
+          <div class="rds-item" id="rdsi-org"><i class="bi bi-diagram-3"></i>Organograma</div>
+
+          <div class="rds-sep"></div>
+          <div class="rds-label">Meus Dados</div>
+          <div class="rds-item" id="rdsi-pnt"><i class="bi bi-clock-history"></i>Meus registros de ponto</div>
+          <div class="rds-item" id="rdsi-cal"><i class="bi bi-calendar3"></i>Meu Calendário</div>
+          <div class="rds-item" id="rdsi-sol"><i class="bi bi-send"></i>Minhas Solicitações</div>
+          <div class="rds-item" id="rdsi-aus"><i class="bi bi-person-x"></i>Minhas ausências</div>
+          <div class="rds-item" id="rdsi-fun"><i class="bi bi-people"></i>Minhas Trocas</div>
+
+          <div class="rds-user">
+            <div class="rds-user-av">JE</div>
+            <div class="rds-user-name">JULIA ETIENE</div>
+          </div>
+          <div class="rds-item" style="color:rgba(255,255,255,.3)"><i class="bi bi-box-arrow-right"></i>Sair</div>
+        </div>
+
+        
+        <div class="rdash-main" id="rdashMain">
+
+          
+          <div class="rd-panel active" id="rdp-dash">
+            <div class="rdash-page-title">Dashboard</div>
+            <div class="rdash-welcome">
+              <div class="rdash-welcome-badge">DESENVOLVEDOR(A)</div>
+              <div class="rdash-welcome-msg">Ol&aacute; JULIA, Bem-vindo(a)!</div>
+            </div>
+            <div class="rdash-grid3">
+              <div class="rdash-col">
+                <div class="rdash-card">
+                  <div class="rdash-card-title"><i class="bi bi-people-fill"></i>Sua Equipe</div>
+                  <div class="rdash-team-avs">
+                    <div class="rdash-av" style="background:rgba(0,170,69,.15);color:var(--green)">NN</div>
+                    <div class="rdash-av" style="background:rgba(96,165,250,.15);color:#60a5fa">JF</div>
+                    <div class="rdash-av" style="background:rgba(245,158,11,.15);color:#d97706">+8</div>
+                  </div>
+                </div>
+                <div class="rdash-card">
+                  <div class="rdash-card-title"><i class="bi bi-bell-fill"></i>Notifi&ccedil;&otilde;es</div>
+                  <div class="rdash-notifs">
+                    <div class="rdash-notif"><div class="rdash-notif-av" style="background:rgba(0,170,69,.13);color:var(--green)">A</div><div class="rdash-notif-body"><div class="rdash-notif-title">LICEN&Ccedil;A M&Eacute;DICA <span class="rdash-notif-badge nb-ok">Aprovada</span></div><div class="rdash-notif-sub">10/04</div></div></div>
+                    <div class="rdash-notif"><div class="rdash-notif-av" style="background:rgba(96,165,250,.13);color:#60a5fa">B</div><div class="rdash-notif-body"><div class="rdash-notif-title">FOLGA <span class="rdash-notif-badge nb-ok">Aprovada</span></div><div class="rdash-notif-sub">10/04</div></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="rdash-col">
+                <div class="rdash-card">
+                  <div class="rdash-card-title"><i class="bi bi-person-badge-fill"></i>Gestores</div>
+                  <div style="font-size:10px;color:#aaa;margin-bottom:8px">Aprova&ccedil;&otilde;es Diretas</div>
+                  <div class="rdash-team-avs"><div class="rdash-av" style="background:rgba(2,0,102,.12);color:var(--navy)">NN</div></div>
+                </div>
+                <div class="rdash-card">
+                  <div class="rdash-card-title"><i class="bi bi-hourglass-split" style="color:var(--navy)"></i>Resumo da Jornada</div>
+                  <div style="font-size:10px;color:#aaa;margin-bottom:4px">Horas Trabalhadas</div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600"><span>0h 00m</span><span style="color:#aaa;font-weight:400">/ 8h 00m</span></div>
+                  <div class="rdash-jorn-bar"><div class="rdash-jorn-fill" id="rdJornFill"></div></div>
+                  <div class="rdash-jorn-schedule"><i class="bi bi-clock" style="color:var(--green)"></i>Escala de hoje: 06:00 &ndash; 18:00</div>
+                </div>
+              </div>
+              <div class="rdash-col">
+                <div class="rdash-card" style="flex:1">
+                  <div class="rdash-card-title"><i class="bi bi-megaphone-fill" style="color:var(--navy)"></i>Comunicados</div>
+                  <div class="rdash-cmn-empty"><i class="bi bi-inbox"></i><p>Sem comunicados<br>Nenhum aviso novo na timeline.</p><div class="rdash-cmn-btn">+ Criar Comunicado</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          
+          <div class="rd-panel" id="rdp-net">
+            <div class="rdash-page-title" style="display:flex;align-items:center;gap:8px">
+              <i class="bi bi-broadcast" style="color:var(--green)"></i>Netgram
+              <span style="font-size:10px;padding:3px 10px;border-radius:20px;background:rgba(0,170,69,.1);color:var(--green);font-weight:500">Social Feed</span>
+            </div>
+            <div style="background:linear-gradient(120deg,#7c3aed,#4f46e5);border-radius:12px;padding:14px 18px;color:#fff;margin-bottom:16px;font-size:11px;line-height:1.6">
+              <div style="font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px"><i class="bi bi-broadcast"></i>Sobre o Netgram</div>
+              O Netgram &eacute; o feed social interno da empresa. Conecte-se, compartilhe novidades e celebre conquistas todos os dias!
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 200px;gap:14px">
+              <div>
+                <div class="rdash-card" style="margin-bottom:12px">
+                  <div style="display:flex;gap:10px;align-items:flex-start">
+                    <div class="rdash-av" style="background:rgba(2,0,102,.12);color:var(--navy);border-radius:50%;flex-shrink:0">JE</div>
+                    <div style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid rgba(0,0,0,.08);font-size:11px;color:#aaa;background:#fafafa">O que voc&ecirc; est&aacute; pensando?</div>
+                  </div>
+                  <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:10px;color:#aaa;padding:6px 12px;border:1px solid rgba(0,0,0,.08);border-radius:8px;display:flex;align-items:center;gap:5px"><i class="bi bi-image"></i>Foto</span>
+                    <span style="font-size:10px;font-weight:600;padding:7px 18px;border-radius:8px;background:var(--green);color:#fff;display:flex;align-items:center;gap:5px"><i class="bi bi-send"></i>Publicar</span>
+                  </div>
+                </div>
+                <div style="text-align:center;padding:40px 0;color:#ccc">
+                  <i class="bi bi-chat-square-dots" style="font-size:32px;display:block;margin-bottom:10px"></i>
+                  <div style="font-size:13px;font-weight:600;color:#bbb">Sem posts ainda</div>
+                  <div style="font-size:11px;margin-top:4px">Seja o primeiro a publicar no Netgram!</div>
+                </div>
+              </div>
+              <div class="rdash-card">
+                <div class="rdash-card-title"><i class="bi bi-compass"></i>Explorar o Feed</div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(0,170,69,.07);border:1px solid rgba(0,170,69,.15);font-size:11px;color:var(--green);font-weight:500"><i class="bi bi-circle-fill" style="font-size:8px"></i>Feed Geral</div>
+                  <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:11px;color:#666"><i class="bi bi-megaphone" style="color:#aaa"></i>Comunicados do RH</div>
+                  <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:11px;color:#666"><i class="bi bi-gift" style="color:#aaa"></i>Aniversariantes</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          
+          <div class="rd-panel" id="rdp-pnt">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+              <div>
+                <div style="font-size:11px;color:#aaa;margin-bottom:2px">Este m&ecirc;s</div>
+                <div style="font-size:15px;font-weight:800;color:#111">18h 28m <span style="font-size:11px;font-weight:400;color:#aaa">/ 168h 00m t&eacute;cnicos</span></div>
+              </div>
+              <div style="font-size:11px;font-weight:600;color:var(--green)">&larr; Abril 2026 &rarr;</div>
+            </div>
+            <div style="font-size:9px;color:#ccc;display:flex;padding-left:140px;margin-bottom:6px">
+              <span style="flex:1;text-align:center">8:00</span><span style="flex:1;text-align:center">10:00</span>
+              <span style="flex:1;text-align:center">12:00</span><span style="flex:1;text-align:center">14:00</span>
+              <span style="flex:1;text-align:center">16:00</span><span style="flex:1;text-align:center">18:00</span>
+            </div>
+            <div style="display:flex;flex-direction:column">
+              <div style="display:flex;align-items:center;border-bottom:1px solid rgba(0,0,0,.04);padding:5px 0"><div style="width:90px;font-size:10px;color:#888;flex-shrink:0">Quarta, 01</div><div style="width:50px;font-size:10px;color:#ccc;flex-shrink:0">0h 00m</div><div style="flex:1;height:14px;background:#f5f5f7;border-radius:4px"></div></div>
+              <div style="display:flex;align-items:center;border-bottom:1px solid rgba(0,0,0,.04);padding:5px 0"><div style="width:90px;font-size:10px;color:#888;flex-shrink:0">Quinta, 02</div><div style="width:50px;font-size:10px;color:#ccc;flex-shrink:0">0h 00m</div><div style="flex:1;height:14px;background:#f5f5f7;border-radius:4px"></div></div>
+              <div style="display:flex;align-items:center;border-bottom:1px solid rgba(0,0,0,.04);padding:5px 0"><div style="width:90px;font-size:10px;color:#111;font-weight:600;flex-shrink:0">Segunda, 06</div><div style="width:50px;font-size:10px;color:#111;font-weight:600;flex-shrink:0">7h 43m</div><div style="flex:1;height:14px;background:#f5f5f7;border-radius:4px;position:relative"><div style="position:absolute;left:5%;width:50%;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green),#00cc55)"></div></div></div>
+              <div style="display:flex;align-items:center;border-bottom:1px solid rgba(0,0,0,.04);padding:5px 0"><div style="width:90px;font-size:10px;color:#ccc;flex-shrink:0">Ter&ccedil;a, 07</div><div style="width:50px;font-size:10px;color:#ccc;flex-shrink:0">0h 00m</div><div style="flex:1;height:14px;background:#f5f5f7;border-radius:4px"></div></div>
+              <div style="display:flex;align-items:center;border-bottom:1px solid rgba(0,0,0,.04);padding:5px 0"><div style="width:90px;font-size:10px;color:#111;font-weight:600;flex-shrink:0">Quarta, 08</div><div style="width:50px;font-size:10px;color:#111;font-weight:600;flex-shrink:0">1h 27m</div><div style="flex:1;height:14px;background:#f5f5f7;border-radius:4px;position:relative"><div style="position:absolute;left:10%;width:15%;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green),#00cc55)"></div></div></div>
+              <div style="display:flex;align-items:center;border-bottom:1px solid rgba(0,0,0,.04);padding:5px 0"><div style="width:90px;font-size:10px;color:#111;font-weight:600;flex-shrink:0">Quinta, 09</div><div style="width:50px;font-size:10px;color:#111;font-weight:600;flex-shrink:0">8h 00m</div><div style="flex:1;height:14px;background:#f5f5f7;border-radius:4px;position:relative"><div style="position:absolute;left:5%;width:53%;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green),#00cc55)"></div></div></div>
+              <div style="display:flex;align-items:center;border-bottom:1px solid rgba(0,0,0,.04);padding:5px 0"><div style="width:90px;font-size:10px;color:#a78bfa;flex-shrink:0">Sexta, 10</div><div style="width:50px;font-size:10px;color:var(--green);flex-shrink:0">Lic. Med.</div><div style="flex:1;height:14px;background:rgba(167,139,250,.08);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#a78bfa">LICEN&Ccedil;A M&Eacute;DICA</div></div>
+              <div style="display:flex;align-items:center;border-bottom:1px solid rgba(0,0,0,.04);padding:5px 0"><div style="width:90px;font-size:10px;color:#111;font-weight:600;flex-shrink:0">Segunda, 13</div><div style="width:50px;font-size:10px;color:#111;font-weight:600;flex-shrink:0">8h 00m</div><div style="flex:1;height:14px;background:#f5f5f7;border-radius:4px;position:relative"><div style="position:absolute;left:5%;width:53%;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green),#00cc55)"></div></div></div>
+              <div style="display:flex;align-items:center;padding:5px 0"><div style="width:90px;font-size:10px;color:#111;font-weight:600;flex-shrink:0">Ter&ccedil;a, 14</div><div style="width:50px;font-size:10px;color:#111;font-weight:600;flex-shrink:0">8h 00m</div><div style="flex:1;height:14px;background:#f5f5f7;border-radius:4px;position:relative"><div style="position:absolute;left:5%;width:53%;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green),#00cc55)"></div></div></div>
+            </div>
+          </div>
+
+          
+          <div class="rd-panel" id="rdp-cal">
+            <div style="text-align:center;font-size:15px;font-weight:800;color:#111;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:10px">
+              <span style="font-size:14px;color:#bbb">&lsaquo;</span> Abril <span style="font-size:14px;color:#bbb">&rsaquo;</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">
+              <div style="font-size:9px;text-align:center;color:#aaa;font-weight:500">SEG</div>
+              <div style="font-size:9px;text-align:center;color:#aaa;font-weight:500">TER</div>
+              <div style="font-size:9px;text-align:center;color:#aaa;font-weight:500">QUA</div>
+              <div style="font-size:9px;text-align:center;color:#aaa;font-weight:500">QUI</div>
+              <div style="font-size:9px;text-align:center;color:#aaa;font-weight:500">SEX</div>
+              <div style="font-size:9px;text-align:center;color:#aaa;font-weight:500">S&Aacute;B</div>
+              <div style="font-size:9px;text-align:center;color:#aaa;font-weight:500">DOM</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">
+              <div style="border:1px solid rgba(0,0,0,.04);border-radius:6px;padding:5px;min-height:54px;background:#fafafa;font-size:8px;color:#ddd"><div style="text-align:right;font-weight:600;margin-bottom:2px">31</div></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff;font-size:8px"><div style="text-align:right;font-weight:600;color:#111;margin-bottom:2px">1</div><div style="padding:1px 3px;border-radius:3px;background:rgba(0,170,69,.12);color:var(--green)">08h&ndash;12h</div></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff;font-size:8px"><div style="text-align:right;font-weight:600;color:#111;margin-bottom:2px">2</div><div style="padding:1px 3px;border-radius:3px;background:rgba(0,170,69,.12);color:var(--green)">08h&ndash;12h</div></div>
+              <div style="border:1px solid rgba(239,68,68,.2);border-radius:6px;padding:5px;min-height:54px;background:rgba(239,68,68,.03);font-size:8px"><div style="text-align:right;font-weight:600;color:#ef4444;margin-bottom:2px">3</div><div style="padding:1px 3px;border-radius:3px;background:rgba(239,68,68,.1);color:#ef4444">SEMANA SANTA</div></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff;font-size:8px"><div style="text-align:right;font-weight:600;color:#111;margin-bottom:2px">4</div><div style="padding:1px 3px;border-radius:3px;background:rgba(0,170,69,.12);color:var(--green)">08h&ndash;12h</div></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff"></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff"></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff;font-size:8px"><div style="text-align:right;font-weight:600;color:#111;margin-bottom:2px">7</div><div style="padding:1px 3px;border-radius:3px;background:rgba(0,170,69,.12);color:var(--green)">09h&ndash;12h</div></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff;font-size:8px"><div style="text-align:right;font-weight:600;color:#111;margin-bottom:2px">8</div><div style="padding:1px 3px;border-radius:3px;background:rgba(0,170,69,.12);color:var(--green)">09h&ndash;12h</div></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff;font-size:8px"><div style="text-align:right;font-weight:600;color:#111;margin-bottom:2px">9</div><div style="padding:1px 3px;border-radius:3px;background:rgba(0,170,69,.12);color:var(--green)">08h&ndash;01h</div></div>
+              <div style="border:1px solid rgba(167,139,250,.25);border-radius:6px;padding:5px;min-height:54px;background:rgba(167,139,250,.04);font-size:8px"><div style="text-align:right;font-weight:600;color:#7c3aed;margin-bottom:2px">10</div><div style="padding:1px 3px;border-radius:3px;background:rgba(167,139,250,.15);color:#7c3aed">LIC.M&Eacute;DICA</div></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff"></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff"></div>
+              <div style="border:1px solid rgba(0,0,0,.04);border-radius:6px;padding:5px;min-height:54px;background:#fafafa;font-size:8px;color:#ddd"><div style="text-align:right;font-weight:600;margin-bottom:2px">13</div></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff;font-size:8px"><div style="text-align:right;font-weight:600;color:#111;margin-bottom:2px">14</div><div style="padding:1px 3px;border-radius:3px;background:rgba(0,170,69,.12);color:var(--green)">09h&ndash;12h</div></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff;font-size:8px"><div style="text-align:right;font-weight:600;color:#111;margin-bottom:2px">15</div><div style="padding:1px 3px;border-radius:3px;background:rgba(0,170,69,.12);color:var(--green)">08h&ndash;12h</div></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff;font-size:8px"><div style="text-align:right;font-weight:600;color:#111;margin-bottom:2px">16</div><div style="padding:1px 3px;border-radius:3px;background:rgba(0,170,69,.12);color:var(--green)">08h&ndash;01h</div></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff;font-size:8px"><div style="text-align:right;font-weight:600;color:#111;margin-bottom:2px">17</div><div style="padding:1px 3px;border-radius:3px;background:rgba(0,170,69,.12);color:var(--green)">08h&ndash;12h</div></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff"></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff"></div>
+              <div style="border:1px solid rgba(0,0,0,.04);border-radius:6px;padding:5px;min-height:54px;background:#fafafa;font-size:8px;color:#ddd"><div style="text-align:right;font-weight:600;margin-bottom:2px">20</div></div>
+              <div style="border:1px solid rgba(245,158,11,.2);border-radius:6px;padding:5px;min-height:54px;background:rgba(245,158,11,.03);font-size:8px"><div style="text-align:right;font-weight:600;color:#d97706;margin-bottom:2px">21</div><div style="padding:1px 3px;border-radius:3px;background:rgba(245,158,11,.12);color:#d97706">TIRADENTES</div></div>
+              <div style="border:2px solid var(--green);border-radius:6px;padding:5px;min-height:54px;background:rgba(0,170,69,.04);font-size:8px"><div style="background:var(--green);color:#fff;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;margin-left:auto;font-size:9px;font-weight:600;margin-bottom:2px">22</div><div style="padding:1px 3px;border-radius:3px;background:rgba(0,170,69,.12);color:var(--green)">08h&ndash;12h</div></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff;font-size:8px"><div style="text-align:right;font-weight:600;color:#111;margin-bottom:2px">23</div><div style="padding:1px 3px;border-radius:3px;background:rgba(0,170,69,.12);color:var(--green)">08h&ndash;12h</div></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff"></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff"></div>
+              <div style="border:1px solid rgba(0,0,0,.05);border-radius:6px;padding:5px;min-height:54px;background:#fff"></div>
+            </div>
+          </div>
+
+          
+          <div class="rd-panel" id="rdp-aus">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+              <div style="font-size:16px;font-weight:800;color:#111;display:flex;align-items:center;gap:8px"><i class="bi bi-person-x-fill" style="color:var(--green)"></i>Minhas aus&ecirc;ncias</div>
+              <span style="font-size:10px;font-weight:600;padding:7px 14px;border-radius:8px;background:var(--green);color:#fff;display:flex;align-items:center;gap:5px"><i class="bi bi-plus"></i>Nova Solicita&ccedil;&atilde;o</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 110px;gap:12px">
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px">
+                <div style="background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,.06);padding:8px"><div style="font-size:9px;font-weight:700;color:#888;margin-bottom:6px;text-align:center;text-transform:uppercase">Jan</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px 0;font-size:7px;text-align:center;line-height:13px"><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:#374151">1</span><span style="color:#374151">2</span><span style="color:#374151">3</span><span style="color:#374151">4</span><span style="color:#374151">5</span><span style="background:rgba(245,158,11,.18);color:#d97706;border-radius:3px;font-weight:700">6</span><span style="color:#374151">7</span><span style="color:#374151">8</span><span style="color:#374151">9</span><span style="color:#374151">10</span><span style="color:#374151">11</span><span style="color:#374151">12</span><span style="color:#374151">13</span><span style="color:#374151">14</span><span style="color:#374151">15</span><span style="color:#374151">16</span><span style="color:#374151">17</span><span style="color:#374151">18</span><span style="background:rgba(239,68,68,.15);color:#ef4444;border-radius:3px;font-weight:700">19</span><span style="color:#374151">20</span><span style="color:#374151">21</span><span style="color:#374151">22</span><span style="color:#374151">23</span><span style="color:#374151">24</span><span style="color:#374151">25</span><span style="color:#374151">26</span><span style="color:#374151">27</span><span style="color:#374151">28</span><span style="color:#374151">29</span><span style="color:#374151">30</span><span style="color:#374151">31</span></div></div>
+                <div style="background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,.06);padding:8px"><div style="font-size:9px;font-weight:700;color:#888;margin-bottom:6px;text-align:center;text-transform:uppercase">Fev</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px 0;font-size:7px;text-align:center;line-height:13px"><span style="color:#374151">1</span><span style="color:#374151">2</span><span style="color:#374151">3</span><span style="color:#374151">4</span><span style="color:#374151">5</span><span style="color:#374151">6</span><span style="color:#374151">7</span><span style="color:#374151">8</span><span style="color:#374151">9</span><span style="color:#374151">10</span><span style="color:#374151">11</span><span style="color:#374151">12</span><span style="color:#374151">13</span><span style="color:#374151">14</span><span style="color:#374151">15</span><span style="color:#374151">16</span><span style="color:#374151">17</span><span style="color:#374151">18</span><span style="color:#374151">19</span><span style="color:#374151">20</span><span style="color:#374151">21</span><span style="color:#374151">22</span><span style="color:#374151">23</span><span style="color:#374151">24</span><span style="color:#374151">25</span><span style="color:#374151">26</span><span style="color:#374151">27</span><span style="color:#374151">28</span></div></div>
+                <div style="background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,.06);padding:8px"><div style="font-size:9px;font-weight:700;color:#888;margin-bottom:6px;text-align:center;text-transform:uppercase">Mar</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px 0;font-size:7px;text-align:center;line-height:13px"><span style="color:#374151">1</span><span style="color:#374151">2</span><span style="color:#374151">3</span><span style="color:#374151">4</span><span style="color:#374151">5</span><span style="color:#374151">6</span><span style="color:#374151">7</span><span style="color:#374151">8</span><span style="color:#374151">9</span><span style="color:#374151">10</span><span style="color:#374151">11</span><span style="color:#374151">12</span><span style="color:#374151">13</span><span style="color:#374151">14</span><span style="color:#374151">15</span><span style="color:#374151">16</span><span style="color:#374151">17</span><span style="color:#374151">18</span><span style="color:#374151">19</span><span style="color:#374151">20</span><span style="color:#374151">21</span><span style="color:#374151">22</span><span style="color:#374151">23</span><span style="color:#374151">24</span><span style="color:#374151">25</span><span style="color:#374151">26</span><span style="color:#374151">27</span><span style="color:#374151">28</span><span style="color:#374151">29</span><span style="color:#374151">30</span><span style="color:#374151">31</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span></div></div>
+                <div style="background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,.06);padding:8px"><div style="font-size:9px;font-weight:700;color:#888;margin-bottom:6px;text-align:center;text-transform:uppercase">Abr</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px 0;font-size:7px;text-align:center;line-height:13px"><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="background:rgba(245,158,11,.18);color:#d97706;border-radius:3px;font-weight:700">1</span><span style="color:#374151">2</span><span style="background:rgba(245,158,11,.18);color:#d97706;border-radius:3px;font-weight:700">3</span><span style="color:#374151">4</span><span style="color:#374151">5</span><span style="color:#374151">6</span><span style="color:#374151">7</span><span style="color:#374151">8</span><span style="color:#374151">9</span><span style="background:rgba(239,68,68,.15);color:#ef4444;border-radius:3px;font-weight:700">10</span><span style="color:#374151">11</span><span style="color:#374151">12</span><span style="color:#374151">13</span><span style="color:#374151">14</span><span style="color:#374151">15</span><span style="color:#374151">16</span><span style="color:#374151">17</span><span style="color:#374151">18</span><span style="color:#374151">19</span><span style="color:#374151">20</span><span style="background:rgba(245,158,11,.18);color:#d97706;border-radius:3px;font-weight:700">21</span><span style="background:var(--green);color:#fff;border-radius:50%;font-weight:700">22</span><span style="color:#374151">23</span><span style="color:#374151">24</span><span style="color:#374151">25</span><span style="color:#374151">26</span><span style="color:#374151">27</span><span style="color:#374151">28</span><span style="color:#374151">29</span><span style="color:#374151">30</span><span style="color:transparent">0</span><span style="color:transparent">0</span></div></div>
+                <div style="background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,.06);padding:8px"><div style="font-size:9px;font-weight:700;color:#888;margin-bottom:6px;text-align:center;text-transform:uppercase">Mai</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px 0;font-size:7px;text-align:center;line-height:13px"><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="background:rgba(239,68,68,.15);color:#ef4444;border-radius:3px;font-weight:700">1</span><span style="color:#374151">2</span><span style="color:#374151">3</span><span style="background:rgba(245,158,11,.18);color:#d97706;border-radius:3px;font-weight:700">4</span><span style="background:rgba(245,158,11,.18);color:#d97706;border-radius:3px;font-weight:700">5</span><span style="color:#374151">6</span><span style="color:#374151">7</span><span style="color:#374151">8</span><span style="color:#374151">9</span><span style="color:#374151">10</span><span style="color:#374151">11</span><span style="color:#374151">12</span><span style="color:#374151">13</span><span style="color:#374151">14</span><span style="color:#374151">15</span><span style="color:#374151">16</span><span style="color:#374151">17</span><span style="color:#374151">18</span><span style="color:#374151">19</span><span style="color:#374151">20</span><span style="color:#374151">21</span><span style="color:#374151">22</span><span style="color:#374151">23</span><span style="color:#374151">24</span><span style="color:#374151">25</span><span style="color:#374151">26</span><span style="color:#374151">27</span><span style="color:#374151">28</span><span style="color:#374151">29</span><span style="color:#374151">30</span><span style="color:#374151">31</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span></div></div>
+                <div style="background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,.06);padding:8px"><div style="font-size:9px;font-weight:700;color:#888;margin-bottom:6px;text-align:center;text-transform:uppercase">Jun</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px 0;font-size:7px;text-align:center;line-height:13px"><span style="color:transparent">0</span><span style="color:#374151">1</span><span style="color:#374151">2</span><span style="color:#374151">3</span><span style="color:#374151">4</span><span style="color:#374151">5</span><span style="color:#374151">6</span><span style="color:#374151">7</span><span style="color:#374151">8</span><span style="color:#374151">9</span><span style="color:#374151">10</span><span style="background:rgba(239,68,68,.15);color:#ef4444;border-radius:3px;font-weight:700">11</span><span style="color:#374151">12</span><span style="color:#374151">13</span><span style="color:#374151">14</span><span style="color:#374151">15</span><span style="color:#374151">16</span><span style="color:#374151">17</span><span style="color:#374151">18</span><span style="color:#374151">19</span><span style="color:#374151">20</span><span style="color:#374151">21</span><span style="color:#374151">22</span><span style="color:#374151">23</span><span style="color:#374151">24</span><span style="color:#374151">25</span><span style="color:#374151">26</span><span style="color:#374151">27</span><span style="color:#374151">28</span><span style="color:#374151">29</span><span style="color:#374151">30</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span></div></div>
+                <div style="background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,.06);padding:8px"><div style="font-size:9px;font-weight:700;color:#888;margin-bottom:6px;text-align:center;text-transform:uppercase">Jul</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px 0;font-size:7px;text-align:center;line-height:13px"><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:#374151">1</span><span style="color:#374151">2</span><span style="color:#374151">3</span><span style="color:#374151">4</span><span style="color:#374151">5</span><span style="color:#374151">6</span><span style="color:#374151">7</span><span style="color:#374151">8</span><span style="background:rgba(239,68,68,.15);color:#ef4444;border-radius:3px;font-weight:700">9</span><span style="color:#374151">10</span><span style="color:#374151">11</span><span style="color:#374151">12</span><span style="color:#374151">13</span><span style="color:#374151">14</span><span style="color:#374151">15</span><span style="color:#374151">16</span><span style="color:#374151">17</span><span style="color:#374151">18</span><span style="color:#374151">19</span><span style="color:#374151">20</span><span style="color:#374151">21</span><span style="color:#374151">22</span><span style="color:#374151">23</span><span style="color:#374151">24</span><span style="color:#374151">25</span><span style="color:#374151">26</span><span style="color:#374151">27</span><span style="color:#374151">28</span><span style="color:#374151">29</span><span style="color:#374151">30</span><span style="color:#374151">31</span><span style="color:transparent">0</span></div></div>
+                <div style="background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,.06);padding:8px"><div style="font-size:9px;font-weight:700;color:#888;margin-bottom:6px;text-align:center;text-transform:uppercase">Ago</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px 0;font-size:7px;text-align:center;line-height:13px"><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:#374151">1</span><span style="color:#374151">2</span><span style="color:#374151">3</span><span style="color:#374151">4</span><span style="color:#374151">5</span><span style="color:#374151">6</span><span style="color:#374151">7</span><span style="color:#374151">8</span><span style="color:#374151">9</span><span style="color:#374151">10</span><span style="color:#374151">11</span><span style="color:#374151">12</span><span style="color:#374151">13</span><span style="color:#374151">14</span><span style="color:#374151">15</span><span style="color:#374151">16</span><span style="color:#374151">17</span><span style="color:#374151">18</span><span style="color:#374151">19</span><span style="color:#374151">20</span><span style="color:#374151">21</span><span style="color:#374151">22</span><span style="color:#374151">23</span><span style="color:#374151">24</span><span style="color:#374151">25</span><span style="color:#374151">26</span><span style="color:#374151">27</span><span style="color:#374151">28</span><span style="color:#374151">29</span><span style="color:#374151">30</span><span style="color:#374151">31</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span></div></div>
+                <div style="background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,.06);padding:8px"><div style="font-size:9px;font-weight:700;color:#888;margin-bottom:6px;text-align:center;text-transform:uppercase">Set</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px 0;font-size:7px;text-align:center;line-height:13px"><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:#374151">1</span><span style="color:#374151">2</span><span style="color:#374151">3</span><span style="color:#374151">4</span><span style="color:#374151">5</span><span style="color:#374151">6</span><span style="background:rgba(239,68,68,.15);color:#ef4444;border-radius:3px;font-weight:700">7</span><span style="color:#374151">8</span><span style="color:#374151">9</span><span style="color:#374151">10</span><span style="color:#374151">11</span><span style="color:#374151">12</span><span style="color:#374151">13</span><span style="color:#374151">14</span><span style="color:#374151">15</span><span style="color:#374151">16</span><span style="color:#374151">17</span><span style="color:#374151">18</span><span style="color:#374151">19</span><span style="color:#374151">20</span><span style="color:#374151">21</span><span style="color:#374151">22</span><span style="color:#374151">23</span><span style="color:#374151">24</span><span style="color:#374151">25</span><span style="color:#374151">26</span><span style="color:#374151">27</span><span style="color:#374151">28</span><span style="color:#374151">29</span><span style="color:#374151">30</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span></div></div>
+                <div style="background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,.06);padding:8px"><div style="font-size:9px;font-weight:700;color:#888;margin-bottom:6px;text-align:center;text-transform:uppercase">Out</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px 0;font-size:7px;text-align:center;line-height:13px"><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:#374151">1</span><span style="color:#374151">2</span><span style="color:#374151">3</span><span style="color:#374151">4</span><span style="color:#374151">5</span><span style="color:#374151">6</span><span style="color:#374151">7</span><span style="color:#374151">8</span><span style="color:#374151">9</span><span style="color:#374151">10</span><span style="color:#374151">11</span><span style="background:rgba(239,68,68,.15);color:#ef4444;border-radius:3px;font-weight:700">12</span><span style="color:#374151">13</span><span style="color:#374151">14</span><span style="color:#374151">15</span><span style="color:#374151">16</span><span style="color:#374151">17</span><span style="color:#374151">18</span><span style="color:#374151">19</span><span style="color:#374151">20</span><span style="color:#374151">21</span><span style="color:#374151">22</span><span style="color:#374151">23</span><span style="color:#374151">24</span><span style="color:#374151">25</span><span style="color:#374151">26</span><span style="color:#374151">27</span><span style="color:#374151">28</span><span style="color:#374151">29</span><span style="color:#374151">30</span><span style="color:#374151">31</span></div></div>
+                <div style="background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,.06);padding:8px"><div style="font-size:9px;font-weight:700;color:#888;margin-bottom:6px;text-align:center;text-transform:uppercase">Nov</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px 0;font-size:7px;text-align:center;line-height:13px"><span style="color:#374151">1</span><span style="background:rgba(239,68,68,.15);color:#ef4444;border-radius:3px;font-weight:700">2</span><span style="color:#374151">3</span><span style="color:#374151">4</span><span style="color:#374151">5</span><span style="color:#374151">6</span><span style="color:#374151">7</span><span style="color:#374151">8</span><span style="color:#374151">9</span><span style="color:#374151">10</span><span style="color:#374151">11</span><span style="color:#374151">12</span><span style="color:#374151">13</span><span style="color:#374151">14</span><span style="background:rgba(239,68,68,.15);color:#ef4444;border-radius:3px;font-weight:700">15</span><span style="color:#374151">16</span><span style="color:#374151">17</span><span style="color:#374151">18</span><span style="color:#374151">19</span><span style="background:var(--green);color:#fff;border-radius:50%;font-weight:700">20</span><span style="color:#374151">21</span><span style="color:#374151">22</span><span style="color:#374151">23</span><span style="color:#374151">24</span><span style="color:#374151">25</span><span style="color:#374151">26</span><span style="color:#374151">27</span><span style="color:#374151">28</span><span style="color:#374151">29</span><span style="color:#374151">30</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:transparent">0</span></div></div>
+                <div style="background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,.06);padding:8px"><div style="font-size:9px;font-weight:700;color:#888;margin-bottom:6px;text-align:center;text-transform:uppercase">Dez</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px 0;font-size:7px;text-align:center;line-height:13px"><span style="color:transparent">0</span><span style="color:transparent">0</span><span style="color:#374151">1</span><span style="color:#374151">2</span><span style="color:#374151">3</span><span style="color:#374151">4</span><span style="color:#374151">5</span><span style="color:#374151">6</span><span style="color:#374151">7</span><span style="background:rgba(239,68,68,.15);color:#ef4444;border-radius:3px;font-weight:700">8</span><span style="color:#374151">9</span><span style="color:#374151">10</span><span style="color:#374151">11</span><span style="color:#374151">12</span><span style="color:#374151">13</span><span style="color:#374151">14</span><span style="color:#374151">15</span><span style="color:#374151">16</span><span style="color:#374151">17</span><span style="color:#374151">18</span><span style="color:#374151">19</span><span style="color:#374151">20</span><span style="color:#374151">21</span><span style="color:#374151">22</span><span style="color:#374151">23</span><span style="color:#374151">24</span><span style="background:rgba(239,68,68,.15);color:#ef4444;border-radius:3px;font-weight:700">25</span><span style="color:#374151">26</span><span style="color:#374151">27</span><span style="color:#374151">28</span><span style="color:#374151">29</span><span style="color:#374151">30</span><span style="color:#374151">31</span><span style="color:transparent">0</span><span style="color:transparent">0</span></div></div>
+              </div>
+              <div class="rdash-card" style="font-size:10px">
+                <div class="rdash-card-title" style="font-size:10px">Filtros</div>
+                <div style="font-size:8px;text-transform:uppercase;color:#aaa;margin-bottom:5px;letter-spacing:1px">ESTADO</div>
+                <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+                  <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#666"><div style="width:10px;height:10px;border-radius:2px;background:rgba(245,158,11,.3);border:1px solid #f59e0b"></div>Pendente</div>
+                  <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#666"><div style="width:10px;height:10px;border-radius:2px;background:rgba(0,170,69,.2);border:1px solid var(--green)"></div>Confirmados</div>
+                </div>
+                <div style="font-size:8px;text-transform:uppercase;color:#aaa;margin-bottom:5px;letter-spacing:1px">TIPO</div>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#666"><div style="width:10px;height:10px;border-radius:2px;background:rgba(96,165,250,.3)"></div>F&eacute;rias</div>
+                  <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#666"><div style="width:10px;height:10px;border-radius:2px;background:rgba(2,0,102,.2)"></div>Banco de horas</div>
+                  <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#666"><div style="width:10px;height:10px;border-radius:2px;background:rgba(167,139,250,.3)"></div>Folga Plant&atilde;o</div>
+                  <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#666"><div style="width:10px;height:10px;border-radius:2px;background:rgba(239,68,68,.2)"></div>Licen&ccedil;a m&eacute;dica</div>
+                  <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#666"><div style="width:10px;height:10px;border-radius:2px;background:rgba(0,0,0,.1)"></div>Feriados</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <style>
+    .rd-panel { display:none; animation: rdPanelIn .45s cubic-bezier(.23,1,.32,1); }
+    .rd-panel.active { display:block; }
+    @keyframes rdPanelIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+
+    <script>
+    (function() {
+      var pages = {
+        'rdsi-dash': 'rdp-dash',
+        'rdsi-net':  'rdp-net',
+        'rdsi-pnt':  'rdp-pnt',
+        'rdsi-cal':  'rdp-cal',
+        'rdsi-aus':  'rdp-aus'
+      };
+      var rdItems = ['rdsi-dash','rdsi-net','rdsi-pnt','rdsi-cal','rdsi-aus'];
+      var rdIdx = 0;
+      function switchTo(id) {
+        document.querySelectorAll('.rds-item').forEach(function(el){ el.classList.remove('act'); });
+        var sEl = document.getElementById(id);
+        if (sEl) sEl.classList.add('act');
+        document.querySelectorAll('.rd-panel').forEach(function(p){ p.classList.remove('active'); });
+        var panel = document.getElementById(pages[id]);
+        if (panel) panel.classList.add('active');
+      }
+      setInterval(function() {
+        rdIdx = (rdIdx + 1) % rdItems.length;
+        switchTo(rdItems[rdIdx]);
+      }, 2800);
+    })();
+    </script>
+
+    </script>
+
+
+    
+    <div class="modules-header" rv> 
+      <div>
+        <p class="s-label">Todos os Módulos</p>
+        <h2 class="s-title">10 módulos,<br><em>uma plataforma</em></h2>
+      </div>
+      <p class="s-body" style="max-width:320px">Cada módulo foi pensado para o contexto real das provedoras, com atualizações frequentes.</p>
+    </div>
+
+    <div class="modules-grid">
+
+      <div class="mod-card mc-green" rv>
+        <div class="mod-num">01</div>
+        <div class="mod-icon mi-green"><i class="bi bi-clock-history"></i></div>
+        <div class="mod-title">Controle de Ponto</div>
+        <div class="mod-desc">Registro multi-batida com GPS e foto por batida. Suporte a turnos rotativos, noturno, plantão e escala 12x36. Espelho mensal automático com fechamento por período.</div>
+        <div class="mod-tags">
+          <span class="mod-tag mt-g">GPS</span>
+          <span class="mod-tag mt-g">Foto</span>
+          <span class="mod-tag mt-n">Turno 24h</span>
+          <span class="mod-tag mt-g">Excel</span>
+        </div>
+      </div>
+
+      <div class="mod-card mc-amber" rv>
+        <div class="mod-num">02</div>
+        <div class="mod-icon mi-amber"><i class="bi bi-file-medical"></i></div>
+        <div class="mod-title">Atestados & Licenças</div>
+        <div class="mod-desc">Solicitação digital de atestados médicos, licenças e ausências. Fluxo multi-nível: colaborador → supervisor → RH. Histórico completo com auditoria e alertas automáticos.</div>
+        <div class="mod-tags">
+          <span class="mod-tag mt-a">Multi-nível</span>
+          <span class="mod-tag mt-n">Notificação</span>
+          <span class="mod-tag mt-g">Histórico</span>
+        </div>
+      </div>
+
+      <div class="mod-card mc-purple" rv>
+        <div class="mod-num">03</div>
+        <div class="mod-icon mi-purple"><i class="bi bi-graph-up-arrow"></i></div>
+        <div class="mod-title">Performance & Metas</div>
+        <div class="mod-desc">Ciclos de avaliação por período com metas individuais e coletivas. Pontuação por critério, feedbacks estruturados e relatórios de desempenho por setor e turno.</div>
+        <div class="mod-tags">
+          <span class="mod-tag mt-n">Metas</span>
+          <span class="mod-tag mt-g">Avaliação</span>
+          <span class="mod-tag mt-a">Feedback</span>
+        </div>
+      </div>
+
+      <div class="mod-card mc-blue" rv>
+        <div class="mod-num">04</div>
+        <div class="mod-icon mi-blue"><i class="bi bi-person-check"></i></div>
+        <div class="mod-title">Recrutamento</div>
+        <div class="mod-desc">Gestão completa do funil: criação de vagas, candidaturas, triagem, entrevistas e admissão. Onboarding integrado com carta de oferta e geração do cadastro automático no sistema.</div>
+        <div class="mod-tags">
+          <span class="mod-tag mt-g">Vagas</span>
+          <span class="mod-tag mt-n">Triagem</span>
+          <span class="mod-tag mt-g">Onboarding</span>
+        </div>
+      </div>
+
+      <div class="mod-card mc-navy" rv>
+        <div class="mod-num">05</div>
+        <div class="mod-icon mi-navy"><i class="bi bi-diagram-3"></i></div>
+        <div class="mod-title">Organograma</div>
+        <div class="mod-desc">Estrutura hierárquica visual de toda a empresa — departamentos, filiais e POPs. Visualização de subordinados, gestores e setores. Filtros por unidade e cargo.</div>
+        <div class="mod-tags">
+          <span class="mod-tag mt-n">Hierarquia</span>
+          <span class="mod-tag mt-g">Filiais</span>
+          <span class="mod-tag mt-n">POPs</span>
+        </div>
+      </div>
+
+      <div class="mod-card mc-teal" rv>
+        <div class="mod-num">06</div>
+        <div class="mod-icon mi-teal"><i class="bi bi-arrow-left-right"></i></div>
+        <div class="mod-title">Troca de Turno</div>
+        <div class="mod-desc">Solicitação de permuta de escalas entre colaboradores com aprovação hierárquica. Valida conflitos automaticamente e atualiza o espelho de ponto sem intervenção manual.</div>
+        <div class="mod-tags">
+          <span class="mod-tag mt-g">Permuta</span>
+          <span class="mod-tag mt-n">Aprovação</span>
+          <span class="mod-tag mt-a">Anti-conflito</span>
+        </div>
+      </div>
+
+      <div class="mod-card mc-rose" rv>
+        <div class="mod-num">07</div>
+        <div class="mod-icon mi-rose"><i class="bi bi-receipt"></i></div>
+        <div class="mod-title">Reembolsos</div>
+        <div class="mod-desc">Gestão de despesas e reembolsos corporativos com upload de comprovantes. Fluxo de aprovação por supervisor e RH, histórico por colaborador e relatório financeiro mensal.</div>
+        <div class="mod-tags">
+          <span class="mod-tag mt-g">Comprovantes</span>
+          <span class="mod-tag mt-n">Aprovação</span>
+          <span class="mod-tag mt-a">Relatório</span>
+        </div>
+      </div>
+
+      <div class="mod-card mc-indigo" rv>
+        <div class="mod-num">08</div>
+        <div class="mod-icon mi-indigo"><i class="bi bi-chat-dots"></i></div>
+        <div class="mod-title">Comunicados</div>
+        <div class="mod-desc">Feed interno da empresa com publicações, avisos e comunicados. Segmentação por departamento ou filial, confirmação de leitura e histórico de publicações.</div>
+        <div class="mod-tags">
+          <span class="mod-tag mt-n">Feed</span>
+          <span class="mod-tag mt-g">Segmentação</span>
+          <span class="mod-tag mt-a">Confirmação</span>
+        </div>
+      </div>
+
+      <div class="mod-card mc-orange" rv>
+        <div class="mod-num">09</div>
+        <div class="mod-icon mi-orange"><i class="bi bi-shield-lock"></i></div>
+        <div class="mod-title">Auditoria & Logs</div>
+        <div class="mod-desc">Rastreamento completo de todas as ações no sistema — logins, edições, aprovações e exportações. Logs por usuário, data e módulo para total conformidade e segurança.</div>
+        <div class="mod-tags">
+          <span class="mod-tag mt-a">Logs</span>
+          <span class="mod-tag mt-n">Segurança</span>
+          <span class="mod-tag mt-g">Conformidade</span>
+        </div>
+      </div>
+
+      <div class="mod-card mc-cyan" rv>
+        <div class="mod-num">10</div>
+        <div class="mod-icon mi-cyan"><i class="bi bi-person-badge"></i></div>
+        <div class="mod-title">Cadastro de Funcionários</div>
+        <div class="mod-desc">Perfil completo com dados pessoais, cargo, departamento, escala e documentos. Gestão de usuários com perfis de acesso diferenciados por função — Admin, RH e Supervisor.</div>
+        <div class="mod-tags">
+          <span class="mod-tag mt-g">Perfil</span>
+          <span class="mod-tag mt-n">Permissões</span>
+          <span class="mod-tag mt-a">Documentos</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+/* Dashboard sidebar cycling animation */
+(function() {
+  const items = ['dsi-dash','dsi-ponto','dsi-leave','dsi-aprov','dsi-perf','dsi-rec','dsi-org','dsi-claim','dsi-buzz'];
+  const titles = ['Dashboard Principal','Controle de Ponto','Atestados & Licenças','Central de Aprovações','Performance & Metas','Recrutamento','Organograma','Reembolsos','Comunicados'];
+  let idx = 0;
+  setInterval(() => {
+    document.querySelectorAll('.ds-item').forEach(el => el.classList.remove('active'));
+    idx = (idx + 1) % items.length;
+    const el = document.getElementById(items[idx]);
+    if (el) el.classList.add('active');
+    const titleEl = document.getElementById('dmTitle');
+    if (titleEl) { titleEl.style.opacity='0'; setTimeout(()=>{titleEl.textContent=titles[idx];titleEl.style.opacity='1';},200); }
+  }, 2200);
+
+  /* Animate KPIs with random micro changes */
+  setInterval(() => {
+    const pres = document.getElementById('kpiPres');
+    const pend = document.getElementById('kpiPend');
+    if(pres) pres.textContent = 19 + Math.floor(Math.random()*4);
+    if(pend) pend.textContent = 2 + Math.floor(Math.random()*4);
+  }, 3000);
+})();
+</script>
+
+
+
+<section id="product" class="product-sec">
+  <div class="wrap">
+    <div class="product-grid">
+      
+      <div class="product-screen" rv>
+        <div class="ps-bar">
+          <div class="ps-dots"><span class="psd"></span><span class="psd"></span><span class="psd"></span></div>
+          <div class="ps-url">netline.rh / attendance / team</div>
+        </div>
+        <div class="ps-body">
+          <div class="ps-toprow">
+            <div class="ps-title">Registros de Ponto — Equipe</div>
+            <div class="ps-live"><span class="ps-livdot"></span>Ao Vivo</div>
+          </div>
+          <div class="ps-stats">
+            <div class="ps-stat"><div class="ps-stat-v" style="color:var(--green)">21</div><div class="ps-stat-l">Presentes</div></div>
+            <div class="ps-stat"><div class="ps-stat-v" style="color:#f59e0b">4</div><div class="ps-stat-l">Atrasos</div></div>
+            <div class="ps-stat"><div class="ps-stat-v" style="color:#60a5fa">3</div><div class="ps-stat-l">Licença</div></div>
+          </div>
+          <div class="ps-rows">
+            <div class="ps-row">
+              <div class="ps-av" style="background:rgba(0,170,69,.15);color:var(--green)">JE</div>
+              <div class="ps-meta"><div class="ps-name">Julia Etiene</div><div class="ps-dept">NOC · Turno Noite</div></div>
+              <div class="ps-chips">
+                <span class="chip ci">08:01</span><span class="chip co">12:00</span>
+                <span class="chip ci">13:00</span><span class="chip co">17:00</span>
+              </div>
+              <div class="ps-h">8h 00m<br><span class="ps-hs" style="color:var(--green)">OK</span></div>
+            </div>
+            <div class="ps-row">
+              <div class="ps-av" style="background:rgba(96,165,250,.15);color:#60a5fa">LA</div>
+              <div class="ps-meta"><div class="ps-name">Lucas Alves</div><div class="ps-dept">Campo · FTTH</div></div>
+              <div class="ps-chips">
+                <span class="chip ci">07:58</span><span class="chip co">11:30</span>
+                <span class="chip ci">12:15</span><span class="chip co">17:02</span>
+              </div>
+              <div class="ps-h">8h 19m<br><span class="ps-hs" style="color:#60a5fa">+19m</span></div>
+            </div>
+            <div class="ps-row">
+              <div class="ps-av" style="background:rgba(245,158,11,.15);color:#f59e0b">CS</div>
+              <div class="ps-meta"><div class="ps-name">Carlos Souza</div><div class="ps-dept">Suporte N2</div></div>
+              <div class="ps-chips">
+                <span class="chip" style="background:rgba(245,158,11,.1);color:#f59e0b;border:1px solid rgba(245,158,11,.25)">08:14</span>
+                <span class="chip co">12:00</span>
+              </div>
+              <div class="ps-h" style="color:#f59e0b">3h 46m<br><span class="ps-hs">Em curso</span></div>
+            </div>
+          </div>
+          <div style="margin-top:20px;display:flex;gap:10px">
+            <div style="padding:8px 18px;border-radius:100px;background:rgba(0,170,69,.1);border:1px solid rgba(0,170,69,.2);font-size:11px;color:var(--green);display:flex;align-items:center;gap:6px;cursor:pointer"><i class="bi bi-file-earmark-excel"></i>Exportar Excel</div>
+            <div style="padding:8px 18px;border-radius:100px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);font-size:11px;color:rgba(255,255,255,.35);display:flex;align-items:center;gap:6px;cursor:pointer"><i class="bi bi-funnel"></i>Filtrar</div>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="product-right" rv>
+        <p class="s-label" style="color:rgba(255,255,255,.25)">O Produto</p>
+        <h2 class="s-title">Controle total,<br><em>visibilidade real</em></h2>
+        <p class="s-body">Dashboards ao vivo, filtros por mês, setor e colaborador. Exportação para Excel com colunas individuais de Entrada e Saída.</p>
+        <div class="feat-list">
+          <div class="fl-item">
+            <div class="fl-ico"><i class="bi bi-geo-alt"></i></div>
+            <div><div class="fl-txt">GPS + Foto por batida</div><div class="fl-tx2">Validação em tempo real da localização</div></div>
+          </div>
+          <div class="fl-item">
+            <div class="fl-ico"><i class="bi bi-bell"></i></div>
+            <div><div class="fl-txt">Central de aprovações unificada</div><div class="fl-tx2">Atestados, licenças, trocas e ausências</div></div>
+          </div>
+          <div class="fl-item">
+            <div class="fl-ico"><i class="bi bi-file-earmark-excel"></i></div>
+            <div><div class="fl-txt">Relatório Excel instantâneo</div><div class="fl-tx2">Filtrado por mês, setor e colaborador</div></div>
+          </div>
+          <div class="fl-item">
+            <div class="fl-ico"><i class="bi bi-lock"></i></div>
+            <div><div class="fl-txt">Controle por hierarquia</div><div class="fl-tx2">Admin, RH e Supervisor com poderes distintos</div></div>
+          </div>
+        </div>
+        <div style="margin-top:44px">
+          <a href="/login/" class="btn-dark"><span>Acessar o Sistema</span><i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<div id="metrics" class="metrics">
+  <div class="met" rv>
+    <div class="met-v g" data-count="99.9" data-suf="%">0</div>
+    <div class="met-l">Disponibilidade</div>
+  </div>
+  <div class="met" rv>
+    <div class="met-v n" data-count="12" data-suf="+">0</div>
+    <div class="met-l">Módulos Integrados</div>
+  </div>
+  <div class="met" rv>
+    <div class="met-v g" id="pingMet">3<span style="font-size:.44em;opacity:.4">ms</span></div>
+    <div class="met-l">Latência</div>
+  </div>
+  <div class="met" rv>
+    <div class="met-v">24<span style="font-size:.44em;opacity:.3">/7</span></div>
+    <div class="met-l">Suporte Contínuo</div>
+  </div>
+</div>
+
+
+<style>
+.contact-sec { background: var(--bg-2); }
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 80px;
+  align-items: center;
+}
+.contact-left {}
+.contact-left .s-label { margin-bottom: 12px; }
+.contact-left .s-title { margin-bottom: 20px; }
+.contact-left .s-body { margin-bottom: 36px; }
+.contact-info-items { display: flex; flex-direction: column; gap: 16px; }
+.ci-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 20px; border-radius: 14px;
+  background: #fff; border: 1px solid var(--ink3);
+  transition: all .3s;
+}
+.ci-item:hover { transform: translateX(4px); box-shadow: 0 8px 24px rgba(0,0,0,.07); }
+.ci-icon {
+  width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.ci-text {}
+.ci-label { font-size: 11px; color: var(--ink2); letter-spacing: .5px; margin-bottom: 2px; }
+.ci-value { font-size: 13px; font-weight: 600; color: var(--ink); }
+
+/* Form */
+.contact-form-wrap {
+  background: #fff; border-radius: 24px;
+  border: 1px solid var(--ink3);
+  padding: 44px;
+  box-shadow: 0 40px 80px rgba(0,0,0,.07);
+}
+.cf-title { font-size: 18px; font-weight: 800; letter-spacing: -.4px; margin-bottom: 28px; color: var(--ink); }
+.cf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.cf-field { margin-bottom: 16px; }
+.cf-label {
+  display: block; font-size: 11px; font-weight: 600; letter-spacing: .5px;
+  text-transform: uppercase; color: var(--ink2); margin-bottom: 7px;
+}
+.cf-input, .cf-textarea {
+  width: 100%; padding: 13px 16px; border-radius: 12px;
+  border: 1.5px solid rgba(0,0,0,.1); background: #fafafa;
+  font-size: 13px; color: var(--ink); font-family: inherit;
+  transition: border-color .3s, box-shadow .3s;
+  outline: none; box-sizing: border-box;
+}
+.cf-input:focus, .cf-textarea:focus {
+  border-color: var(--green); background: #fff;
+  box-shadow: 0 0 0 4px rgba(0,170,69,.08);
+}
+/* Custom select */
+.cf-select-wrap { position: relative; }
+.cf-select-wrap::after {
+  content: '';
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  width: 0; height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #888;
+  pointer-events: none;
+  transition: transform .25s;
+}
+.cf-select-wrap:focus-within::after { border-top-color: var(--green); transform: translateY(-50%) rotate(180deg); }
+.cf-select {
+  width: 100%; padding: 13px 42px 13px 16px; border-radius: 12px;
+  border: 1.5px solid rgba(0,0,0,.1); background: #fff;
+  font-size: 13px; color: var(--ink); font-family: inherit;
+  transition: border-color .3s, box-shadow .3s;
+  outline: none; box-sizing: border-box;
+  appearance: none; -webkit-appearance: none;
+  cursor: pointer;
+}
+.cf-select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px rgba(0,170,69,.08);
+}
+.cf-textarea { min-height: 120px; resize: vertical; }
+.cf-submit {
+  width: 100%; padding: 16px; border-radius: 14px;
+  background: var(--navy); color: #fff; border: none; cursor: pointer;
+  font-size: 14px; font-weight: 700; font-family: inherit; letter-spacing: -.2px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: all .3s; margin-top: 8px;
+}
+.cf-submit:hover { background: #0d0b5a; transform: translateY(-2px); box-shadow: 0 16px 40px rgba(2,0,102,.25); }
+.cf-submit:active { transform: translateY(0); }
+
+/* Success state */
+.cf-success {
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  padding: 48px 20px; text-align: center; gap: 14px;
+}
+.cf-success-icon {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: rgba(0,170,69,.1); border: 2px solid rgba(0,170,69,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; color: var(--green); margin-bottom: 8px;
+  animation: popIn .5s cubic-bezier(.23,1,.32,1);
+}
+@keyframes popIn { from{transform:scale(0.5);opacity:0} to{transform:scale(1);opacity:1} }
+.cf-success h3 { font-size: 20px; font-weight: 800; color: var(--ink); margin: 0; }
+.cf-success p { font-size: 14px; color: var(--ink2); margin: 0; }
+
+@media(max-width: 900px) {
+  .contact-grid { grid-template-columns: 1fr; gap: 48px; }
+  .cf-row { grid-template-columns: 1fr; }
+  .contact-form-wrap { padding: 28px; }
+}
+</style>
+
+<section id="contact" class="contact-sec">
+  <div class="wrap">
+    <div class="contact-grid">
+
+      
+      <div class="contact-left" rv>
+        <p class="s-label">Contato</p>
+        <h2 class="s-title">Fale com<br><em>a gente</em></h2>
+        <p class="s-body">Tem alguma dúvida sobre o sistema, quer solicitar uma demonstração ou precisa de suporte? Envie uma mensagem e nossa equipe retornará em breve.</p>
+        <div class="contact-info-items">
+          <div class="ci-item">
+            <div class="ci-icon" style="background:rgba(0,170,69,.1);color:var(--green)"><i class="bi bi-envelope-fill"></i></div>
+            <div class="ci-text">
+              <div class="ci-label">E-mail</div>
+              <div class="ci-value">contato@netline.rh</div>
+            </div>
+          </div>
+          <div class="ci-item">
+            <div class="ci-icon" style="background:rgba(2,0,102,.08);color:var(--navy)"><i class="bi bi-clock-fill"></i></div>
+            <div class="ci-text">
+              <div class="ci-label">Horário de atendimento</div>
+              <div class="ci-value">Segunda a Sexta · 08:00 – 18:00</div>
+            </div>
+          </div>
+          <div class="ci-item">
+            <div class="ci-icon" style="background:rgba(96,165,250,.1);color:#3b82f6"><i class="bi bi-telephone-fill"></i></div>
+            <div class="ci-text">
+              <div class="ci-label">Telefone / WhatsApp</div>
+              <div class="ci-value">0800 281 4437</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
+      <div rv>
+        <div class="contact-form-wrap" id="contactFormWrap">
+          <div class="cf-title">Enviar mensagem</div>
+          <form id="contactForm" onsubmit="submitContact(event)">
+            <div class="cf-row">
+              <div class="cf-field">
+                <label class="cf-label" for="cf-nome">Nome</label>
+                <input class="cf-input" id="cf-nome" type="text" placeholder="Seu nome completo" required>
+              </div>
+              <div class="cf-field">
+                <label class="cf-label" for="cf-email">E-mail</label>
+                <input class="cf-input" id="cf-email" type="email" placeholder="seu@email.com" required>
+              </div>
+            </div>
+            <div class="cf-field">
+              <label class="cf-label" for="cf-assunto">Assunto</label>
+              <div class="cf-select-wrap">
+              <select class="cf-select" id="cf-assunto">
+                <option value="">Selecione um assunto...</option>
+                <option>Solicitar demonstração</option>
+                <option>Dúvida sobre funcionalidades</option>
+                <option>Suporte técnico</option>
+                <option>Informações sobre planos</option>
+                <option>Parceria comercial</option>
+                <option>Outro</option>
+              </select>
+              </div>
+            </div>
+            <div class="cf-field">
+              <label class="cf-label" for="cf-msg">Mensagem</label>
+              <textarea class="cf-textarea" id="cf-msg" placeholder="Descreva sua dúvida ou solicitação..." required></textarea>
+            </div>
+            <button class="cf-submit" type="submit">
+              <i class="bi bi-send-fill"></i>
+              Enviar mensagem
+            </button>
+          </form>
+
+          
+          <div class="cf-success" id="cfSuccess">
+            <div class="cf-success-icon"><i class="bi bi-check-lg"></i></div>
+            <h3>Mensagem enviada!</h3>
+            <p>Recebemos seu contato e retornaremos em breve.<br>Obrigado pelo interesse no Netline RH.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+function submitContact(e) {
+  e.preventDefault();
+  const form = document.getElementById('contactForm');
+  const success = document.getElementById('cfSuccess');
+  const btn = form.querySelector('.cf-submit');
+
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando...';
+  btn.style.opacity = '.7';
+  btn.disabled = true;
+
+  setTimeout(function() {
+    form.style.display = 'none';
+    success.style.display = 'flex';
+  }, 1200);
+}
+</script>
+
+
+{% include 'components/public_footer.html' %}
+
+<script>
+/* ═══════════════════════════════════════════════════
+   THREE.JS — ABSTRACT 3D DASHBOARD/NETWORK SCENE
+   (estilo Sougen: objeto grande, elegante, flutuante)
+═══════════════════════════════════════════════════ */
+(function() {
+  const wrap = document.getElementById('hero-3d');
+  if (!wrap) return;
+
+  const W = wrap.clientWidth || window.innerWidth * .6;
+  const H = window.innerHeight;
+
+  const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('hero-canvas'), antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, H);
+  renderer.setClearColor(0xf0f0f0, 0);
+  renderer.shadowMap.enabled = true;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / H, .1, 200);
+  camera.position.set(1.5, .5, 6);
+
+  // Ambient
+  scene.add(new THREE.AmbientLight(0xf0f0f0, 1.2));
+
+  // Key light (green-tinted)
+  const keyLight = new THREE.DirectionalLight(0x00ff88, 2);
+  keyLight.position.set(4, 8, 5);
+  scene.add(keyLight);
+
+  // Fill light (navy)
+  const fillLight = new THREE.DirectionalLight(0x0000aa, 1);
+  fillLight.position.set(-6, -2, -3);
+  scene.add(fillLight);
+
+  // ── MAIN SHAPE: Torus Knot (elegant abstract form) ──
+  const knotGeo = new THREE.TorusKnotGeometry(1.4, .38, 180, 18, 2, 3);
+  const knotMat = new THREE.MeshPhongMaterial({
+    color: 0x0a0a1a,
+    specular: 0x00aa45,
+    shininess: 120,
+    wireframe: false,
+  });
+  const knot = new THREE.Mesh(knotGeo, knotMat);
+  knot.position.set(2, -.2, 0);
+  knot.castShadow = true;
+  scene.add(knot);
+
+  // Wireframe overlay on the knot
+  const knotWireGeo = new THREE.TorusKnotGeometry(1.42, .38, 80, 10, 2, 3);
+  const knotWireMat = new THREE.MeshBasicMaterial({ color: 0x00aa45, wireframe: true, transparent: true, opacity: .08 });
+  const knotWire = new THREE.Mesh(knotWireGeo, knotWireMat);
+  knotWire.position.copy(knot.position);
+  scene.add(knotWire);
+
+  // ── FLOATING RINGS ──
+  function addRing(r, tube, x, y, rotX, rotZ, color, opacity) {
+    const g = new THREE.TorusGeometry(r, tube, 4, 100);
+    const m = new THREE.MeshBasicMaterial({ color, transparent: true, opacity });
+    const mesh = new THREE.Mesh(g, m);
+    mesh.position.set(x, y, 0);
+    mesh.rotation.x = rotX;
+    mesh.rotation.z = rotZ;
+    scene.add(mesh);
+    return mesh;
+  }
+  const ring1 = addRing(2.2, .008, 2, -.2, .5, .2, 0x00aa45, .3);
+  const ring2 = addRing(3.0, .006, 1.5, .4, 1.1, -.3, 0x020066, .18);
+  const ring3 = addRing(1.5, .006, 2.5, -.6, -.6, .8, 0x00aa45, .15);
+
+  // ── FLOATING PARTICLES ──
+  const pCount = 600;
+  const pGeo = new THREE.BufferGeometry();
+  const pPos = new Float32Array(pCount * 3);
+  const pCol = new Float32Array(pCount * 3);
+  for (let i = 0; i < pCount; i++) {
+    pPos[i*3]   = (Math.random() - .5) * 14;
+    pPos[i*3+1] = (Math.random() - .5) * 10;
+    pPos[i*3+2] = (Math.random() - .5) * 6 - 2;
+    const g = Math.random() > .5;
+    pCol[i*3]   = g ? 0 : .05;
+    pCol[i*3+1] = g ? .65 : .05;
+    pCol[i*3+2] = g ? .27 : .4;
+  }
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+  const pMat = new THREE.PointsMaterial({ size: .04, vertexColors: true, transparent: true, opacity: .6 });
+  const particles = new THREE.Points(pGeo, pMat);
+  scene.add(particles);
+
+  // Mouse
+  let mx = 0, my = 0;
+  document.addEventListener('mousemove', e => {
+    mx = (e.clientX / window.innerWidth - .5) * 2;
+    my = -(e.clientY / window.innerHeight - .5) * 2;
+  });
+
+  // Animate
+  let t = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    
+    // Stop 3D rendering on mobile devices entirely to save battery and GPU
+    if (window.innerWidth <= 900) return;
+
+    t += .007;
+
+    knot.rotation.x = t * .4 + my * .12;
+    knot.rotation.y = t * .55 + mx * .15;
+    knotWire.rotation.copy(knot.rotation);
+
+    ring1.rotation.z = t * .22;
+    ring2.rotation.x += .008;
+    ring3.rotation.y = t * .18;
+
+    particles.rotation.y = t * .03;
+    particles.rotation.x = my * .03;
+
+    camera.position.x += (1.5 + mx * .4 - camera.position.x) * .06;
+    camera.position.y += (.5 + my * .3 - camera.position.y) * .06;
+    camera.lookAt(2, 0, 0);
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+
+/* ═══════════════════════════════════════════════════
+   CURSOR
+═══════════════════════════════════════════════════ */
+const curEl = document.getElementById('C');
+document.addEventListener('mousemove', e => { 
+  if (curEl) {
+    curEl.style.left = e.clientX + 'px'; 
+    curEl.style.top = e.clientY + 'px'; 
+  }
+});
+
+document.querySelectorAll('a, button, .feat, .test-card, .fl-item, .ps-row').forEach(el => {
+  el.addEventListener('mouseenter', () => { curEl.style.width = '18px'; curEl.style.height = '18px'; });
+  el.addEventListener('mouseleave', () => { curEl.style.width = '10px'; curEl.style.height = '10px'; });
+});
+
+/* ═══════════════════════════════════════════════════
+   NAV SCROLL
+═══════════════════════════════════════════════════ */
+window.addEventListener('scroll', () => document.getElementById('nav').classList.toggle('sc', scrollY > 60));
+
+/* ═══════════════════════════════════════════════════
+   REVEAL ON SCROLL
+═══════════════════════════════════════════════════ */
+const rvObs = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('show'), i * 80);
+      rvObs.unobserve(e.target);
+    }
+  });
+}, { threshold: .08 });
+document.querySelectorAll('[rv]').forEach(el => rvObs.observe(el));
+
+/* ═══════════════════════════════════════════════════
+   COUNTER
+═══════════════════════════════════════════════════ */
+function runCounter(el) {
+  const t = parseFloat(el.dataset.count), s = el.dataset.suf || '';
+  const fl = t % 1 !== 0, dur = 2200, start = performance.now();
+  (function tick(now) {
+    const p = Math.min((now - start) / dur, 1);
+    const e2 = 1 - Math.pow(1 - p, 4);
+    el.textContent = (fl ? (t*e2).toFixed(1) : Math.round(t*e2)) + s;
+    if (p < 1) requestAnimationFrame(tick);
+  })(performance.now());
+}
+const ctObs = new IntersectionObserver(e => { e.forEach(el => { if(el.isIntersecting && el.target.dataset.count) { runCounter(el.target); ctObs.unobserve(el.target); } }); }, {threshold:.5});
+document.querySelectorAll('[data-count]').forEach(el => ctObs.observe(el));
+
+/* ═══════════════════════════════════════════════════
+   PING
+═══════════════════════════════════════════════════ */
+setInterval(() => {
+  const el = document.getElementById('pingMet');
+  if (el) el.innerHTML = (1 + Math.floor(Math.random()*5)) + '<span style="font-size:.44em;opacity:.4">ms</span>';
+}, 1800);
+
+/* ═══════════════════════════════════════════════════
+   MAGNETIC EFFECT
+═══════════════════════════════════════════════════ */
+document.querySelectorAll('.hero-btn, .btn-dark, .nav-cta').forEach(btn => {
+  btn.addEventListener('mousemove', e => {
+    const r = btn.getBoundingClientRect();
+    const dx = e.clientX - (r.left + r.width / 2);
+    const dy = e.clientY - (r.top + r.height / 2);
+    btn.style.transform = `translate(${dx * .15}px, ${dy * .15}px)`;
+  });
+  btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
+});
+/* ═══════════════════════════════════════════════════
+   HERO WORD CYCLE
+═══════════════════════════════════════════════════ */
+const heroWords = ["CONECTADA", "ENGAJADA", "EFICIENTE", "MONITORADA"];
+let hwIdx = 0;
+const hwEl = document.getElementById('heroWord');
+if (hwEl) {
+  setTimeout(() => { hwEl.style.animation = 'none'; }, 2500);
+  setInterval(() => {
+    hwEl.style.transition = 'transform 0.5s cubic-bezier(.23,1,.32,1)';
+    hwEl.style.transform = 'translateY(-100%)';
+    setTimeout(() => {
+      hwIdx = (hwIdx + 1) % heroWords.length;
+      hwEl.textContent = heroWords[hwIdx];
+      hwEl.style.transition = 'none';
+      hwEl.style.transform = 'translateY(100%)';
+      void hwEl.offsetWidth; // force reflow
+      hwEl.style.transition = 'transform 0.6s cubic-bezier(.23,1,.32,1)';
+      hwEl.style.transform = 'translateY(0)';
+    }, 500);
+  }, 3500);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block breadcrumb %}
+<span style="color: var(--text-secondary); font-size: 13px;">
+    <a href="{% url 'user_list' %}" style="color: var(--text-secondary);">Usuários</a> / {{ title }}
+</span>
+{% endblock %}
+
+{% block content %}
+<style>
+    /* Premium Labels */
+    .form-label {
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+    }
+    /* Rounded inputs */
+    input[type="text"], input[type="email"], input[type="password"] {
+        border-radius: 50px !important;
+        min-height: 42px;
+        padding-left: 16px;
+    }
+    /* Corrige o estilo do TomSelect no modal sem conflitar com background-image nativo do Bootstrap */
+    .ts-wrapper.form-select, .ts-wrapper.form-control {
+        background-image: none !important; 
+        padding: 0 !important;
+        border: none !important;
+    }
+    .ts-wrapper .ts-control {
+        border-radius: 50px !important;
+        min-height: 42px !important;
+        padding-left: 16px !important;
+    }
+    {% if request.GET.popup %}
+    /* Oculta a barra de rolagem visualmente no modal, mantendo a funcionalidade se precisar */
+    ::-webkit-scrollbar {
+        width: 0px;
+        background: transparent;
+    }
+    html, body {
+        scrollbar-width: none; /* Firefox */
+    }
+    {% endif %}
+</style>
+{% if not request.GET.popup %}
+<div class="page-header">
+    <h1 class="page-title">
+        {% if is_reset %}
+        <i class="bi bi-key text-orange"></i>
+        {% elif is_create %}
+        <i class="bi bi-person-plus text-orange"></i>
+        {% else %}
+        <i class="bi bi-pencil text-orange"></i>
+        {% endif %}
+        {{ title }}
+    </h1>
+    <a href="{% url 'user_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Voltar
+    </a>
+</div>
+{% endif %}
+
+<div class="row justify-content-center">
+    <div class="col-xl-{% if request.GET.popup %}12{% else %}6{% endif %} col-lg-{% if request.GET.popup %}12{% else %}8{% endif %}">
+
+        {% if user_obj and not is_create %}
+        
+        <div style="background: #f8fafc; border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+            <div style="width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, #1e293b, #334155); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                {{ user_obj.first_name|first|default:user_obj.username|first|upper }}
+            </div>
+            <div>
+                <div style="font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 2px;">{{ user_obj.username }}</div>
+                <div style="font-size: 13px; color: #64748b; font-weight: 500;">
+                    {{ user_obj.get_full_name|default:"Usuário" }} <span style="margin: 0 6px; color: #cbd5e1;">|</span> {{ user_obj.get_role_display }}
+                    {% if not user_obj.is_active %}
+                    <span style="display:inline-block; margin-left: 8px; background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase;">Inativo</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="{% if not request.GET.popup %}card{% endif %}" style="{% if request.GET.popup %}background:transparent;border:none;box-shadow:none;{% endif %}">
+            {% if is_reset %}
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+                <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #3b82f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid #bfdbfe;">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0f172a;">Segurança da Conta</h3>
+                    <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b; font-weight: 500;">Defina uma nova senha de acesso para este usuário.</p>
+                </div>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if not is_reset %}
+                    
+                    <div class="row g-3 mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.username.label }} <span style="color:var(--danger)">*</span></label>
+                            {{ form.username }}
+                            {% if form.username.errors %}<div style="color:var(--danger);font-size:12px;margin-top:4px;">{{ form.username.errors|first }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.email.label }}</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}<div style="color:var(--danger);font-size:12px;margin-top:4px;">{{ form.email.errors|first }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.first_name.label }}</label>
+                            {{ form.first_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.last_name.label }}</label>
+                            {{ form.last_name }}
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row g-3 mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.role.label }} <span style="color:var(--danger)">*</span></label>
+                            {{ form.role }}
+                            <div style="font-size:11px; color: var(--text-secondary); margin-top:4px;">
+                                <i class="bi bi-info-circle"></i>
+                                Admin = acesso total · Supervisor = aprova licenças · ESS = funcionário
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.employee.label }}</label>
+                            {{ form.employee }}
+                            <div style="font-size:11px; color: var(--text-secondary); margin-top:4px;">
+                                <i class="bi bi-info-circle"></i>
+                                Vincula o login ao cadastro do funcionário no PIM
+                            </div>
+                        </div>
+                        {% if not is_create %}
+                        <div class="col-12">
+                            <div class="form-check mt-1">
+                                {{ form.is_active }}
+                                <label class="form-check-label ms-2">{{ form.is_active.label }}</label>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <hr>
+                    {% endif %}
+
+                    {% if is_create or is_reset %}
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase;">
+                                {% if is_reset %}Nova Senha{% else %}Senha{% endif %}
+                                <span style="color:var(--danger)">*</span>
+                            </label>
+                            {{ form.password1 }}
+                            {% if form.password1.errors %}<div style="color:var(--danger);font-size:12px;margin-top:4px;">{{ form.password1.errors|first }}</div>{% endif %}
+                            <div style="font-size:11px; color: #94a3b8; margin-top:6px;"><i class="bi bi-shield-check me-1"></i>Mínimo 8 caracteres</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase;">
+                                {% if is_reset %}Confirmar Nova Senha{% else %}Confirmar Senha{% endif %}
+                                <span style="color:var(--danger)">*</span>
+                            </label>
+                            {{ form.password2 }}
+                            {% if form.password2.errors %}<div style="color:var(--danger);font-size:12px;margin-top:4px;">{{ form.password2.errors|first }}</div>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger mt-3" style="border-radius:10px; font-size:13px;">
+                        <i class="bi bi-exclamation-triangle me-2"></i>{{ form.non_field_errors|first }}
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex gap-2 justify-content-end mt-4">
+                        {% if not request.GET.popup %}
+                        <a href="{% url 'user_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>
+                            {% if is_reset %}Redefinir Senha{% elif is_create %}Criar Usuário{% else %}Salvar Alterações{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

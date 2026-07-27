@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Modelos de E-mail{% endblock %}
+{% block breadcrumb %}<span style="color:var(--text-secondary);font-size:13px;">Comunicações / E-mails</span>{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 style="font-weight: 800; color: #0f172a; margin: 0;">E-mails Automáticos</h4>
+        <p class="text-muted mb-0" style="font-size: 14px;">Gerencie os textos e comunicações enviadas pelo sistema.</p>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0" style="border-radius: 16px;">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background: #f8fafc;">
+                    <tr>
+                        <th class="text-uppercase text-muted" style="font-size: 12px; font-weight: 600; padding: 16px 24px; border-bottom: 1px solid #e2e8f0;">Comunicação</th>
+                        <th class="text-uppercase text-muted" style="font-size: 12px; font-weight: 600; padding: 16px 24px; border-bottom: 1px solid #e2e8f0;">Assunto</th>
+                        <th class="text-uppercase text-muted" style="font-size: 12px; font-weight: 600; padding: 16px 24px; border-bottom: 1px solid #e2e8f0;">Última Atualização</th>
+                        <th class="text-uppercase text-muted text-end" style="font-size: 12px; font-weight: 600; padding: 16px 24px; border-bottom: 1px solid #e2e8f0;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in templates %}
+                    <tr>
+                        <td style="padding: 16px 24px; border-bottom: 1px solid #f1f5f9;">
+                            <div class="d-flex align-items-center gap-3">
+                                <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(13, 192, 42, 0.1); display: flex; align-items: center; justify-content: center; color: #0dc02a;">
+                                    <i class="bi bi-envelope-paper-fill fs-5"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0" style="font-weight: 700; color: #1e293b;">{{ template.name }}</h6>
+                                    <small class="text-muted" style="font-size: 12px;">{{ template.identifier }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding: 16px 24px; border-bottom: 1px solid #f1f5f9; color: #475569; font-size: 14px;">
+                            {{ template.subject }}
+                        </td>
+                        <td style="padding: 16px 24px; border-bottom: 1px solid #f1f5f9; color: #64748b; font-size: 13px;">
+                            {{ template.updated_at|date:"d/m/Y H:i" }}
+                        </td>
+                        <td style="padding: 16px 24px; border-bottom: 1px solid #f1f5f9;" class="text-end">
+                            <a href="{% url 'email_template_edit' template.pk %}" class="btn btn-sm" style="background: #f1f5f9; color: #334155; border-radius: 8px; font-weight: 600; padding: 6px 14px;">
+                                <i class="bi bi-pencil-square me-1"></i> Editar
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-3" style="opacity: 0.3;"></i>
+                            Nenhum modelo de e-mail encontrado no banco de dados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

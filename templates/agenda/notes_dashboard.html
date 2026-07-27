@@ -1,0 +1,549 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mural de Notas & Lembretes{% endblock %}
+{% block breadcrumb %}
+<span style="color: #64748b; font-size: 14px; font-weight: 500;">Mural de Notas & Lembretes</span>
+{% endblock %}
+
+{% block content %}
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+    /* Estilos Gerais do Dashboard */
+    .dashboard-notes-container {
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        color: #0f172a;
+    }
+
+    /* Cabeçalho do Mural */
+    .dashboard-header {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 20px 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    }
+
+    .btn-back-calendar {
+        background: #f1f5f9 !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #475569 !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        padding: 10px 20px !important;
+        border-radius: 12px !important;
+        transition: all 0.2s ease !important;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-back-calendar:hover {
+        background: #e2e8f0 !important;
+        color: #0f172a !important;
+        transform: translateX(-2px);
+    }
+
+    /* Criador de Notas Estilo Google Keep (Largo e Centralizado) */
+    .keep-creator-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 18px 24px;
+        transition: border-color 0.25s;
+    }
+    .keep-creator-card:focus-within {
+        border-color: #f59e0b;
+    }
+
+    .keep-creator-input {
+        border: none !important;
+        outline: none !important;
+        padding: 6px 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        width: 100%;
+        color: #0f172a;
+    }
+    #note-title-input {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+    #note-content-input {
+        font-size: 13.5px;
+        font-weight: 500;
+        min-height: 80px;
+        resize: none;
+    }
+
+    .keep-creator-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid #f1f5f9;
+        padding-top: 12px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .select-meeting-ref {
+        border-radius: 8px !important;
+        font-size: 12px !important;
+        padding: 6px 12px !important;
+        cursor: pointer;
+        color: #475569 !important;
+        border: 1px solid #cbd5e1 !important;
+        background-color: #f8fafc !important;
+        height: auto !important;
+        max-width: 250px;
+        font-weight: 600;
+    }
+
+    .btn-save-note {
+        background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 12.5px !important;
+        padding: 8px 18px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.25) !important;
+        transition: all 0.2s ease !important;
+    }
+    .btn-save-note:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(245, 158, 11, 0.35) !important;
+    }
+
+    /* Filtros Rápidos */
+    .notes-filters-bar {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 12px 18px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
+    }
+
+    /* Mural Grid Estilo Pinterest */
+    .notes-masonry-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+        gap: 20px;
+        align-items: start;
+    }
+
+    /* Cartão de Nota */
+    .note-board-card {
+        background: #fffbeb; /* Amarelo Keep pastel */
+        border-left: 5px solid #f59e0b;
+        border-radius: 12px;
+        padding: 16px 18px;
+        position: relative;
+        box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.05), 0 2px 4px -1px rgba(245, 158, 11, 0.02);
+        transition: all 0.25s ease;
+        border-top: 1px solid rgba(245, 158, 11, 0.1);
+        border-right: 1px solid rgba(245, 158, 11, 0.1);
+        border-bottom: 1px solid rgba(245, 158, 11, 0.1);
+    }
+    .note-board-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.12);
+    }
+
+    .btn-delete-board-note {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: transparent;
+        border: none;
+        color: #d97706;
+        opacity: 0.4;
+        transition: all 0.2s;
+        cursor: pointer;
+        padding: 0;
+        font-size: 14px;
+    }
+    .btn-delete-board-note:hover {
+        opacity: 1;
+        color: #b45309;
+        transform: scale(1.1);
+    }
+
+    .note-board-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #78350f;
+        margin-bottom: 8px;
+        padding-right: 20px;
+        border-bottom: 1px dashed rgba(245, 158, 11, 0.2);
+        padding-bottom: 4px;
+    }
+
+    .note-board-content {
+        font-size: 12.5px;
+        color: #92400e;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: inherit;
+    }
+
+    .note-board-footer {
+        margin-top: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px dashed rgba(245, 158, 11, 0.15);
+        padding-top: 8px;
+    }
+
+    .note-board-date {
+        font-size: 9.5px;
+        color: #b45309;
+        font-weight: 600;
+    }
+
+    /* Tag do Compromisso Referenciado */
+    .note-board-ref-badge {
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #ffffff !important;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: all 0.2s ease;
+    }
+    .note-board-ref-badge:hover {
+        transform: scale(1.03);
+        filter: brightness(0.98);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+    }
+
+    /* Ocultação de Elementos */
+    .d-none-grid-item {
+        display: none !important;
+    }
+</style>
+
+<div class="dashboard-notes-container py-3 d-flex flex-column gap-4">
+    
+    <!-- 1. Cabeçalho Dinâmico -->
+    <div class="dashboard-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; color: #f59e0b; font-size: 22px;">
+                <i class="bi bi-lightbulb-fill"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold mb-0" style="font-size: 18px;">Meu Mural de Lembretes & Notas</h4>
+                <p class="text-muted mb-0" style="font-size: 12.5px;">Gerencie suas anotações pessoais integradas diretamente aos seus compromissos.</p>
+            </div>
+        </div>
+        
+        <a href="{% url 'agenda_calendar' %}" class="btn btn-back-calendar shadow-sm">
+            <i class="bi bi-calendar-week" style="font-size: 16px;"></i>
+            <span>Voltar para a Agenda</span>
+        </a>
+    </div>
+
+    <!-- 2. Criador Rápido Google Keep (Centralizado) -->
+    <div class="w-100">
+        <div class="keep-creator-card shadow-sm">
+            <input type="text" id="note-title-input" class="keep-creator-input" placeholder="Título do Lembrete...">
+            <textarea id="note-content-input" class="keep-creator-input" placeholder="Escreva uma anotação rápida..."></textarea>
+            
+            <div class="keep-creator-footer">
+                <!-- Dropdown de Vincular Eventos -->
+                <select id="note-event-ref-input" class="form-select select-meeting-ref">
+                    <option value="">-- Vincular a um Compromisso --</option>
+                    {% for ev in open_events %}
+                    <option value="{{ ev.id }}">{{ ev.title }} ({{ ev.start_date|date:"d/m" }})</option>
+                    {% endfor %}
+                </select>
+
+                <button class="btn btn-save-note" onclick="saveBoardNote()">
+                    <i class="bi bi-check-lg me-1"></i> Salvar Lembrete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Barra de Busca e Filtros -->
+    <div class="notes-filters-bar d-flex justify-content-between align-items-center gap-3 flex-wrap">
+        <!-- Input de busca -->
+        <div class="position-relative" style="flex: 1 1 300px; max-width: 450px;">
+            <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" style="font-size: 13px;"></i>
+            <input type="text" id="board-notes-search" class="form-control ps-5" placeholder="Pesquisar lembretes por texto..." style="border-radius: 20px; font-size: 13px; height: 38px;" oninput="filterBoardNotes()">
+        </div>
+
+        <!-- Filtro por compromisso -->
+        <div class="d-flex align-items-center gap-2" style="flex: 0 1 350px;">
+            <i class="bi bi-funnel text-muted" style="font-size: 14px;"></i>
+            <select id="board-notes-event-filter" class="form-select" style="border-radius: 10px; font-size: 12.5px; height: 38px; cursor: pointer;" onchange="filterBoardNotes()">
+                <option value="all">Exibir todos os Lembretes</option>
+                <option value="linked">Apenas notas vinculadas a reuniões</option>
+                <option value="unlinked">Apenas notas soltas (sem vínculo)</option>
+                <optgroup label="Filtrar por Reunião Específica">
+                    {% for ev in open_events %}
+                    <option value="ev-{{ ev.id }}">{{ ev.title }}</option>
+                    {% endfor %}
+                </optgroup>
+            </select>
+        </div>
+    </div>
+
+    <!-- 4. Mural Grid de Notas -->
+    <div class="notes-masonry-grid mt-2" id="board-notes-grid">
+        {% for note in quick_notes %}
+        <div class="note-board-card" id="board-note-{{ note.id }}" 
+             data-title="{{ note.title|lower }}" 
+             data-content="{{ note.content|lower }}"
+             data-ref="{% if note.referenced_event %}ev-{{ note.referenced_event.id }}{% else %}none{% endif %}">
+            
+            <button class="btn-delete-board-note" onclick="deleteBoardNote({{ note.id }})" title="Excluir Lembrete">
+                <i class="bi bi-x-circle-fill"></i>
+            </button>
+            
+            <div class="note-board-title">{{ note.title }}</div>
+            <div class="note-board-content">{{ note.content }}</div>
+            
+            <div class="note-board-footer">
+                <span class="note-board-date">{{ note.created_at|date:"d/m/Y H:i" }}</span>
+                
+                {% if note.referenced_event %}
+                <!-- Deep Link Badge -->
+                <a href="{% url 'agenda_calendar' %}?highlight_event_id={{ note.referenced_event.id }}" class="note-board-ref-badge" style="background-color: {{ note.referenced_event.color|default:'#3b82f6' }};" title="Ver compromisso na agenda (scrola e abre detalhes automaticamente)">
+                    <i class="bi bi-calendar-event"></i>
+                    <span>{{ note.referenced_event.title|truncatechars:18 }}</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="w-100 text-center py-5" id="board-notes-empty-state">
+            <div class="d-flex flex-column align-items-center gap-2">
+                <i class="bi bi-sticky-fill text-muted" style="font-size: 40px; color: #cbd5e1 !important;"></i>
+                <h6 class="fw-bold text-muted mb-0" style="font-size: 14px;">Mural Vazio</h6>
+                <p class="text-muted mb-0" style="font-size: 12px;">Crie seu primeiro lembrete acima e organize sua rotina corporativa!</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- JavaScript para o Dashboard Ampliado -->
+<script>
+    // Filtro Client-side de Busca e Categoria
+    function filterBoardNotes() {
+        const searchInput = document.getElementById('board-notes-search');
+        const filterSelect = document.getElementById('board-notes-event-filter');
+        const grid = document.getElementById('board-notes-grid');
+        const cards = grid.querySelectorAll('.note-board-card');
+        const emptyState = document.getElementById('board-notes-empty-state');
+
+        if (!grid || !cards) return;
+
+        const term = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        const filterVal = filterSelect ? filterSelect.value : 'all';
+
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const title = card.getAttribute('data-title') || '';
+            const content = card.getAttribute('data-content') || '';
+            const ref = card.getAttribute('data-ref') || 'none';
+
+            // 1. Busca por texto
+            const matchesText = title.includes(term) || content.includes(term);
+
+            // 2. Filtro por tipo de reunião/categoria
+            let matchesCategory = false;
+            if (filterVal === 'all') {
+                matchesCategory = true;
+            } else if (filterVal === 'linked') {
+                matchesCategory = (ref !== 'none');
+            } else if (filterVal === 'unlinked') {
+                matchesCategory = (ref === 'none');
+            } else {
+                matchesCategory = (ref === filterVal);
+            }
+
+            if (matchesText && matchesCategory) {
+                card.classList.remove('d-none-grid-item');
+                visibleCount++;
+            } else {
+                card.classList.add('d-none-grid-item');
+            }
+        });
+
+        // Toggle do placeholder de grid vazio
+        if (visibleCount === 0) {
+            if (!emptyState) {
+                const emptyHTML = `
+                    <div class="w-100 text-center py-5" id="board-notes-empty-state">
+                        <div class="d-flex flex-column align-items-center gap-2">
+                            <i class="bi bi-funnel text-muted" style="font-size: 40px; color: #cbd5e1 !important;"></i>
+                            <h6 class="fw-bold text-muted mb-0" style="font-size: 14px;">Nenhum lembrete encontrado</h6>
+                            <p class="text-muted mb-0" style="font-size: 12px;">Refine seus termos de pesquisa ou filtros.</p>
+                        </div>
+                    </div>
+                `;
+                grid.insertAdjacentHTML('beforeend', emptyHTML);
+            } else {
+                emptyState.style.display = 'block';
+                const emptyTitle = emptyState.querySelector('h6');
+                const emptyText = emptyState.querySelector('p');
+                if (emptyTitle) emptyTitle.innerText = "Nenhum lembrete encontrado";
+                if (emptyText) emptyText.innerText = "Refine seus termos de pesquisa ou filtros.";
+            }
+        } else {
+            if (emptyState) {
+                emptyState.style.display = 'none';
+            }
+        }
+    }
+
+    // Salvar Lembrete via AJAX
+    function saveBoardNote() {
+        const titleInput = document.getElementById('note-title-input');
+        const contentInput = document.getElementById('note-content-input');
+        const refInput = document.getElementById('note-event-ref-input');
+
+        const title = titleInput.value.trim() || 'Lembrete Sem Título';
+        const content = contentInput.value.trim();
+        const referenced_event_id = refInput.value || null;
+
+        if (!content) {
+            alert("Escreva alguma coisa no conteúdo do seu lembrete!");
+            return;
+        }
+
+        const payload = { title, content, referenced_event_id };
+
+        fetch("{% url 'agenda_create_quick_note' %}", {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                titleInput.value = '';
+                contentInput.value = '';
+                refInput.value = '';
+
+                // Remove placeholder de grid vazio se houver
+                const emptyState = document.getElementById('board-notes-empty-state');
+                if (emptyState) {
+                    emptyState.remove();
+                }
+
+                // Insere dinamicamente o novo card Keep-style na grade
+                const grid = document.getElementById('board-notes-grid');
+                const card = document.createElement('div');
+                card.className = 'note-board-card';
+                card.id = `board-note-${data.note.id}`;
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(-10px)';
+                card.setAttribute('data-title', data.note.title.toLowerCase());
+                card.setAttribute('data-content', data.note.content.toLowerCase());
+                
+                const refVal = data.note.referenced_event ? `ev-${data.note.referenced_event.id}` : 'none';
+                card.setAttribute('data-ref', refVal);
+
+                let badgeHTML = '';
+                if (data.note.referenced_event) {
+                    badgeHTML = `
+                        <a href="{% url 'agenda_calendar' %}?highlight_event_id=${data.note.referenced_event.id}" class="note-board-ref-badge" style="background-color: ${data.note.referenced_event.color || '#3b82f6'};" title="Ver compromisso na agenda">
+                            <i class="bi bi-calendar-event"></i>
+                            <span>${data.note.referenced_event.title}</span>
+                        </a>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <button class="btn-delete-board-note" onclick="deleteBoardNote(${data.note.id})" title="Excluir Lembrete">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </button>
+                    <div class="note-board-title">${data.note.title}</div>
+                    <div class="note-board-content">${data.note.content}</div>
+                    <div class="note-board-footer">
+                        <span class="note-board-date">${data.note.created_at}</span>
+                        ${badgeHTML}
+                    </div>
+                `;
+
+                grid.prepend(card);
+
+                setTimeout(() => {
+                    card.style.transition = 'all 0.25s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 50);
+
+                // Re-aplica filtros
+                filterBoardNotes();
+
+            } else {
+                alert("Erro ao salvar nota: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro ao conectar com o servidor.");
+        });
+    }
+
+    // Excluir Lembrete via AJAX
+    function deleteBoardNote(noteId) {
+        if (!confirm("Tem certeza que deseja excluir permanentemente este lembrete?")) {
+            return;
+        }
+
+        fetch(`/agenda/api/notes/${noteId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const card = document.getElementById(`board-note-${noteId}`);
+                if (card) {
+                    card.style.transition = 'all 0.25s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.9)';
+                    setTimeout(() => {
+                        card.remove();
+                        filterBoardNotes();
+                    }, 250);
+                }
+            } else {
+                alert("Erro: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro ao deletar lembrete.");
+        });
+    }
+</script>
+{% endblock %}

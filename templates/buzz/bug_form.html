@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Reportar Problema{% endblock %}
+
+{% block extra_head %}
+<style>
+    .form-card {
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--card-border, #e2e8f0);
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 680px;
+        margin: 0 auto;
+    }
+    .form-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--card-border, #e2e8f0); }
+    .form-title { font-size: 24px; font-weight: 700; color: var(--text-primary, #0f172a); margin-bottom: 4px; }
+    .form-group { margin-bottom: 20px; }
+    .form-label { font-size: 13px; font-weight: 600; color: var(--text-primary, #0f172a); margin-bottom: 6px; display: block; }
+    .form-control {
+        border: 1px solid var(--card-border, #e2e8f0);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 14px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        background: var(--card-bg, #fff);
+        color: var(--text-primary, #0f172a);
+        width: 100%;
+    }
+    .form-control:focus {
+        border-color: #ef4444;
+        box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+        outline: none;
+    }
+    .submit-btn {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: #fff;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 50px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+    }
+    .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(239,68,68,0.4); }
+    .tips-card {
+        background: linear-gradient(135deg, #fffbeb, #fef9c3);
+        border: 1px solid #fef3c7;
+        border-radius: 12px;
+        padding: 16px;
+        font-size: 13px;
+        color: #92400e;
+        margin-bottom: 24px;
+    }
+    .tips-card ul { margin: 8px 0 0 0; padding-left: 20px; }
+    .tips-card li { margin-bottom: 4px; }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'changelog_list' %}" class="text-muted text-decoration-none">Novidades</a>
+<i class="bi bi-chevron-right mx-1 text-muted" style="font-size: 11px;"></i>
+<a href="{% url 'bug_list' %}" class="text-muted text-decoration-none">Reportes</a>
+<i class="bi bi-chevron-right mx-1 text-muted" style="font-size: 11px;"></i>
+<span style="color: #ef4444;">Reportar Problema</span>
+{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <div class="form-header">
+        <div class="d-flex align-items-center gap-3 mb-2">
+            <div style="width:44px;height:44px;background:#fef2f2;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-bug" style="color:#ef4444;font-size:20px;"></i>
+            </div>
+            <div>
+                <div class="form-title">Reportar Problema</div>
+                <div style="font-size:13px;color:var(--text-muted,#94a3b8);">Nossa equipe vai analisar e retornar em breve.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tips-card">
+        <strong><i class="bi bi-lightbulb me-1"></i>Dicas para um bom relato:</strong>
+        <ul>
+            <li>Descreva o que aconteceu e o que você esperava que acontecesse</li>
+            <li>Inclua os passos que levaram ao problema</li>
+            <li>Se possível, anexe uma captura de tela da tela com erro</li>
+        </ul>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="form-label">Título do Problema *</label>
+            {{ form.title }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">Descrição Detalhada *</label>
+            {{ form.description }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">Capturas de Tela <span style="font-weight:400;color:var(--text-muted,#94a3b8);">(opcional — selecione quantas quiser)</span></label>
+            <div id="drop-zone" style="border: 2px dashed var(--card-border, #e2e8f0); border-radius: 12px; padding: 28px; text-align:center; cursor:pointer; transition:all 0.2s; background: var(--hover-bg, #f8fafc);" onclick="document.getElementById('bug-screenshots-input').click()" ondragover="event.preventDefault();this.style.borderColor='#ef4444';" ondragleave="this.style.borderColor=''" ondrop="handleDrop(event)">
+                <i class="bi bi-image" style="font-size:28px;color:#94a3b8;display:block;margin-bottom:8px;"></i>
+                <div style="font-size:14px;color:#94a3b8;">Clique ou arraste imagens aqui</div>
+                <div style="font-size:12px;color:#cbd5e1;margin-top:4px;">PNG, JPG, GIF, WEBP aceitos</div>
+            </div>
+            <input type="file" id="bug-screenshots-input" name="screenshots" accept="image/*" multiple style="display:none;" onchange="previewImages(this)">
+            <div id="preview-grid" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;"></div>
+        </div>
+
+        <script>
+        function previewImages(input) {
+            const grid = document.getElementById('preview-grid');
+            grid.innerHTML = '';
+            const files = Array.from(input.files);
+            files.forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const wrap = document.createElement('div');
+                    wrap.style.cssText = 'position:relative;width:90px;height:90px;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;';
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+                    wrap.appendChild(img);
+                    grid.appendChild(wrap);
+                };
+                reader.readAsDataURL(file);
+            });
+            const dz = document.getElementById('drop-zone');
+            if (files.length > 0) {
+                dz.style.borderColor = '#10b981';
+                dz.querySelector('div').textContent = files.length + ' imagem(ns) selecionada(s)';
+            }
+        }
+        function handleDrop(e) {
+            e.preventDefault();
+            const input = document.getElementById('bug-screenshots-input');
+            const dt = new DataTransfer();
+            Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')).forEach(f => dt.items.add(f));
+            input.files = dt.files;
+            previewImages(input);
+            document.getElementById('drop-zone').style.borderColor = '';
+        }
+        </script>
+        <div class="d-flex align-items-center justify-content-between mt-4 pt-4" style="border-top: 1px solid var(--card-border, #e2e8f0);">
+            <a href="{% url 'bug_list' %}" style="color:var(--text-muted,#94a3b8);text-decoration:none;font-size:14px;">
+                <i class="bi bi-arrow-left me-1"></i> Voltar
+            </a>
+            <button type="submit" class="submit-btn">
+                <i class="bi bi-send me-2"></i>Enviar Relato
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

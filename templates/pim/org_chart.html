@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block title %}Organograma{% endblock %}
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;">Organização / Organograma Corporativo</span>{% endblock %}
+
+{% block content %}
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-org-chart@3.1.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-flextree@2.1.2/build/d3-flextree.js"></script>
+
+<style>
+.org-wrapper {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 130px);
+    background: #f8fafc;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+}
+
+.chart-container {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+}
+.chart-container:active {
+    cursor: grabbing;
+}
+
+.node-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px -2px rgba(16, 24, 40, 0.1), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
+    border-top: 4px solid #2563eb;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    height: 100%;
+    box-sizing: border-box;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.node-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(16, 24, 40, 0.1), 0 4px 6px -4px rgba(16, 24, 40, 0.1);
+}
+
+.node-card-root { border-top-color: #64748b; }
+.node-card-company { border-top-color: #4f46e5; }
+.node-card-department { border-top-color: #10b981; }
+
+.node-image {
+    width: 56px; 
+    height: 56px; 
+    border-radius: 50%; 
+    object-fit: cover;
+    margin-bottom: 12px; 
+    border: 2px solid #f1f5f9;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.node-name { 
+    font-size: 15px; 
+    font-weight: 600; 
+    color: #1e293b; 
+    text-align: center; 
+    line-height: 1.2;
+    margin-bottom: 4px;
+}
+.node-pos { 
+    font-size: 12px; 
+    font-weight: 500;
+    color: #64748b; 
+    text-align: center; 
+    line-height: 1.3;
+}
+
+.action-bar {
+    position: absolute; 
+    bottom: 24px; 
+    right: 24px; 
+    display: flex; 
+    gap: 8px; 
+    z-index: 10;
+}
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+    font-size: 18px;
+}
+.action-btn:hover {
+    background: #f8fafc;
+    color: #2563eb;
+    transform: translateY(-2px);
+}
+.action-btn.primary {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+.action-btn.primary:hover {
+    background: #1d4ed8;
+    color: white;
+}
+</style>
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+            <i class="bi bi-diagram-3-fill"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 22px;">Organograma da Empresa</h1>
+            <p class="text-muted mb-0" style="font-size: 13px;">Estrutura hierárquica e conexões organizacionais.</p>
+        </div>
+    </div>
+</div>
+
+<div class="org-wrapper">
+    <div class="action-bar">
+        <button class="action-btn" onclick="chart.zoomOut()" title="Diminuir Zoom"><i class="bi bi-zoom-out"></i></button>
+        <button class="action-btn" onclick="chart.zoomIn()" title="Aumentar Zoom"><i class="bi bi-zoom-in"></i></button>
+        <button class="action-btn" onclick="chart.expandAll()" title="Expandir Tudo"><i class="bi bi-arrows-expand"></i></button>
+        <button class="action-btn" onclick="chart.collapseAll()" title="Recolher Tudo"><i class="bi bi-arrows-collapse"></i></button>
+        <button class="action-btn primary" onclick="chart.fit()" title="Centralizar Visualização"><i class="bi bi-arrows-move"></i></button>
+        <button class="action-btn" onclick="chart.fullscreen()" title="Tela Cheia"><i class="bi bi-arrows-fullscreen"></i></button>
+    </div>
+    <div class="chart-container"></div>
+</div>
+
+<script>
+    const orgData = {{ org_data_json|safe }};
+    
+    // Configura o chart premium
+    const chart = new d3.OrgChart()
+        .container('.chart-container')
+        .data(orgData)
+        .nodeWidth(d => d.data.type === 'board' ? 360 : 250)
+        .nodeHeight(d => d.data.type === 'board' ? 220 : 220)
+        .initialZoom(0.8)
+        .childrenMargin(d => 60)
+        .compactMarginBetween(d => 40)
+        .compactMarginPair(d => 40)
+        .nodeContent(function(d, i, arr, state) {
+            const type = d.data.type;
+            
+            // Paleta Premium
+            let themeColor = "#3b82f6"; // Blue-500
+            let badgeHtml = "";
+            let bgColor = "#ffffff";
+
+            if (type === 'board') {
+                 let ceosHtml = (d.data.ceos || []).map(c => `
+                     <div style="display:flex; flex-direction:column; align-items:center;">
+                         <div style="position: relative; margin-bottom: 8px;">
+                             <div style="position: absolute; inset: -3px; background: linear-gradient(135deg, #1e293b, #475569); border-radius: 50%; opacity: 0.2; filter: blur(4px);"></div>
+                             <img src="${c.img}" style="position: relative; width:52px; height:52px; border-radius:50%; border:2px solid #fff; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1); background: white; z-index: 2;"/>
+                         </div>
+                         <span style="font-size:12px; font-weight:700; color:#1e293b; letter-spacing: -0.2px;">${c.name}</span>
+                     </div>
+                 `).join('');
+                 
+                 return `
+                 <div style="font-family: 'Inter', system-ui, sans-serif; width:100%; height:100%; background:linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); border-top:4px solid #0f172a; border-radius:16px; box-shadow:0 10px 25px -5px rgba(15, 23, 42, 0.1); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; position:relative; overflow:hidden;">
+                     <div style="font-size:16px; font-weight:800; color:#0f172a; margin-bottom:16px; letter-spacing: -0.3px; position: relative; z-index: 2;">${d.data.name}</div>
+                     <div style="display:flex; gap:24px; justify-content:center; width:100%; position: relative; z-index: 2;">
+                         ${ceosHtml}
+                     </div>
+                 </div>`;
+            }
+
+            if (type === 'root') {
+                 badgeHtml = `<div style="font-size: 10px; color: #475569; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 10px; background: rgba(71, 85, 105, 0.1); padding: 4px 10px; border-radius: 20px;">ECOSSISTEMA</div>`;
+                 themeColor = "#475569";
+            } else if (type === 'company') {
+                 badgeHtml = `<div style="font-size: 10px; color: #4f46e5; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 10px; background: rgba(79, 70, 229, 0.1); padding: 4px 10px; border-radius: 20px;">MATRIZ</div>`;
+                 themeColor = "#4f46e5";
+            } else if (d.data.is_supervisor) {
+                 badgeHtml = `<div style="font-size: 10px; padding: 4px 10px; border-radius: 20px; background: rgba(245, 158, 11, 0.15); color: #d97706; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 10px; border: 1px solid rgba(245, 158, 11, 0.3);">SUPERVISOR</div>`;
+                 themeColor = "#f59e0b"; 
+            } else if (d.data.positionName === "Sem Cargo") {
+                 badgeHtml = `<div style="font-size: 10px; padding: 4px 10px; border-radius: 20px; background: rgba(239, 68, 68, 0.1); color: #ef4444; font-weight: 600; margin-top: 10px; display: inline-block;">Sem Cargo</div>`;
+                 themeColor = "#ef4444";
+            } else {
+                 themeColor = "#3b82f6";
+            }
+            
+            return `
+            <div style="font-family: 'Inter', system-ui, sans-serif; width: 100%; height: 100%; background: ${bgColor}; border-radius: 16px; box-shadow: 0 4px 15px -3px rgba(0,0,0,0.05), 0 2px 6px -2px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; padding: 16px; transition: transform 0.2s, box-shadow 0.2s; position: relative; overflow: hidden;">
+                
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: ${themeColor};"></div>
+                
+                <div style="position: relative; margin-bottom: 12px; margin-top: 4px;">
+                    <div style="position: absolute; inset: -4px; background: ${themeColor}; border-radius: 50%; opacity: 0.15; filter: blur(3px);"></div>
+                    <img src="${d.data.imageUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${d.data.name.replace(' ', '+')}&background=f8fafc&color=${themeColor.replace('#', '')}&bold=true'" 
+                         style="position: relative; width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" />
+                </div>
+                
+                <div style="font-size: 15px; font-weight: 700; color: #1e293b; text-align: center; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.2px;">
+                    ${d.data.name}
+                </div>
+                
+                <div style="font-size: 11px; font-weight: 600; color: #64748b; text-align: center; margin-top: 5px; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: 0.5px;">
+                    ${d.data.positionName}
+                </div>
+
+                ${badgeHtml}
+                
+            </div>
+            `;
+        })
+        .linkUpdate(function (d, i, arr) {
+            d3.select(this)
+              .attr('stroke', '#cbd5e1')
+              .attr('stroke-width', 2)
+              .attr('fill', 'none');
+        })
+        .render();
+        
+    // Inicia expandido
+    setTimeout(() => {
+        chart.expandAll();
+        chart.fit();
+    }, 200);
+</script>
+{% endblock %}

@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+{% block title %}Solicitação #{{ lr.pk }}{% endblock %}
+
+{% block breadcrumb %}
+<span style="color: #64748b; font-size: 14px; font-weight: 500;">
+    <a href="{% url 'leave_list' %}" style="color: #64748b; text-decoration: none;">Inboxes</a> / Detalhes da Solicitação
+</span>
+{% endblock %}
+
+{% block content %}
+<style>
+/* Dashboard Aesthetic Custom Settings */
+:root {
+    --card-bg: #ffffff;
+    --card-border: #e2e8f0;
+    --primary: #4f46e5;
+    --primary-light: #e0e7ff;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --radius: 16px;
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+}
+
+.card-premium {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.card-premium-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+}
+
+.card-premium-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-premium-body {
+    padding: 24px;
+}
+
+/* Detail Grid */
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+@media(min-width: 992px) {
+    .detail-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.detail-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+}
+
+.detail-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+/* Status Pills */
+.status-pill {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+}
+.status-pending { background: #fffcf0; color: #d97706; border: 1px solid #fef3c7; }
+.status-hr { background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; }
+.status-approved { background: #f0fdf4; color: #166534; border: 1px solid #dcfce3; }
+.status-rejected { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
+.status-cancelled { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+/* Timeline */
+.timeline-item {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+}
+.timeline-icon-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.timeline-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    z-index: 2;
+}
+.timeline-line {
+    width: 2px;
+    flex-grow: 1;
+    min-height: 24px;
+    background: var(--card-border);
+    margin: 4px 0;
+}
+.timeline-content {
+    padding-bottom: 24px;
+    padding-top: 4px;
+}
+.timeline-title { font-weight: 700; font-size: 14px; color: var(--text-main); margin-bottom: 2px;}
+.timeline-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5;}
+
+.icon-success { background: var(--success); color: white; }
+.icon-danger { background: var(--danger); color: white; }
+.icon-warning { background: var(--warning); color: white; }
+.icon-neutral { background: #e2e8f0; color: #64748b; }
+
+/* Action History */
+.history-item {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px dashed var(--card-border);
+}
+.history-item:last-child { border-bottom: none; padding-bottom: 0; }
+.history-avatar {
+    width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; color: #475569;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;
+}
+
+/* Modals */
+.modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 1050; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+}
+.modal-premium {
+    background: var(--card-bg); border-radius: 20px; padding: 32px; width: 480px; max-width: 95%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.btn-premium { font-weight: 600; padding: 8px 20px; border-radius: 8px; font-size: 13px; transition: all 0.2s; box-shadow: none !important; outline: none !important; }
+.btn-outline { border: 1px solid var(--card-border); background: transparent; color: var(--text-main); box-shadow: none !important; }
+.btn-outline:hover, .btn-outline:focus { background: #f8fafc; box-shadow: none !important; outline: none !important;}
+.btn-success { background: var(--success); color: white; border: none;}
+.btn-success:hover { background: #059669; }
+.btn-danger-outline { border: 1px solid #fecdd3; background: white; color: var(--danger); }
+.btn-danger-outline:hover { background: #fef2f2; }
+</style>
+
+<div class="page-header">
+    <h1 class="page-title"><i class="bi bi-calendar2-check text-primary"></i> Detalhes da Solicitação</h1>
+    <a href="{% url 'leave_list' %}" class="btn-premium btn-outline text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i> Voltar à Central
+    </a>
+</div>
+
+<div class="row g-4">
+    
+    <div class="col-lg-8">
+        
+        <div class="card-premium">
+            <div class="card-premium-header">
+                <h5 class="card-premium-title"><i class="bi bi-file-text opacity-75"></i> Visão Geral</h5>
+                <div>
+                    {% if lr.status == 'PENDING' %}<span class="status-pill status-pending">Pendente</span>
+                    {% elif lr.status == 'SUPERVISOR_APPROVED' %}<span class="status-pill status-hr">Ag. aprovação do RH</span>
+                    {% elif lr.status == 'APPROVED' %}<span class="status-pill status-approved">Aprovada</span>
+                    {% elif lr.status == 'REJECTED' %}<span class="status-pill status-rejected">Rejeitada</span>
+                    {% elif lr.status == 'CANCELLED' %}<span class="status-pill status-cancelled">Cancelada</span>
+                    {% else %}<span class="status-pill status-pending">{{ lr.get_status_display }}</span>{% endif %}
+                </div>
+            </div>
+            
+            <div class="card-premium-body">
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Funcionário</span>
+                        <div class="detail-value d-flex align-items-center gap-2 mt-1">
+                            {% if lr.employee.picture %}
+                            <img src="{{ lr.employee.picture.picture.url }}" alt="avatar" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+                            {% else %}
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #e2e8f0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">{{ lr.employee.full_name.0|upper }}</div>
+                            {% endif %}
+                            {{ lr.employee.full_name }}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Tipo de Licença</span>
+                        <span class="detail-value text-primary mt-1">{{ lr.leave_type.name }}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Solicitado em</span>
+                        <span class="detail-value mt-1">{{ lr.date_applied|date:"d/m/Y" }}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Data Início</span>
+                        <span class="detail-value mt-1"><i class="bi bi-calendar-check me-1 opacity-50"></i> {{ lr.from_date|date:"d/m/Y" }}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Data Fim</span>
+                        <span class="detail-value mt-1"><i class="bi bi-calendar-x me-1 opacity-50"></i> {{ lr.to_date|date:"d/m/Y" }}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Comentário Original</span>
+                        <span class="detail-value mt-1 opacity-75">{{ lr.comment|default:"Sem comentários" }}</span>
+                    </div>
+                </div>
+
+                {% if lr.rejection_reason %}
+                <div class="mt-4 p-3 rounded" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                    <div style="font-size: 12px; font-weight: 700; color: #b91c1c; text-transform: uppercase; margin-bottom: 4px;">
+                        <i class="bi bi-exclamation-octagon me-1"></i> Motivo da Rejeição
+                    </div>
+                    <div style="font-size: 14px; color: #991b1b;">{{ lr.rejection_reason }}</div>
+                </div>
+                {% endif %}
+
+                {% if lr.attachment %}
+                <div class="mt-4 pt-4" style="border-top: 1px solid var(--card-border);">
+                    <div class="detail-label mb-3"><i class="bi bi-paperclip me-1"></i> Atestado / Documento Anexado</div>
+                    {% if lr.attachment.name|slice:"-4:" == ".pdf" %}
+                    <a href="{{ lr.attachment.url }}" target="_blank" class="btn-premium btn-outline text-decoration-none">
+                        <i class="bi bi-file-earmark-pdf text-danger me-1"></i> Visualizar PDF Anexado
+                    </a>
+                    {% else %}
+                    <a href="{{ lr.attachment.url }}" target="_blank" class="d-inline-block">
+                        <img src="{{ lr.attachment.url }}" alt="Atestado" style="max-width: 100%; max-height: 250px; border-radius: 12px; border: 1px solid var(--card-border); object-fit: contain; background: #f8fafc; padding: 4px; transition: transform 0.2s;">
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        
+        {% if lr.action_logs.all %}
+        <div class="card-premium mb-4 mb-lg-0">
+            <div class="card-premium-header">
+                <h5 class="card-premium-title"><i class="bi bi-clock-history opacity-75"></i> Histórico de Registros</h5>
+            </div>
+            <div class="card-premium-body py-2">
+                {% for log in lr.action_logs.all %}
+                <div class="history-item">
+                    <div class="history-avatar" style="
+                        {% if log.action == 'SUBMIT' %}background:var(--primary-light);color:var(--primary);
+                        {% elif log.action == 'SUPERVISOR_APPROVE' %}background:#fff7ed;color:#ea580c;
+                        {% elif log.action == 'HR_APPROVE' %}background:#dcfce3;color:#166534;
+                        {% elif log.action == 'REJECT' %}background:#fee2e2;color:#991b1b;
+                        {% elif log.action == 'CANCEL' %}background:#f1f5f9;color:#475569;
+                        {% else %}background:var(--primary-light);color:var(--primary);{% endif %}">
+                        {% if log.action == 'SUBMIT' %}<i class="bi bi-send"></i>
+                        {% elif log.action == 'SUPERVISOR_APPROVE' %}<i class="bi bi-person-check"></i>
+                        {% elif log.action == 'HR_APPROVE' %}<i class="bi bi-patch-check"></i>
+                        {% elif log.action == 'REJECT' %}<i class="bi bi-x-circle"></i>
+                        {% elif log.action == 'CANCEL' %}<i class="bi bi-ban"></i>
+                        {% else %}<i class="bi bi-chat"></i>{% endif %}
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 14px; color: var(--text-main);">{{ log.get_action_display }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                            Por <strong>{{ log.performed_by.get_full_name|default:log.performed_by.username }}</strong> — {{ log.performed_at|date:"d/m/Y H:i" }}
+                        </div>
+                        {% if log.note %}
+                        <div style="font-size: 13px; margin-top: 6px; padding: 8px 12px; background: #f8fafc; border-radius: 8px; color: var(--text-muted); font-style: italic;">
+                            "{{ log.note }}"
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    
+    <div class="col-lg-4">
+        
+        <div class="card-premium mb-4">
+            <div class="card-premium-header">
+                <h5 class="card-premium-title"><i class="bi bi-signpost-split opacity-75"></i> Fluxo de Aprovação</h5>
+            </div>
+            <div class="card-premium-body pb-0">
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon-col">
+                        <div class="timeline-icon icon-success"><i class="bi bi-person-fill"></i></div>
+                        <div class="timeline-line" style="background: var(--success);"></div>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Solicitado</div>
+                        <div class="timeline-desc">{{ lr.date_applied|date:"d/m/Y" }}</div>
+                    </div>
+                </div>
+
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon-col">
+                        {% if lr.status == 'SUPERVISOR_APPROVED' or lr.status == 'APPROVED' %}
+                            <div class="timeline-icon icon-success"><i class="bi bi-check-lg"></i></div>
+                        {% elif lr.status == 'REJECTED' %}
+                            <div class="timeline-icon icon-danger"><i class="bi bi-x-lg"></i></div>
+                        {% elif lr.status == 'CANCELLED' %}
+                            <div class="timeline-icon icon-neutral"><i class="bi bi-ban"></i></div>
+                        {% else %}
+                            <div class="timeline-icon icon-neutral"><i class="bi bi-hourglass-split"></i></div>
+                        {% endif %}
+                        <div class="timeline-line" style="background: {% if lr.status == 'APPROVED' %}var(--success){% elif lr.status == 'REJECTED' %}var(--danger){% else %}var(--card-border){% endif %};"></div>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Supervisão</div>
+                        <div class="timeline-desc">
+                            {% if lr.status == 'PENDING' %}<span class="text-warning fw-medium">Aguardando análise</span>
+                            {% elif lr.status == 'SUPERVISOR_APPROVED' %}Pré-aprovado
+                            {% elif lr.status == 'APPROVED' %}Validado
+                            {% elif lr.status == 'REJECTED' %}Rejeitado
+                            {% elif lr.status == 'CANCELLED' %}Cancelado
+                            {% else %}—{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon-col">
+                        {% if lr.status == 'APPROVED' %}
+                            <div class="timeline-icon icon-success"><i class="bi bi-check-lg"></i></div>
+                        {% elif lr.status == 'REJECTED' %}
+                            <div class="timeline-icon icon-danger"><i class="bi bi-x-lg"></i></div>
+                        {% elif lr.status == 'SUPERVISOR_APPROVED' %}
+                            <div class="timeline-icon icon-warning"><i class="bi bi-hourglass-split"></i></div>
+                        {% elif lr.status == 'CANCELLED' %}
+                            <div class="timeline-icon icon-neutral"><i class="bi bi-ban"></i></div>
+                        {% else %}
+                            <div class="timeline-icon icon-neutral"><i class="bi bi-building"></i></div>
+                        {% endif %}
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Recursos Humanos</div>
+                        <div class="timeline-desc">
+                            {% if lr.status == 'APPROVED' %}Aprovado definitivamente.
+                            {% elif lr.status == 'REJECTED' %}Rejeitado na decisão final.
+                            {% elif lr.status == 'SUPERVISOR_APPROVED' %}<span class="text-warning fw-medium">Aguardando validação...</span>
+                            {% elif lr.status == 'CANCELLED' %}Fluxo abortado.
+                            {% else %}Atua após o Gestor.{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="d-flex flex-column gap-3">
+            {% if user.role == 'Supervisor' and lr.status == 'PENDING' %}
+                <a href="{% url 'leave_approve' lr.pk %}" class="btn-premium btn-success text-center text-decoration-none" onclick="return confirm('Pré-aprovar e enviar ao RH?')">
+                    <i class="bi bi-check-circle me-1"></i> Pré-Aprovar (Enviar ao RH)
+                </a>
+                <button class="btn-premium btn-danger-outline w-100" onclick="document.getElementById('modalRejeitar').style.display='flex'">
+                    <i class="bi bi-x-circle me-1"></i> Rejeitar Solicitação
+                </button>
+            {% endif %}
+
+            {% if user.is_hr or user.is_admin %}
+                {% if lr.status == 'PENDING' or lr.status == 'SUPERVISOR_APPROVED' %}
+                <a href="{% url 'leave_approve' lr.pk %}" class="btn-premium btn-success text-center text-decoration-none" onclick="return confirm('Aprovar definitivamente esta licença?')">
+                    <i class="bi bi-check-circle-fill me-1"></i> Aprovar Definitivamente
+                </a>
+                <button class="btn-premium btn-danger-outline w-100" onclick="document.getElementById('modalRejeitar').style.display='flex'">
+                    <i class="bi bi-x-circle me-1"></i> Rejeitar Definitivamente
+                </button>
+                {% endif %}
+            {% endif %}
+
+            {% if lr.status == 'PENDING' and not user.is_hr and not user.is_admin and user.role != 'Supervisor' %}
+            <a href="{% url 'leave_cancel' lr.pk %}" class="btn-premium btn-outline text-center text-decoration-none" onclick="return confirm('Tem certeza que deseja cancelar?')">
+                <i class="bi bi-trash3 me-1"></i> Cancelar Solicitação
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+<div id="modalRejeitar" class="modal-overlay">
+    <div class="modal-premium">
+        <h4 style="margin: 0 0 8px; font-weight: 700; color: var(--text-main);"><i class="bi bi-exclamation-circle text-danger me-2"></i> Motivo da Rejeição</h4>
+        <p style="font-size: 14px; color: var(--text-muted); margin: 0 0 24px;">Por favor, descreva claramente o motivo para o funcionário.</p>
+        
+        <form method="post" action="{% url 'leave_reject' lr.pk %}">
+            {% csrf_token %}
+            <textarea name="rejection_reason" rows="4" required style="width: 100%; padding: 16px; border-radius: 12px; border: 1px solid var(--card-border); outline: none; resize: vertical; font-size: 14px; background: #f8fafc;" placeholder="Escreva o motivo..."></textarea>
+            
+            <div class="d-flex gap-2 justify-content-end mt-4">
+                <button type="button" class="btn-premium btn-outline" onclick="document.getElementById('modalRejeitar').style.display='none'">Cancelar</button>
+                <button type="submit" class="btn-premium btn-success" style="background: var(--danger);"><i class="bi bi-x-lg me-1"></i> Rejeitar Licença</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

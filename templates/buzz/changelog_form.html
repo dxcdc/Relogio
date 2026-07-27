@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Publicar Atualização{% endblock %}
+
+{% block extra_head %}
+<style>
+    .form-card {
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--card-border, #e2e8f0);
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 720px;
+        margin: 0 auto;
+    }
+    .form-header {
+        margin-bottom: 32px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--card-border, #e2e8f0);
+    }
+    .form-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-primary, #0f172a);
+        margin-bottom: 4px;
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-label { font-size: 13px; font-weight: 600; color: var(--text-primary, #0f172a); margin-bottom: 6px; display: block; }
+    .form-control, .form-select {
+        border: 1px solid var(--card-border, #e2e8f0);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 14px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        background: var(--card-bg, #fff);
+        color: var(--text-primary, #0f172a);
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16,185,129,0.12);
+        outline: none;
+    }
+    .submit-btn {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 50px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+    }
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(16,185,129,0.4);
+    }
+    .back-link { color: var(--text-muted, #94a3b8); text-decoration: none; font-size: 14px; }
+    .back-link:hover { color: #10b981; }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'changelog_list' %}" class="text-muted text-decoration-none">Novidades</a>
+<i class="bi bi-chevron-right mx-1 text-muted" style="font-size: 11px;"></i>
+<span style="color: var(--accent-color);">Nova Atualização</span>
+{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <div class="form-header">
+        <div class="d-flex align-items-center gap-3 mb-2">
+            <div style="width:44px;height:44px;background:#f0fdf4;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-newspaper" style="color:#10b981;font-size:20px;"></i>
+            </div>
+            <div>
+                <div class="form-title">Publicar Atualização</div>
+                <div style="font-size:13px;color:var(--text-muted,#94a3b8);">Comunique as mudanças recentes do sistema para todos os usuários.</div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label class="form-label">Título da Atualização *</label>
+            {{ form.title }}
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Versão / Tag</label>
+                    {{ form.version }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Categoria *</label>
+                    {{ form.category }}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Descrição das Mudanças *</label>
+            {{ form.content }}
+            <small style="font-size:11px;color:var(--text-muted,#94a3b8);margin-top:4px;display:block;">
+                Dica: Use linhas separadas para cada item de mudança. Ex: "• Corrigido o bug de login", "• Adicionado filtro de datas..."
+            </small>
+        </div>
+
+        <div class="form-group d-flex align-items-center gap-3">
+            {{ form.pinned }}
+            <label class="form-label mb-0" style="cursor:pointer;">Fixar esta nota no topo da lista</label>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between mt-4 pt-4" style="border-top: 1px solid var(--card-border, #e2e8f0);">
+            <a href="{% url 'changelog_list' %}" class="back-link">
+                <i class="bi bi-arrow-left me-1"></i> Voltar
+            </a>
+            <button type="submit" class="submit-btn">
+                <i class="bi bi-send me-2"></i>Publicar Agora
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

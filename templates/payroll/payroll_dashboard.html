@@ -1,0 +1,586 @@
+{% extends "base.html" %}
+{% block title %}Documentos{% endblock %}
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;">{% if is_hr %}Admin / Gestão de Documentos{% else %}Meus Documentos{% endif %}</span>{% endblock %}
+
+{% block content %}
+<style>
+    .premium-tooltip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 6px;
+    }
+    .premium-tooltip .tooltip-text {
+        visibility: hidden;
+        width: 320px;
+        background-color: #0f172a;
+        color: #f8fafc;
+        text-align: left;
+        border-radius: 12px;
+        padding: 14px 18px;
+        position: absolute;
+        z-index: 100;
+        top: 130%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: all 0.2s ease-in-out;
+        font-size: 13px;
+        line-height: 1.5;
+        font-weight: 500;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+        white-space: normal;
+        text-transform: none;
+        letter-spacing: normal;
+        pointer-events: none;
+    }
+    .premium-tooltip .tooltip-text::after {
+        content: "";
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 6px;
+        border-style: solid;
+        border-color: transparent transparent #0f172a transparent;
+    }
+    .premium-tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+        top: 150%;
+    }
+</style>
+<!-- HEADER UNIFICADO -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <!-- Ícone + Título -->
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center position-relative" style="width:56px;height:56px;background:linear-gradient(135deg,#0dc02a,#0a9b21);border-radius:16px;color:white;font-size:24px;box-shadow:0 8px 16px -4px rgba(13,192,42,0.4);flex-shrink:0;">
+            <i class="bi bi-folder2-open"></i>
+            <div class="position-absolute" style="bottom:-4px;right:-4px;width:20px;height:20px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.15);">
+                <i class="bi bi-check-circle-fill" style="font-size:12px;color:#0dc02a;"></i>
+            </div>
+        </div>
+        <div>
+            <h1 class="page-title mb-1" style="font-weight:800;color:#0f172a;font-size:22px;letter-spacing:-0.5px;line-height:1.2;">
+                {% if is_hr %}Gestão de Documentos{% else %}Meus Documentos{% endif %}
+            </h1>
+            <div class="text-muted d-flex align-items-center" style="font-size:13px;font-weight:500;">
+                {% if is_hr %}
+                    Central de Holerites e Atestados
+                    <div class="premium-tooltip ms-2">
+                        <i class="bi bi-question-circle-fill" style="color:#cbd5e1;cursor:help;font-size:15px;transition:color 0.2s" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#cbd5e1'"></i>
+                        <span class="tooltip-text">
+                            <strong style="color:#38bdf8;font-size:14px;display:block;margin-bottom:6px;">Como importar Holerites?</strong>
+                            <span style="color:#4ade80;">1.</span> Salve o PDF do sistema contábil.<br>
+                            <span style="color:#4ade80;">2.</span> O nome do PDF deve ser o <strong>Nome Completo</strong> do funcionário.<br>
+                            <span style="color:#4ade80;">3.</span> Compacte os PDFs num arquivo .ZIP e use o <strong>Upload em Lote</strong>.
+                        </span>
+                    </div>
+                {% else %}
+                    Seus holerites e atestados médicos
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if is_hr %}
+    <!-- Botões de Ação -->
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" data-bs-toggle="modal" data-bs-target="#uploadModal" class="btn text-white d-flex align-items-center gap-2 shadow-sm" style="background:#202a44;border-radius:12px;font-weight:600;font-size:13.5px;padding:10px 20px;border:none;">
+            <i class="bi bi-person-up fs-6"></i> Anexar Individual
+        </button>
+        <button type="button" data-bs-toggle="modal" data-bs-target="#batchUploadModal" class="btn text-white d-flex align-items-center gap-2 shadow-sm" style="background:#202a44;border-radius:12px;font-weight:600;font-size:13.5px;padding:10px 20px;border:none;">
+            <i class="bi bi-file-earmark-zip fs-6"></i> Upload em Lote
+        </button>
+        <form method="POST" action="{% url 'payslip_delete_all' current_year current_month %}" onsubmit="return confirm('ATENÇÃO: Você tem certeza que deseja APAGAR TODOS os holerites deste mês?');" class="m-0 p-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger d-flex align-items-center justify-content-center" style="border-radius:12px;padding:10px 14px;background:#fee2e2;color:#ef4444;border:1px solid #fecaca;" title="Apagar Todos">
+                <i class="bi bi-trash3-fill fs-6"></i>
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+{% if is_hr %}
+<!-- Filtros -->
+<style>
+    .premium-input {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        height: 48px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #334155;
+        transition: all 0.2s ease-in-out;
+    }
+    .premium-input:hover {
+        background-color: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+    .premium-input:focus {
+        background-color: #ffffff;
+        border-color: #94a3b8;
+        box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.1) !important;
+    }
+    select.premium-input {
+        cursor: pointer;
+    }
+</style>
+
+<form method="GET" class="mb-5">
+    <div class="d-flex flex-column flex-lg-row gap-3 p-3 align-items-center" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; box-shadow:0 4px 20px -5px rgba(0,0,0,0.05);">
+        
+        <!-- Search -->
+        <div class="flex-grow-1 position-relative w-100">
+            <div class="position-absolute top-50 translate-middle-y" style="left: 16px; color: #94a3b8;">
+                <i class="bi bi-search"></i>
+            </div>
+            <input type="text" name="q" value="{{ search_query }}" 
+                   class="form-control shadow-none premium-input w-100" 
+                   placeholder="Buscar funcionário por nome..." 
+                   style="padding-left: 44px;"
+                   onchange="this.form.submit()">
+        </div>
+
+        <!-- Departamento -->
+        <div style="min-width: 240px; width: 100%;" class="w-lg-auto">
+            <select name="department_id" class="form-select shadow-none premium-input w-100" onchange="this.form.submit()">
+                <option value="">Todos os Departamentos</option>
+                {% for dep in departments %}
+                <option value="{{ dep.id }}" {% if dep.id == department_id %}selected{% endif %}>{{ dep.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Mês -->
+        <div style="min-width: 140px; width: 100%;" class="w-lg-auto">
+            <select name="month" class="form-select shadow-none premium-input w-100" onchange="this.form.submit()">
+                {% for m_val, m_name in months %}
+                <option value="{{ m_val }}" {% if m_val == current_month %}selected{% endif %}>{{ m_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Ano -->
+        <div style="min-width: 120px; width: 100%;" class="w-lg-auto">
+            <select name="year" class="form-select shadow-none premium-input w-100" onchange="this.form.submit()">
+                {% for y in years %}
+                <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</form>
+{% endif %}
+
+
+<ul class="nav nav-tabs mb-4" id="docsTabs" role="tablist" style="border-bottom: 2px solid #e2e8f0; font-weight: 600;">
+    {% if not is_hr %}
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab" style="border: none; color: #64748b; padding: 12px 24px;">
+            <i class="bi bi-pencil-square me-2"></i> Para Assinar
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="signed-tab" data-bs-toggle="tab" data-bs-target="#signed" type="button" role="tab" style="border: none; color: #64748b; padding: 12px 24px;">
+            <i class="bi bi-check-circle me-2"></i> Histórico de Holerites
+        </button>
+    </li>
+    {% else %}
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="all-payslips-tab" data-bs-toggle="tab" data-bs-target="#all-payslips" type="button" role="tab" style="border: none; color: #64748b; padding: 12px 24px;">
+            <i class="bi bi-cash-stack me-2"></i> Holerites ({{ current_month|stringformat:"02d" }}/{{ current_year }})
+        </button>
+    </li>
+    {% endif %}
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if is_hr %} {% endif %}" id="leaves-tab" data-bs-toggle="tab" data-bs-target="#leaves" type="button" role="tab" style="border: none; color: #64748b; padding: 12px 24px;">
+            <i class="bi bi-file-medical me-2"></i> {% if is_hr %}Atestados Recebidos{% else %}Meus Atestados{% endif %}
+        </button>
+    </li>
+</ul>
+
+<style>
+    .nav-tabs .nav-link.active {
+        color: #0f172a !important;
+        background: transparent !important;
+        border-bottom: 3px solid #3b82f6 !important;
+    }
+    .nav-tabs .nav-link:hover:not(.active) {
+        border-bottom: 3px solid #cbd5e1 !important;
+        color: #334155 !important;
+    }
+</style>
+
+<div class="tab-content" id="docsTabsContent">
+    
+    {% if not is_hr %}
+    
+    <div class="tab-pane fade show active" id="pending" role="tabpanel">
+        <div class="card" style="border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0" style="margin: 0;">
+                        <thead style="background: #f8fafc;">
+                            <tr>
+                                <th style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Referência</th>
+                                <th style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Arquivo</th>
+                                <th style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Status</th>
+                                <th class="text-end" style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for slip in payslips %}
+                            {% if slip.status == 'pending' %}
+                            <tr>
+                                <td style="padding: 16px 24px; vertical-align: middle;">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div style="width: 40px; height: 40px; border-radius: 10px; background: #fffbeb; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #b45309;">
+                                            {{ slip.reference_month|stringformat:"02d" }}/{{ slip.reference_year|stringformat:"y" }}
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold" style="color: #0f172a;">Holerite Mensal</h6>
+                                            <small class="text-muted">Mês: {{ slip.reference_month|stringformat:"02d" }}/{{ slip.reference_year }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px 24px; vertical-align: middle;">
+                                    <span class="text-muted"><i class="bi bi-lock"></i> Requer Assinatura</span>
+                                </td>
+                                <td style="padding: 16px 24px; vertical-align: middle;">
+                                    <span class="badge bg-warning text-dark px-3 py-2" style="border-radius: 8px;"><i class="bi bi-clock-history"></i> Aguardando sua assinatura</span>
+                                </td>
+                                <td class="text-end" style="padding: 16px 24px; vertical-align: middle;">
+                                    <a href="{% url 'payslip_detail' slip.pk %}" class="btn btn-sm text-white fw-bold" style="background: #10b981; border-radius: 8px; padding: 8px 16px;">
+                                        Assinar Agora <i class="bi bi-pen"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <i class="bi bi-check-circle d-block mb-2" style="font-size: 32px; color: #10b981;"></i>
+                                    Você não possui nenhum holerite pendente de assinatura.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="tab-pane fade" id="signed" role="tabpanel">
+        <div class="card" style="border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0" style="margin: 0;">
+                        <thead style="background: #f8fafc;">
+                            <tr>
+                                <th style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Referência</th>
+                                <th style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Arquivo (PDF)</th>
+                                <th style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Data da Assinatura</th>
+                                <th class="text-end" style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for slip in payslips %}
+                            {% if slip.status == 'signed' %}
+                            <tr>
+                                <td style="padding: 16px 24px; vertical-align: middle;">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div style="width: 40px; height: 40px; border-radius: 10px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #047857;">
+                                            {{ slip.reference_month|stringformat:"02d" }}/{{ slip.reference_year|stringformat:"y" }}
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold" style="color: #0f172a;">Holerite Mensal</h6>
+                                            <small class="text-muted">Mês: {{ slip.reference_month|stringformat:"02d" }}/{{ slip.reference_year }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px 24px; vertical-align: middle;">
+                                    {% if slip.document %}
+                                    <a href="{{ slip.document.url }}?v={{ slip.updated_at|date:'U' }}" target="_blank" class="text-decoration-none" style="color: #475569; font-weight: 600; font-size: 14px;">
+                                        <i class="bi bi-file-pdf text-danger fs-5 me-1"></i> Baixar PDF
+                                    </a>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 16px 24px; vertical-align: middle;">
+                                    <span style="font-size: 13px; color: #475569;">{{ slip.signed_at|date:"d/m/Y H:i" }}</span>
+                                </td>
+                                <td class="text-end" style="padding: 16px 24px; vertical-align: middle;">
+                                    <a href="{% url 'payslip_detail' slip.pk %}" class="btn btn-sm btn-light text-primary fw-bold" style="border-radius: 8px; padding: 8px 16px;">
+                                        Ver Certificado <i class="bi bi-shield-check"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% else %}
+    
+    <div class="tab-pane fade show active" id="all-payslips" role="tabpanel">
+        <div class="card" style="border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0" style="margin: 0;">
+                        <thead style="background: #f8fafc;">
+                            <tr>
+                                <th style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Funcionário</th>
+                                <th style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Arquivo</th>
+                                <th style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Status da Assinatura</th>
+                                <th class="text-end" style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for slip in payslips %}
+                            <tr>
+                                <td style="padding: 16px 24px; vertical-align: middle;">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div style="width: 40px; height: 40px; border-radius: 10px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #334155;">
+                                            {{ slip.reference_month|stringformat:"02d" }}/{{ slip.reference_year|stringformat:"y" }}
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold" style="color: #0f172a;">{{ slip.employee.full_name }}</h6>
+                                            <small class="text-muted">Ref: {{ slip.reference_month|stringformat:"02d" }}/{{ slip.reference_year }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px 24px; vertical-align: middle;">
+                                    {% if slip.document %}
+                                    <a href="{{ slip.document.url }}?v={{ slip.updated_at|date:'U' }}" target="_blank" class="text-decoration-none" style="color: #475569; font-weight: 600; font-size: 14px;">
+                                        <i class="bi bi-file-pdf text-danger fs-5 me-1"></i> Ver PDF
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted"><i class="bi bi-x-circle"></i> Sem arquivo</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 16px 24px; vertical-align: middle;">
+                                    {% if slip.status == 'pending' %}
+                                        <span class="badge bg-warning text-dark px-3 py-2" style="border-radius: 8px;"><i class="bi bi-clock-history"></i> Aguardando</span>
+                                    {% elif slip.status == 'signed' %}
+                                        <span class="badge bg-success px-3 py-2" style="border-radius: 8px;"><i class="bi bi-check-circle-fill"></i> Assinado (Válido)</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end" style="padding: 16px 24px; vertical-align: middle;">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <form method="POST" action="{% url 'payslip_delete' slip.pk %}" onsubmit="return confirm('Tem certeza que deseja apagar o holerite de {{ slip.employee.first_name }}?');" class="m-0 p-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-light text-danger fw-bold" style="border-radius: 8px; padding: 8px 12px;" title="Apagar Holerite">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </form>
+                                        <a href="{% url 'payslip_detail' slip.pk %}" class="btn btn-sm btn-light text-primary fw-bold" style="border-radius: 8px; padding: 8px 16px;">
+                                            Abrir Tela <i class="bi bi-arrow-right-short"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <i class="bi bi-cloud-arrow-up d-block mb-2" style="font-size: 32px; opacity: 0.5;"></i>
+                                    Nenhum holerite anexado neste mês.<br>
+                                    Clique em <b>"Anexar Individual"</b> ou <b>"Upload em Lote"</b> para iniciar.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    
+    <div class="tab-pane fade" id="leaves" role="tabpanel">
+        <div class="card" style="border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0" style="margin: 0;">
+                        <thead style="background: #f8fafc;">
+                            <tr>
+                                {% if is_hr %}
+                                <th style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Funcionário</th>
+                                {% endif %}
+                                <th style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Data / Solicitação</th>
+                                <th style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Período</th>
+                                <th style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Tipo</th>
+                                <th class="text-end" style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">Documento</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for leave in leave_docs %}
+                            <tr>
+                                {% if is_hr %}
+                                <td style="padding: 16px 24px; vertical-align: middle;">
+                                    <h6 class="mb-0 fw-bold" style="color: #0f172a;">{{ leave.employee.full_name }}</h6>
+                                </td>
+                                {% endif %}
+                                <td style="padding: 16px 24px; vertical-align: middle;">
+                                    <span style="font-size: 13px; color: #475569; font-weight: 600;">{{ leave.date_applied|date:"d/m/Y" }}</span>
+                                </td>
+                                <td style="padding: 16px 24px; vertical-align: middle;">
+                                    <span style="font-size: 13px; color: #475569;">{{ leave.from_date|date:"d/m/Y" }} a {{ leave.to_date|date:"d/m/Y" }}</span>
+                                </td>
+                                <td style="padding: 16px 24px; vertical-align: middle;">
+                                    <span class="badge bg-light text-dark px-3 py-2" style="border-radius: 8px; border: 1px solid #cbd5e1;">{{ leave.leave_type.name }}</span>
+                                </td>
+                                <td class="text-end" style="padding: 16px 24px; vertical-align: middle;">
+                                    {% if leave.attachment %}
+                                    <a href="{{ leave.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-dark fw-bold" style="border-radius: 8px; padding: 8px 16px;">
+                                        <i class="bi bi-file-earmark-medical me-1"></i> Ver Anexo
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="{% if is_hr %}5{% else %}4{% endif %}" class="text-center py-5 text-muted">
+                                    <i class="bi bi-folder-x d-block mb-2" style="font-size: 32px; opacity: 0.5;"></i>
+                                    Nenhum atestado ou documento de licença encontrado.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if is_hr %}
+
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+            <div class="modal-header border-0 pb-0" style="padding: 32px 32px 16px 32px;">
+                <h5 class="modal-title fw-bold" style="color: #0f172a; font-size: 22px;">Anexar Holerite</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body" style="padding: 0 32px 32px 32px;">
+                    <p class="text-muted mb-4">Selecione o funcionário e envie o arquivo PDF do holerite correspondente ao mês.</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary" style="font-size: 13px;">Funcionário</label>
+                        <select name="employee_id" class="form-select" style="border-radius: 10px; border-color: #cbd5e1; padding: 12px;" required>
+                            <option value="">Selecione...</option>
+                            {% for emp in employees %}
+                            <option value="{{ emp.id }}">{{ emp.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold text-secondary" style="font-size: 13px;">Mês</label>
+                            <select name="month" class="form-select" style="border-radius: 10px; border-color: #cbd5e1; padding: 12px;">
+                                {% for m_val, m_name in months %}
+                                <option value="{{ m_val }}" {% if m_val == current_month %}selected{% endif %}>{{ m_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold text-secondary" style="font-size: 13px;">Ano</label>
+                            <select name="year" class="form-select" style="border-radius: 10px; border-color: #cbd5e1; padding: 12px;">
+                                {% for y in years %}
+                                <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary" style="font-size: 13px;">Arquivo PDF</label>
+                        <input type="file" name="document" class="form-control" accept=".pdf" style="border-radius: 10px; padding: 10px;" required>
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-0 d-flex justify-content-end gap-2" style="padding: 0 32px 32px 32px;">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 10px; font-weight: 600; color: #475569; background: #f1f5f9; border: none;">Cancelar</button>
+                    <button type="submit" class="btn btn-dark px-4" style="border-radius: 10px; font-weight: 600; background: #0f172a; border: none;"><i class="bi bi-upload me-2"></i> Salvar e Notificar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="batchUploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+            <div class="modal-header border-0 pb-0" style="padding: 32px 32px 16px 32px;">
+                <h5 class="modal-title fw-bold" style="color: #0f172a; font-size: 22px;">Upload em Lote (ZIP)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body" style="padding: 0 32px 32px 32px;">
+                    <div class="alert alert-info" style="border-radius: 10px; font-size: 13px;">
+                        <i class="bi bi-info-circle-fill me-1"></i> O nome de cada arquivo PDF dentro do ZIP deve ser exatamente o <b>Nome Completo</b> do funcionário cadastrado.
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold text-secondary" style="font-size: 13px;">Mês</label>
+                            <select name="month" class="form-select" style="border-radius: 10px; border-color: #cbd5e1; padding: 12px;">
+                                {% for m_val, m_name in months %}
+                                <option value="{{ m_val }}" {% if m_val == current_month %}selected{% endif %}>{{ m_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold text-secondary" style="font-size: 13px;">Ano</label>
+                            <select name="year" class="form-select" style="border-radius: 10px; border-color: #cbd5e1; padding: 12px;">
+                                {% for y in years %}
+                                <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary" style="font-size: 13px;">Arquivo .ZIP</label>
+                        <input type="file" name="zip_file" class="form-control" accept=".zip" style="border-radius: 10px; padding: 10px;" required>
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-0 d-flex justify-content-end gap-2" style="padding: 0 32px 32px 32px;">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 10px; font-weight: 600; color: #475569; background: #f1f5f9; border: none;">Cancelar</button>
+                    <button type="submit" class="btn btn-dark px-4" style="border-radius: 10px; font-weight: 600; background: #0f172a; border: none;"><i class="bi bi-file-zip me-2"></i> Processar ZIP</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fix for Bootstrap modal backdrop bug (stacking context issue)
+        const modal = document.getElementById('uploadModal');
+        const batchModal = document.getElementById('batchUploadModal');
+        if (modal) {
+            document.body.appendChild(modal);
+        }
+        if (batchModal) {
+            document.body.appendChild(batchModal);
+        }
+    });
+</script>
+{% endblock %}

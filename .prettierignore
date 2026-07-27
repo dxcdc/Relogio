@@ -1,0 +1,3 @@
+# Ignora todos os templates Django para evitar quebra de tags {{ }} e {% %}
+templates/
+*.html

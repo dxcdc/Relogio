@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block title %}Avaliações{% endblock %}{% block content %}
+<div class="page-header"><h1 class="page-title"><i class="bi bi-star text-orange"></i> Avaliações de Desempenho</h1><div class="d-flex gap-2"><a href="{% url 'review_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Nova Avaliação</a><a href="{% url 'kpi_list' %}" class="btn btn-outline-orange">KPIs</a><a href="{% url 'tracker_list' %}" class="btn btn-outline-orange">Rastreadores</a></div></div>
+<div class="table-wrapper"><table class="table"><thead><tr><th>Funcionário</th><th>Período</th><th>Prazo</th><th>Nota Final</th><th>Status</th><th>Ações</th></tr></thead><tbody>{% for r in reviews %}<tr>
+<td style="font-weight:600;">{{ r.employee.full_name }}</td><td style="font-size:12px;color:var(--text-secondary);">{{ r.review_period_start|date:"d/m/Y" }} – {{ r.review_period_end|date:"d/m/Y" }}</td>
+<td>{{ r.due_date|date:"d/m/Y"|default:"—" }}</td><td>{% if r.final_rating %}<strong>{{ r.final_rating }}</strong>{% else %}—{% endif %}</td>
+<td>{% if r.status == 'COMPLETED' %}<span class="status-badge badge-approved">Concluída</span>{% elif r.status == 'IN PROGRESS' %}<span class="status-badge badge-pending">Em Andamento</span>{% else %}<span class="status-badge badge-inactive">{{ r.status }}</span>{% endif %}</td>
+<td><a href="{% url 'review_detail' r.pk %}" class="btn btn-icon btn-icon-primary"><i class="bi bi-eye"></i></a></td>
+</tr>{% empty %}<tr><td colspan="6" class="text-center py-5" style="color:var(--text-secondary);">Nenhuma avaliação</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

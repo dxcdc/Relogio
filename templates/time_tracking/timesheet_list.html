@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block title %}Timesheets{% endblock %}{% block content %}
+<div class="page-header"><h1 class="page-title"><i class="bi bi-clock text-orange"></i> Timesheets</h1><div class="d-flex gap-2"><a href="{% url 'timesheet_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Novo</a><a href="{% url 'project_list' %}" class="btn btn-outline-orange">Projetos</a><a href="{% url 'customer_list' %}" class="btn btn-outline-orange">Clientes</a></div></div>
+<div class="table-wrapper"><table class="table"><thead><tr><th>Funcionário</th><th>Início</th><th>Fim</th><th>Status</th><th>Ações</th></tr></thead><tbody>{% for ts in timesheets %}<tr>
+<td style="font-weight:600;">{{ ts.employee.full_name }}</td><td>{{ ts.start_date|date:"d/m/Y" }}</td><td>{{ ts.end_date|date:"d/m/Y" }}</td>
+<td>{% if ts.state == 'APPROVED' %}<span class="status-badge badge-approved">Aprovado</span>{% elif ts.state == 'SUBMITTED' %}<span class="status-badge badge-submitted">Enviado</span>{% else %}<span class="status-badge badge-inactive">{{ ts.state }}</span>{% endif %}</td>
+<td><a href="{% url 'timesheet_detail' ts.pk %}" class="btn btn-icon btn-icon-primary"><i class="bi bi-eye"></i></a></td>
+</tr>{% empty %}<tr><td colspan="5" class="text-center py-5" style="color:var(--text-secondary);">Nenhum timesheet</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

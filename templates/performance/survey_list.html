@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Pesquisas e Questionários{% endblock %}
+
+{% block breadcrumb %}
+<span style="color: #64748b; font-size: 14px; font-weight: 500;">Performance / Pesquisas</span>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+            <i class="bi bi-clipboard2-data"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 24px;">
+                Pesquisas
+            </h1>
+            <p class="text-muted mt-1 mb-0" style="font-size: 14px;">Gerencie pesquisas de clima, engajamento e avaliações.</p>
+        </div>
+    </div>
+    {% if request.user.is_admin or request.user.is_hr %}
+    <a href="{% url 'survey_create' %}" class="btn text-white fw-bold d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 12px; padding: 10px 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);">
+        <i class="bi bi-plus-lg"></i> Criar Pesquisa
+    </a>
+    {% endif %}
+</div>
+
+<div class="row">
+    {% for survey in surveys %}
+    <div class="col-md-4 mb-4">
+        <div class="card border-0 h-100" style="border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.2s;">
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3" style="width: 40px; height: 40px; background: #f1f5f9; color: #475569;">
+                        {% if survey.is_leadership_survey %}
+                        <i class="bi bi-person-badge-fill fs-5" style="color: #4f46e5;"></i>
+                        {% else %}
+                        <i class="bi {% if survey.is_anonymous %}bi-incognito text-danger{% else %}bi-person-check text-primary{% endif %} fs-5"></i>
+                        {% endif %}
+                    </div>
+                    {% if survey.status == 'PUBLISHED' %}
+                        <span class="badge" style="background:#dcfce7; color:#166534; padding:6px 12px; border-radius:20px;"><i class="bi bi-broadcast me-1"></i> Publicada</span>
+                    {% elif survey.status == 'DRAFT' %}
+                        <span class="badge" style="background:#f1f5f9; color:#475569; padding:6px 12px; border-radius:20px;"><i class="bi bi-pencil me-1"></i> Rascunho</span>
+                    {% else %}
+                        <span class="badge" style="background:#fee2e2; color:#991b1b; padding:6px 12px; border-radius:20px;"><i class="bi bi-lock me-1"></i> Encerrada</span>
+                    {% endif %}
+                </div>
+                
+                <h5 class="fw-bold mb-2" style="color: #0f172a;">{{ survey.title }}</h5>
+                <p class="text-muted" style="font-size: 13px; line-height: 1.4; flex-grow: 1;">
+                    {{ survey.description|truncatechars:80|default:"Sem descrição fornecida." }}
+                </p>
+                
+                <div class="d-flex flex-wrap gap-2 mb-3 mt-auto">
+                    {% if survey.is_leadership_survey %}
+                    <span class="badge text-indigo border" style="font-size: 11px; background: #e0e7ff; color: #3730a3; border-color: #c7d2fe;">
+                        <i class="bi bi-person-badge-fill me-1"></i> Liderança
+                    </span>
+                    {% endif %}
+                    <span class="badge bg-light text-secondary border" style="font-size: 11px;">
+                        <i class="bi bi-bullseye me-1"></i>
+                        {% if survey.target_type == 'ALL' %}Todos
+                        {% elif survey.target_type == 'LEGAL_ENTITY' %}{{ survey.target_legal_entity.name|default:"Filial" }}
+                        {% else %}{{ survey.target_subunit.name|default:"Departamento" }}{% endif %}
+                    </span>
+                    <span class="badge bg-light text-secondary border" style="font-size: 11px;">
+                        <i class="bi bi-calendar-event me-1"></i> Criada: {{ survey.created_at|date:"d/m/Y" }}
+                    </span>
+                </div>
+                
+                <div class="d-flex gap-2 pt-3" style="border-top: 1px solid #e2e8f0;">
+                    {% if request.user.is_admin or request.user.is_hr %}
+                        {% if survey.status == 'DRAFT' %}
+                            <form method="POST" action="{% url 'survey_edit' survey.pk %}" class="w-25">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="publish">
+                                <button class="btn btn-sm w-100 fw-bold px-0" style="background: #e0e7ff; color: #4f46e5; border-radius: 8px;" title="Publicar"><i class="bi bi-broadcast"></i></button>
+                            </form>
+                            <a href="{% url 'survey_edit' survey.pk %}" class="btn btn-sm w-25 fw-bold d-flex align-items-center justify-content-center" style="background: #f1f5f9; color: #475569; border-radius: 8px;" title="Editar"><i class="bi bi-pencil"></i></a>
+                        {% else %}
+                            <a href="{% url 'survey_results' survey.pk %}" class="btn btn-sm w-50 fw-bold" style="background: #f0fdf4; color: #166534; border-radius: 8px;">Resultados</a>
+                        {% endif %}
+                        <a href="{% url 'survey_delete' survey.pk %}" class="btn btn-sm w-50 fw-bold" style="background: #fff; border: 1px solid #fecdd3; color: #e11d48; border-radius: 8px;" onclick="return confirm('Deseja realmente apagar esta pesquisa e todas as suas respostas?')">Apagar</a>
+                    {% else %}
+                        {% if survey.status != 'DRAFT' %}
+                            <a href="{% url 'survey_results' survey.pk %}" class="btn btn-sm w-100 fw-bold text-center" style="background: #f0fdf4; color: #166534; border-radius: 8px;">Ver Resultados</a>
+                        {% else %}
+                            <span class="text-muted w-100 text-center py-1 fw-bold" style="font-size: 13px;">Rascunho</span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 80px; height: 80px; background: #f8fafc; color: #94a3b8;">
+            <i class="bi bi-clipboard-x fs-1"></i>
+        </div>
+        <h4 class="fw-bold" style="color: #334155;">Nenhuma Pesquisa</h4>
+        <p class="text-muted">Crie a sua primeira pesquisa de desempenho ou engajamento.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

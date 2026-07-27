@@ -1,0 +1,1 @@
+# agenda application initialization

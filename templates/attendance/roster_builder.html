@@ -1,0 +1,704 @@
+{% extends "base.html" %}
+
+{% block title %}Escala Personalizada - Roster Planner{% endblock %}
+
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;">Ponto / Escala Personalizada</span>{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+            <i class="bi bi-calendar-range"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 22px;">Escala Personalizada</h1>
+            <p class="text-muted mb-0" style="font-size: 13px;">Gerencie e acompanhe a escala de trabalho da sua equipe</p>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <button id="btnClearWeek" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="clearWeekRoster()" style="font-weight: 600;">
+            <i class="bi bi-trash"></i> Limpar Semana
+        </button>
+        <button id="btnClearMonth" class="btn btn-danger btn-sm rounded-pill px-3" onclick="clearMonthRoster()" style="font-weight: 600;">
+            <i class="bi bi-trash2-fill"></i> Limpar Mês
+        </button>
+        <button id="btnExportExcel" class="btn btn-success btn-sm rounded-pill px-3" onclick="exportExcel()" style="font-weight: 600;">
+            <i class="bi bi-file-earmark-excel"></i> Exportar
+        </button>
+        <button id="btnImportExcel" class="btn btn-dark btn-sm rounded-pill px-3" onclick="triggerImport()" style="font-weight: 600;">
+            <i class="bi bi-upload"></i> Importar
+        </button>
+        <input type="file" id="excelFileInput" style="display: none;" accept=".xlsx, .xls" onchange="importExcel(event)">
+        
+        <div style="border-left: 1px solid #e2e8f0; height: 24px; margin: 0 8px;"></div>
+
+        <div class="d-flex align-items-center bg-white border rounded-pill p-1 shadow-sm" style="border-color: #e2e8f0 !important;">
+            <button id="btnPrevWeek" class="btn btn-light btn-sm rounded-pill px-3 text-muted" style="font-weight: 600;"><i class="bi bi-chevron-left"></i> Ant.</button>
+            <span id="currentWeekRange" class="px-3" style="font-weight: 700; color: #1e293b; font-size: 13px;">Carregando...</span>
+            <button id="btnNextWeek" class="btn btn-light btn-sm rounded-pill px-3 text-muted" style="font-weight: 600;">Próx. <i class="bi bi-chevron-right"></i></button>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    
+    <div class="col-xl-3 col-lg-4">
+        <div class="card" style="border: none; box-shadow: 0 4px 24px rgba(0,0,0,0.03); border-radius: 16px;">
+            <div class="card-header bg-white collapsed" style="border-bottom: 2px solid #f1f5f9; padding: 20px; cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseTurnos" aria-expanded="false">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <h5 class="card-title fw-bold" style="color: #1e293b; font-size: 15px; margin: 0;"><i class="bi bi-layers me-2" style="color: #10b981; font-size: 18px;"></i> Blocos de Turno</h5>
+                    <i class="bi bi-chevron-down transition-icon" style="transition: transform 0.3s ease; color: #10b981; font-size: 18px; stroke-width: 2px;"></i>
+                </div>
+            </div>
+            <div id="collapseTurnos" class="collapse">
+                <div class="card-body p-3 pb-0">
+                    <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Selecione um turno abaixo para adicionar à escala:</p>
+                    
+                    <div class="mb-4" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; max-height: 250px; overflow-y: auto; background: #fff;">
+                    {% for block in shift_blocks %}
+                    <label class="d-flex selectable-item mb-0 p-0" style="cursor:pointer; border: none; border-bottom: 1px solid #f1f5f9; transition: all 0.2s;">
+                        <div class="d-flex align-items-center w-100" style="padding: 12px 16px; gap: 12px;">
+                            <input class="form-check-input flex-shrink-0 m-0" type="radio" name="selectedBlock" value="{{ block.id }}" data-name="{{ block.name }}" data-time="{{ block.display_entry|time:'H:i' }} - {{ block.display_exit|time:'H:i' }}" {% if forloop.first %}checked{% endif %} style="width: 18px; height: 18px; margin-top: 0;">
+                            <div class="flex-grow-1 overflow-hidden" style="display: flex; flex-direction: column; justify-content: center;">
+                                <div class="text-truncate" style="font-weight:700; color: #0f172a; font-size: 13px; line-height: 1.2; margin-bottom: 4px;">{{ block.name }}</div>
+                                <div class="text-truncate" style="font-size: 11px; color: #64748b;"><i class="bi bi-clock me-1 text-primary"></i>{{ block.display_entry|time:'H:i' }} - {{ block.display_exit|time:'H:i' }}</div>
+                            </div>
+                        </div>
+                    </label>
+                    {% empty %}
+                    <div class="p-4 text-center">
+                        <i class="bi bi-exclamation-circle text-orange" style="font-size: 24px;"></i>
+                        <p style="font-size: 12px; color: #64748b; margin-top: 8px;">Nenhum Padrão cadastrado!</p>
+                    </div>
+                    {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-header bg-white collapsed" style="border-top: 1px solid #f1f5f9; border-bottom: 2px solid #f1f5f9; padding: 20px; cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseFuncionarios" aria-expanded="false">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <h5 class="card-title fw-bold" style="color: #1e293b; font-size: 15px; margin: 0;"><i class="bi bi-diagram-3 me-2" style="color: #10b981; font-size: 18px;"></i> Setores</h5>
+                    <i class="bi bi-chevron-down transition-icon" style="transition: transform 0.3s ease; color: #10b981; font-size: 18px; stroke-width: 2px;"></i>
+                </div>
+            </div>
+            
+            <div id="collapseFuncionarios" class="collapse">
+                <div class="card-body p-3">
+                
+                <select id="deptFilter" class="form-select mb-3" style="font-size: 13px; border-radius: 8px; font-weight: 500; background-color: #f8fafc;" onchange="filterEmployees()">
+                    <option value="all">Todos Departamentos</option>
+                </select>
+                
+                <div id="employeeSelectContainer" style="max-height: 400px; overflow-y: auto; overflow-x: hidden; border-radius: 12px; border: 1px solid #e2e8f0; background: #fff;">
+                    {% for emp in employees %}
+                    <label class="d-flex selectable-item employee-item mb-0 p-0" data-dept="{{ emp.sub_division.name|default:'' }}" style="cursor:pointer; border: none; border-bottom: 1px solid #f1f5f9; transition: background 0.2s;">
+                        <div class="d-flex align-items-center w-100" style="padding: 12px 16px; gap: 12px;">
+                            <input class="form-check-input flex-shrink-0 m-0" type="radio" name="selectedEmployee" value="{{ emp.id }}" {% if forloop.first %}checked{% endif %} style="width: 16px; height: 16px; margin-top: 0;">
+                            <div class="flex-grow-1 overflow-hidden" style="display: flex; flex-direction: column; justify-content: center;">
+                                <div class="text-truncate" style="font-size: 13px; font-weight: 700; color: #334155; line-height: 1.2; margin-bottom: 4px;">{{ emp.full_name }}</div>
+                                <div class="text-truncate" style="font-size: 11px; color: #94a3b8;">{{ emp.job_title|default:"Sem Cargo" }}</div>
+                            </div>
+                        </div>
+                    </label>
+                    {% empty %}
+                    <div class="p-4 text-center text-muted" style="font-size: 12px;">Nenhum funcionário disponível.</div>
+                    {% endfor %}
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="col-xl-9 col-lg-8">
+        <div class="calendar-container h-100">
+            <div class="calendar-grid" id="rosterGrid">
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Animação para o ícone de colapso */
+    [data-bs-toggle="collapse"][aria-expanded="false"] .transition-icon {
+        transform: rotate(-90deg);
+    }
+    
+    /* Estilos do Calendário Premium */
+    .calendar-container {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.04);
+        padding: 24px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 14px;
+        min-height: 650px;
+    }
+    .calendar-day-col {
+        display: flex;
+        flex-direction: column;
+        background: #f8fafc;
+        border: 1px solid transparent;
+        border-radius: 18px;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+    .calendar-day-col:hover {
+        background: #ffffff;
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01);
+        border-color: #cbd5e1;
+        transform: translateY(-4px);
+    }
+    .calendar-day-header {
+        text-align: center;
+        padding: 20px 12px 16px;
+        background: transparent;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border-bottom: 1px solid rgba(0,0,0,0.03);
+    }
+    .calendar-day-name {
+        display: block;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: #64748b;
+        letter-spacing: 1.5px;
+    }
+    .calendar-day-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        font-size: 18px;
+        font-weight: 800;
+        color: #0f172a;
+        border-radius: 50%;
+        margin-top: 8px;
+        background: #ffffff;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.02);
+        transition: all 0.3s ease;
+    }
+    .calendar-day-col:hover .calendar-day-num {
+        transform: scale(1.1);
+        color: #4f46e5;
+    }
+    
+    /* Destaque Final de Semana */
+    .day-sat { background: #f0f9ff; border-color: #e0f2fe; }
+    .day-sat .calendar-day-num { color: #0369a1; }
+    .day-sat:hover .calendar-day-num { color: #0284c7; background: #e0f2fe; }
+    
+    .day-sun { background: #fff1f2; border-color: #ffe4e6; }
+    .day-sun .calendar-day-num { color: #be123c; }
+    .day-sun:hover .calendar-day-num { color: #e11d48; background: #ffe4e6; }
+
+    .calendar-slots {
+        flex: 1;
+        padding: 16px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow-y: auto;
+    }
+    
+    .calendar-add-btn {
+        margin: 0 12px 16px 12px;
+        padding: 12px;
+        background: #ffffff;
+        border: 1px dashed #cbd5e1;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 700;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    .calendar-add-btn i {
+        font-size: 14px;
+        transition: transform 0.2s;
+    }
+    .calendar-day-col:hover .calendar-add-btn {
+        background: #4f46e5;
+        color: #ffffff;
+        border-style: solid;
+        border-color: #4f46e5;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    .calendar-day-col:hover .calendar-add-btn i {
+        transform: rotate(90deg);
+    }
+    .day-sat:hover .calendar-add-btn { background: #0ea5e9; border-color: #0ea5e9; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3); }
+    .day-sun:hover .calendar-add-btn { background: #f43f5e; border-color: #f43f5e; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3); }
+
+    .shift-card {
+        background: #ffffff; 
+        border: 1px solid #f1f5f9;
+        border-left: 4px solid #10b981; 
+        border-radius: 12px; 
+        padding: 14px;
+        box-shadow: 0 2px 8px -2px rgba(0,0,0,0.04); 
+        position: relative;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .shift-card-rest {
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        border-left: 4px solid #94a3b8 !important;
+        opacity: 0.85;
+    }
+    .shift-card-rest:hover {
+        opacity: 1;
+        border-style: solid;
+        background: #ffffff;
+    }
+    .shift-card:hover { 
+        transform: translateY(-2px) scale(1.02); 
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); 
+        border-color: #e2e8f0; 
+        z-index: 10;
+    }
+    .shift-card .emp-name { 
+        font-weight: 700; 
+        font-size: 13px; 
+        color: #1e293b; 
+        display: block; 
+        line-height: 1.3;
+    }
+    .shift-card .shift-time { 
+        font-size: 11px; 
+        color: #64748b; 
+        font-weight: 600; 
+        display: inline-flex; 
+        align-items: center;
+        background: #f1f5f9;
+        padding: 4px 8px;
+        border-radius: 6px;
+        width: fit-content;
+    }
+    .shift-card .delete-btn {
+        position: absolute; top: -8px; right: -8px; color: #ffffff; background: #ef4444; 
+        border: none; font-size: 10px; cursor: pointer; border-radius: 50%; opacity: 0; 
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+        transform: scale(0.8);
+    }
+    .shift-card:hover .delete-btn { opacity: 1; transform: scale(1); }
+    .shift-card .delete-btn:hover { background: #dc2626; transform: scale(1.1); }
+    
+    /* Scrollbar */
+    #employeeSelectContainer::-webkit-scrollbar, .calendar-slots::-webkit-scrollbar { width: 6px; }
+    #employeeSelectContainer::-webkit-scrollbar-track, .calendar-slots::-webkit-scrollbar-track { background: transparent; }
+    #employeeSelectContainer::-webkit-scrollbar-thumb, .calendar-slots::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    
+    .selectable-item { position: relative; overflow: hidden; background: #ffffff; }
+    .selectable-item:hover { background: #f8fafc !important; }
+    .selectable-item:has(input:checked) { background: #eff6ff !important; border-color: #bfdbfe !important; }
+    .selectable-item:has(input:checked)::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #3b82f6; border-radius: 0 4px 4px 0;
+    }
+    
+    /* Corrige o conflito do TomSelect com o SweetAlert2 */
+    .swal2-select { display: none !important; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    let currentDate = new Date(); // Today
+    // Adjust to Monday of current week
+    let dayIndex = currentDate.getDay(); // 0 is Sunday, 1 is Monday
+    let diff = currentDate.getDate() - dayIndex + (dayIndex === 0 ? -6 : 1);
+    currentDate = new Date(currentDate.setDate(diff));
+    
+    const weekDays = [];
+
+    function updateCalendarHeaders() {
+        const grid = document.getElementById('rosterGrid');
+        grid.innerHTML = '';
+        
+        const endOfWeek = new Date(currentDate);
+        endOfWeek.setDate(currentDate.getDate() + 6);
+        
+        const fmt = d => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+        document.getElementById('currentWeekRange').innerHTML = `<span style="color: #64748b;">${fmt(currentDate)}</span> <i class="bi bi-arrow-right mx-1" style="color: #cbd5e1;"></i> <span style="color: #0f172a;">${fmt(endOfWeek)}</span>`;
+        
+        const dayNames = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Dom'];
+        
+        for(let i=0; i<7; i++) {
+            let d = new Date(currentDate);
+            d.setDate(currentDate.getDate() + i);
+            weekDays[i] = d.toISOString().split('T')[0];
+            
+            let extraClass = '';
+            if(i === 5) extraClass = 'day-sat';
+            if(i === 6) extraClass = 'day-sun';
+            
+            const col = document.createElement('div');
+            col.className = `calendar-day-col ${extraClass}`;
+            col.innerHTML = `
+                <div class="calendar-day-header">
+                    <span class="calendar-day-name">${dayNames[i]}</span>
+                    <span class="calendar-day-num shadow-sm">${d.getDate()}</span>
+                </div>
+                <div class="calendar-slots" data-day="${i}"></div>
+                <button class="calendar-add-btn" data-day="${i}">
+                    <i class="bi bi-plus-lg me-1"></i> <span style="font-size: 11px; text-transform: uppercase;">Ação</span>
+                </button>
+            `;
+            grid.appendChild(col);
+        }
+        
+        setupAddButtons();
+    }
+
+    function setupAddButtons() {
+        document.querySelectorAll('.calendar-add-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const dayOffset = parseInt(e.currentTarget.getAttribute('data-day'));
+                const dateStr = weekDays[dayOffset];
+                const empInput = document.querySelector('input[name="selectedEmployee"]:checked');
+                const empId = empInput ? empInput.value : null;
+                const blockInput = document.querySelector('input[name="selectedBlock"]:checked');
+                
+                if(!empId) {
+                    alert("Selecione um funcionário na lista à esquerda!");
+                    return;
+                }
+                if(!blockInput) {
+                    alert("Selecione um Bloco de Turno à esquerda!");
+                    return;
+                }
+                const blockId = blockInput.value;
+
+                fetch('{% url "api_roster_update" %}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: JSON.stringify({ action: 'add', employee_id: empId, date: dateStr, block_id: blockId })
+                }).then(res => res.json())
+                .then(data => {
+                    if(data.success) fetchRoster();
+                    else alert("Erro: " + data.error);
+                });
+            });
+        });
+    }
+
+    function fetchRoster() {
+        const startDateStr = weekDays[0];
+        const dept = document.getElementById('deptFilter') ? document.getElementById('deptFilter').value : 'all';
+        fetch(`{% url "api_roster_fetch" %}?start_date=${startDateStr}&department=${encodeURIComponent(dept)}`)
+        .then(res => res.json())
+        .then(data => {
+            for(let i=0; i<7; i++) {
+                document.querySelector(`.calendar-slots[data-day="${i}"]`).innerHTML = '';
+            }
+            if(data.overrides) {
+                // Organizar os cards: primeiro por horário de entrada (cedo -> tarde), depois as folgas, desempate por nome
+                data.overrides.sort((a, b) => {
+                    if (a.type === 'REST' && b.type === 'REST') return a.employee_name.localeCompare(b.employee_name);
+                    if (a.type === 'REST') return 1;
+                    if (b.type === 'REST') return -1;
+                    if (a.entry_time < b.entry_time) return -1;
+                    if (a.entry_time > b.entry_time) return 1;
+                    return a.employee_name.localeCompare(b.employee_name);
+                });
+                
+                data.overrides.forEach(ov => {
+                    const idx = weekDays.indexOf(ov.date);
+                    if(idx !== -1) {
+                        const cell = document.querySelector(`.calendar-slots[data-day="${idx}"]`);
+                        
+                        // Select dynamic color based on entry time or random
+                        const colors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'];
+                        const hColor = colors[ov.employee_name.length % colors.length];
+
+                        const card = document.createElement('div');
+                        card.className = ov.type === 'REST' ? 'shift-card shift-card-rest' : 'shift-card';
+                        if (ov.type !== 'REST') {
+                            card.style.borderLeftColor = hColor;
+                        }
+                        
+                        let timeHtml = '';
+                        if (ov.type === 'REST') {
+                            timeHtml = `<span class="shift-time"><i class="bi bi-cup-hot me-1" style="color: #64748b;"></i><span style="color: #64748b; font-weight: 700;">Folga / DSR</span></span>`;
+                        } else {
+                            timeHtml = `<span class="shift-time"><i class="bi bi-clock me-1" style="color: ${hColor}"></i>${ov.entry_time || '--'} - ${ov.exit_time || '--'}</span>`;
+                        }
+                        
+                        card.innerHTML = `
+                            <button class="delete-btn" onclick="removeShift(${ov.id})" title="Remover"><i class="bi bi-x-lg"></i></button>
+                            <span class="emp-name" ${ov.type === 'REST' ? 'style="color: #64748b;"' : ''}>${ov.employee_name}</span>
+                            ${timeHtml}
+                        `;
+                        cell.appendChild(card);
+                    }
+                });
+            }
+        });
+    }
+
+    window.removeShift = function(ovId) {
+        if(!confirm("Remover este turno?")) return;
+        fetch('{% url "api_roster_update" %}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ action: 'remove', override_id: ovId })
+        }).then(res => res.json())
+        .then(data => {
+            if(data.success) fetchRoster();
+            else alert("Erro: " + data.error);
+        });
+    }
+
+    document.getElementById('btnPrevWeek').addEventListener('click', () => {
+        currentDate.setDate(currentDate.getDate() - 7);
+        updateCalendarHeaders();
+        fetchRoster();
+    });
+
+    document.getElementById('btnNextWeek').addEventListener('click', () => {
+        currentDate.setDate(currentDate.getDate() + 7);
+        updateCalendarHeaders();
+        fetchRoster();
+    });
+
+    // Init
+    updateCalendarHeaders();
+    fetchRoster();
+    
+    // Setup Filters
+    function setupFilters() {
+        const containers = document.querySelectorAll('.employee-item');
+        const depts = new Set();
+        containers.forEach(opt => {
+            if(opt.dataset.dept) depts.add(opt.dataset.dept);
+        });
+        const deptFilter = document.getElementById('deptFilter');
+        depts.forEach(d => {
+            const el = document.createElement('option');
+            el.value = d; el.innerText = d;
+            deptFilter.appendChild(el);
+            if(d.toLowerCase().includes('service desk')) {
+                deptFilter.value = d;
+            }
+        });
+        filterEmployees();
+    }
+    
+    window.filterEmployees = function() {
+        const filterVal = document.getElementById('deptFilter').value;
+        const containers = document.querySelectorAll('.employee-item');
+        containers.forEach(opt => {
+            if(filterVal === 'all' || opt.dataset.dept === filterVal) {
+                opt.classList.remove('d-none');
+                opt.classList.add('d-flex');
+            } else {
+                opt.classList.remove('d-flex');
+                opt.classList.add('d-none');
+            }
+        });
+        fetchRoster();
+    };
+    window.exportExcel = function() {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        const dept = document.getElementById('deptFilter').value;
+        let url = `/attendance/roster/api/export-excel/?start_date=${dateStr}`;
+        if(dept && dept !== 'all') {
+            url += `&department=${encodeURIComponent(dept)}`;
+        }
+        window.location.href = url;
+    };
+
+    window.triggerImport = function() {
+        const defaultMonth = currentDate.toISOString().slice(0,7);
+        const dept = document.getElementById('deptFilter') ? document.getElementById('deptFilter').value : 'all';
+        const deptName = dept === 'all' ? 'TODOS OS DEPARTAMENTOS' : dept;
+        
+        Swal.fire({
+            title: 'Importar Escala',
+            html: `
+                <div style="margin-bottom: 20px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">Setor Selecionado</span><br>
+                    <strong style="color: #0f172a; font-size: 15px;"><i class="bi bi-diagram-3 text-primary me-1"></i> ${deptName}</strong>
+                </div>
+                <p style="font-size: 14px; color: #475569;">Para qual mês/ano você está importando essa planilha?</p>
+                <input type="month" id="swal-import-month" class="form-control" style="max-width: 200px; margin: 0 auto;" value="${defaultMonth}">
+                <p style="font-size: 12px; color: #64748b; margin-top: 10px;">Isso evita que a escala caia no mês errado.</p>
+            `,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Escolher Arquivo',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const month = document.getElementById('swal-import-month').value;
+                if (!month) {
+                    Swal.showValidationMessage('Por favor, selecione um mês');
+                }
+                return month;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.importMonthStr = result.value;
+                document.getElementById('excelFileInput').click();
+            }
+        });
+    };
+
+    window.importExcel = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Mostrar Global Loader (nativo do sistema) em vez de SweetAlert
+        const loader = document.getElementById('globalLoader');
+        if (loader) loader.classList.remove('d-none');
+
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        // Usa o mês que o usuário selecionou no alerta anterior
+        const dateToSend = window.importMonthStr ? window.importMonthStr + '-01' : currentDate.toISOString().split('T')[0];
+        formData.append('current_date', dateToSend);
+        
+        fetch(`/attendance/roster/api/import-excel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.error) {
+                if (loader) loader.classList.add('d-none');
+                Swal.fire('Erro!', data.error, 'error');
+            } else {
+                if (loader) loader.classList.add('d-none');
+                Swal.fire('Sucesso!', data.message, 'success').then(() => {
+                    loadWeek(currentDate);
+                });
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            if (loader) loader.classList.add('d-none');
+            Swal.fire('Erro!', 'Falha ao conectar com o servidor.', 'error');
+        })
+        .finally(() => {
+            event.target.value = ''; // reseta o input
+        });
+    };
+    window.clearWeekRoster = function() {
+        const dept = document.getElementById('deptFilter') ? document.getElementById('deptFilter').value : 'all';
+        const deptName = dept === 'all' ? 'TODOS OS DEPARTAMENTOS' : dept;
+        
+        if(!confirm(`Tem certeza que deseja APAGAR toda a escala desta semana para: ${deptName}? Essa ação não pode ser desfeita!`)) return;
+        
+        const loader = document.getElementById('globalLoader');
+        if (loader) loader.classList.remove('d-none');
+        
+        const dateStr = currentDate.toISOString().split('T')[0];
+        
+        fetch('{% url "api_roster_update" %}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+            body: JSON.stringify({ action: 'clear_week', date: dateStr, department: dept })
+        }).then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                if (loader) loader.classList.add('d-none');
+                Swal.fire('Limpo!', data.message, 'success').then(() => {
+                    fetchRoster();
+                });
+            } else {
+                if (loader) loader.classList.add('d-none');
+                Swal.fire('Erro', data.error, 'error');
+            }
+        })
+        .catch(err => {
+            if (loader) loader.classList.add('d-none');
+            console.error(err);
+            Swal.fire('Erro', 'Falha ao se comunicar com o servidor', 'error');
+        });
+    };
+    
+    window.clearMonthRoster = function() {
+        const dept = document.getElementById('deptFilter') ? document.getElementById('deptFilter').value : 'all';
+        const deptName = dept === 'all' ? 'TODOS OS DEPARTAMENTOS' : dept;
+        
+        Swal.fire({
+            title: 'Limpar Escala Mensal',
+            html: `
+                <p>Selecione o mês que deseja <b>APAGAR</b> toda a escala para:<br><strong class="text-danger">${deptName}</strong></p>
+                <input type="month" id="swal-month-input" class="form-control" style="max-width: 200px; margin: 0 auto;">
+                <p style="font-size: 12px; color: #ef4444; margin-top: 10px;">Esta ação é irreversível!</p>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Sim, Apagar Mês!',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const month = document.getElementById('swal-month-input').value;
+                if (!month) {
+                    Swal.showValidationMessage('Por favor, selecione um mês válido');
+                }
+                return month;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const monthStr = result.value;
+                
+                const loader = document.getElementById('globalLoader');
+                if (loader) loader.classList.remove('d-none');
+                
+                fetch('{% url "api_roster_update" %}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+                    body: JSON.stringify({ action: 'clear_month', month: monthStr, department: dept })
+                }).then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        if (loader) loader.classList.add('d-none');
+                        Swal.fire('Limpo!', data.message, 'success').then(() => {
+                            fetchRoster();
+                        });
+                    } else {
+                        if (loader) loader.classList.add('d-none');
+                        Swal.fire('Erro', data.error, 'error');
+                    }
+                })
+                .catch(err => {
+                    if (loader) loader.classList.add('d-none');
+                    console.error(err);
+                    Swal.fire('Erro', 'Falha ao se comunicar com o servidor', 'error');
+                });
+            }
+        });
+    };
+    setupFilters();
+    
+    // Atualização automática a cada 30 segundos
+    setInterval(() => {
+        fetchRoster();
+    }, 30000);
+</script>
+{% endblock %}

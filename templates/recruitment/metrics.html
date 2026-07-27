@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Métricas de Recrutamento{% endblock %}
+{% block breadcrumb %}<span style="color:var(--text-secondary);font-size:13px;">Recrutamento / Métricas</span>{% endblock %}
+
+{% block content %}
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    .metric-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 12px 32px rgba(31, 38, 135, 0.05);
+        padding: 28px;
+        height: 100%;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 4px;
+        background: linear-gradient(90deg, #3b82f6, #10b981, #f59e0b);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(31, 38, 135, 0.08);
+    }
+    .metric-card:hover::before {
+        opacity: 1;
+    }
+
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        color: white;
+        margin-bottom: 16px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .icon-box.primary { background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 8px 16px rgba(59,130,246,0.3); }
+    .icon-box.warning { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 8px 16px rgba(245,158,11,0.3); }
+    .icon-box.success { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 8px 16px rgba(16,185,129,0.3); }
+    .icon-box.info { background: linear-gradient(135deg, #0ea5e9, #0284c7); box-shadow: 0 8px 16px rgba(14,165,233,0.3); }
+
+    .metric-value {
+        font-size: 42px;
+        font-weight: 900;
+        color: #0f172a;
+        margin: 0 0 4px;
+        letter-spacing: -1px;
+    }
+    .metric-title {
+        font-size: 13px;
+        color: #64748b;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+    }
+    .chart-container {
+        position: relative;
+        height: 320px;
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .rejection-item {
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: #f8fafc;
+        margin-bottom: 8px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+    .rejection-item:hover {
+        background: #fff;
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        transform: translateX(4px);
+    }
+</style>
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-5">
+    <div class="d-flex align-items-center gap-3">
+        <div style="width:56px;height:56px;background:linear-gradient(135deg,#0dc02a,#0a9b21);border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;box-shadow:0 8px 20px rgba(13,192,42,0.35);">
+            <i class="bi bi-graph-up-arrow"></i>
+        </div>
+        <div>
+            <h1 style="font-size:26px;font-weight:800;color:#0f172a;margin:0;letter-spacing:-0.5px;">Dashboard de Métricas</h1>
+            <p style="color:#64748b;font-size:14px;margin:0;">Visão analítica avançada do seu funil de talentos</p>
+        </div>
+    </div>
+</div>
+
+<!-- KPIs -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="icon-box primary"><i class="bi bi-people-fill"></i></div>
+                <span class="badge bg-light text-primary border border-primary-subtle rounded-pill px-3 py-2">Global</span>
+            </div>
+            <div class="metric-value">{{ total_candidates }}</div>
+            <div class="metric-title">Candidatos Totais</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="icon-box warning"><i class="bi bi-hourglass-split"></i></div>
+                <span class="badge bg-light text-warning border border-warning-subtle rounded-pill px-3 py-2">Ativos</span>
+            </div>
+            <div class="metric-value">{{ active_candidates }}</div>
+            <div class="metric-title">Em Andamento</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="icon-box success"><i class="bi bi-check-circle-fill"></i></div>
+                <span class="badge bg-light text-success border border-success-subtle rounded-pill px-3 py-2">Efetivos</span>
+            </div>
+            <div class="metric-value">{{ hired_candidates }}</div>
+            <div class="metric-title">Contratações</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="icon-box info"><i class="bi bi-lightning-charge-fill"></i></div>
+                <span class="badge bg-light text-info border border-info-subtle rounded-pill px-3 py-2">Taxa</span>
+            </div>
+            <div class="metric-value">{{ success_rate }}<span style="font-size:24px;color:#94a3b8;">%</span></div>
+            <div class="metric-title">Taxa de Sucesso</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <!-- Drop-off Funnel Chart -->
+    <div class="col-md-8">
+        <div class="metric-card">
+            <h5 class="fw-bold mb-1" style="color:#0f172a;font-size:18px;">Gargalos do Funil de Reprovação</h5>
+            <p style="color:#64748b;font-size:13px;margin-bottom:20px;">Análise de volume de candidatos rejeitados por etapa</p>
+            <div class="chart-container">
+                <canvas id="funnelChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Doughnut Status -->
+    <div class="col-md-4">
+        <div class="metric-card">
+            <h5 class="fw-bold mb-1" style="color:#0f172a;font-size:18px;">Panorama Geral</h5>
+            <p style="color:#64748b;font-size:13px;margin-bottom:20px;">Distribuição de status dos candidatos</p>
+            <div class="chart-container">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Candidates by Job -->
+    <div class="col-md-8">
+        <div class="metric-card">
+            <h5 class="fw-bold mb-1" style="color:#0f172a;font-size:18px;">Vagas de Maior Interesse</h5>
+            <p style="color:#64748b;font-size:13px;margin-bottom:20px;">Top 10 vagas ordenadas pelo volume de inscrições</p>
+            <div class="chart-container">
+                <canvas id="jobsChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Rejection Reasons List -->
+    <div class="col-md-4">
+        <div class="metric-card" style="max-height: 440px; overflow-y: auto;">
+            <h5 class="fw-bold mb-1" style="color:#0f172a;font-size:18px;">Principais Motivos de Saída</h5>
+            <p style="color:#64748b;font-size:13px;margin-bottom:20px;">Justificativas mais comuns de reprovação</p>
+            
+            {% if reason_counts %}
+                <div class="d-flex flex-column">
+                {% for reason, count in reason_counts %}
+                    <div class="rejection-item d-flex justify-content-between align-items-center">
+                        <span style="font-size:13.5px; color:#334155; font-weight: 500;">{{ reason }}</span>
+                        <span class="badge bg-danger rounded-pill shadow-sm" style="font-size:12px; padding:6px 10px;">{{ count }}</span>
+                    </div>
+                {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5 text-muted h-100 d-flex flex-column justify-content-center align-items-center">
+                    <div style="width:64px;height:64px;background:#f1f5f9;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+                        <i class="bi bi-emoji-smile text-slate-400" style="font-size:32px;"></i>
+                    </div>
+                    <h6 class="fw-bold text-slate-600 mb-1">Tudo limpo por aqui</h6>
+                    <p style="font-size:13px;">Ainda não há registros suficientes de motivos de reprovação no banco de dados.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    Chart.defaults.font.family = "'Inter', 'Segoe UI', Roboto, sans-serif";
+    Chart.defaults.color = '#64748b';
+    
+    // Prepare Data from Django
+    const funnelLabels = [{% for key, val in rejection_funnel.items %}'{{ key }}',{% endfor %}];
+    const funnelData = [{% for key, val in rejection_funnel.items %}{{ val }},{% endfor %}];
+    
+    const jobsLabels = [{% for item in jobs_data %}'{{ item.title|truncatechars:25 }}',{% endfor %}];
+    const jobsData = [{% for item in jobs_data %}{{ item.count }},{% endfor %}];
+
+    // Gradients setup
+    function createGradient(ctx, colorStart, colorEnd) {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, colorStart);
+        gradient.addColorStop(1, colorEnd);
+        return gradient;
+    }
+    function createHorizontalGradient(ctx, colorStart, colorEnd) {
+        const gradient = ctx.createLinearGradient(0, 0, 400, 0);
+        gradient.addColorStop(0, colorStart);
+        gradient.addColorStop(1, colorEnd);
+        return gradient;
+    }
+
+    // Status Doughnut Chart
+    const ctxStatus = document.getElementById('statusChart').getContext('2d');
+    const gradStatus1 = createGradient(ctxStatus, '#f59e0b', '#fbbf24');
+    const gradStatus2 = createGradient(ctxStatus, '#10b981', '#34d399');
+    const gradStatus3 = createGradient(ctxStatus, '#ef4444', '#f87171');
+    
+    new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: ['Em Andamento', 'Contratados', 'Reprovados'],
+            datasets: [{
+                data: [{{ active_candidates }}, {{ hired_candidates }}, {{ rejected_candidates }}],
+                backgroundColor: [gradStatus1, gradStatus2, gradStatus3],
+                borderWidth: 4,
+                borderColor: '#ffffff',
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 20, font: { weight: '600' } } },
+                tooltip: { backgroundColor: '#0f172a', padding: 12, cornerRadius: 8 }
+            },
+            cutout: '75%',
+            animation: { animateScale: true, animateRotate: true }
+        }
+    });
+
+    // Funnel (Bar) Chart
+    const ctxFunnel = document.getElementById('funnelChart').getContext('2d');
+    const gradFunnel = createGradient(ctxFunnel, '#ef4444', '#b91c1c');
+    
+    new Chart(ctxFunnel, {
+        type: 'bar',
+        data: {
+            labels: funnelLabels,
+            datasets: [{
+                label: 'Candidatos Reprovados',
+                data: funnelData,
+                backgroundColor: gradFunnel,
+                borderRadius: 8,
+                barThickness: 40,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } },
+                x: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: '600' } } }
+            },
+            plugins: { 
+                legend: { display: false },
+                tooltip: { backgroundColor: '#0f172a', padding: 12, cornerRadius: 8 }
+            }
+        }
+    });
+
+    // Jobs Chart
+    const ctxJobs = document.getElementById('jobsChart').getContext('2d');
+    const gradJobs = createHorizontalGradient(ctxJobs, '#10b981', '#059669');
+    
+    new Chart(ctxJobs, {
+        type: 'bar',
+        data: {
+            labels: jobsLabels,
+            datasets: [{
+                label: 'Interessados',
+                data: jobsData,
+                backgroundColor: gradJobs,
+                borderRadius: 8,
+                barThickness: 24,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y', // horizontal bar
+            scales: {
+                x: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } },
+                y: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: '600' } } }
+            },
+            plugins: { 
+                legend: { display: false },
+                tooltip: { backgroundColor: '#0f172a', padding: 12, cornerRadius: 8 }
+            }
+        }
+    });
+</script>
+{% endblock %}

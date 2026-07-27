@@ -1,0 +1,197 @@
+{% extends "base.html" %}{% block title %}{{ title }}{% endblock %}{% block content %}
+<style>
+    /* Card Grid Styles */
+    .crud-item .card {
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        overflow: visible !important;
+    }
+    .crud-item .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+    }
+    .btn-add-premium {
+        background: #0f172a;
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 10px 20px;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .btn-add-premium:hover {
+        background: #1e293b;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+    
+    /* Input styles for the modal */
+    .form-control {
+        border-radius: 10px !important;
+        border: 1px solid #e2e8f0 !important;
+        padding: 10px 14px !important;
+        font-size: 14px !important;
+        color: #0f172a !important;
+        background-color: #f8fafc !important;
+        box-shadow: none !important;
+    }
+    .form-control:focus {
+        background-color: #ffffff !important;
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+        outline: none !important;
+    }
+    #crudSearchInput {
+        padding-left: 38px !important;
+    }
+</style>
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+            <i class="bi bi-ui-radios-grid"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 22px;">{{ title }}</h1>
+            <p class="text-muted mb-0" style="font-size: 13px;">Gerenciamento de Entidades Básicas</p>
+        </div>
+    </div>
+    
+    <div class="d-flex align-items-center gap-3">
+        <div class="position-relative">
+            <i class="bi bi-search position-absolute text-muted" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 14px;"></i>
+            <input type="text" id="crudSearchInput" class="form-control shadow-sm" placeholder="Pesquisar..." style="border-radius: 12px; width: 280px; transition: border-color 0.2s; background-color: #fff !important;">
+        </div>
+        <button type="button" data-bs-toggle="modal" data-bs-target="#addModal" class="btn btn-add-premium d-flex align-items-center gap-2">
+            <i class="bi bi-plus-lg"></i> Novo Registro
+        </button>
+    </div>
+</div>
+
+<div class="row g-4" id="cardsContainer">
+    {% for obj in objects %}
+    <div class="col-md-6 col-lg-4 crud-item" data-title="{{ obj|lower }}">
+        <div class="card h-100">
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 44px; height: 44px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 18px;">
+                            <i class="bi bi-card-text"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1 crud-title" style="font-weight: 700; color: #0f172a; font-size: 16px;">{{ obj }}</h5>
+                            <span style="color: #64748b; font-size: 12px; font-weight: 600;">ID: #{{ obj.pk }}</span>
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light border-0" type="button" data-bs-toggle="dropdown" style="background: transparent; padding: 4px;">
+                            <i class="bi bi-three-dots-vertical text-muted"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 12px; border: 1px solid #e2e8f0; padding: 8px;">
+                            {% with edit_url_name=request.resolver_match.url_name|slice:':-5'|add:'_edit' %}
+                            <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url edit_url_name obj.pk %}" style="font-size: 13px; font-weight: 500; border-radius: 6px; padding: 8px 16px;">
+                                <i class="bi bi-pencil-square" style="color: #3b82f6;"></i> Editar
+                            </a></li>
+                            {% endwith %}
+                            <li><a class="dropdown-item text-danger d-flex align-items-center gap-2 mt-1" href="{% url 'delete_generic' request.resolver_match.url_name|slice:':-5' obj.pk %}" onclick="return confirm('Deseja realmente remover?')" style="font-size: 13px; font-weight: 500; border-radius: 6px; padding: 8px 16px;">
+                                <i class="bi bi-trash3-fill"></i> Remover
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-auto pt-3 border-top d-flex flex-wrap gap-2">
+                    <span class="badge" style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 600; padding: 6px 12px; font-size: 11px;">{{ title }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 py-5 text-center empty-state">
+        <i class="bi bi-ui-radios-grid text-muted mb-3 d-block" style="font-size: 48px; opacity: 0.5;"></i>
+        <h5 class="fw-bold" style="color: #475569;">Nenhum registro encontrado</h5>
+        <p class="text-muted mb-0">Adicione novos itens clicando no botão acima.</p>
+    </div>
+    {% endfor %}
+    <div class="col-12 py-5 text-center no-results-state" style="display: none;">
+        <i class="bi bi-search text-muted mb-3 d-block" style="font-size: 48px; opacity: 0.5;"></i>
+        <h5 class="fw-bold" style="color: #475569;">Nenhum resultado para sua busca</h5>
+    </div>
+</div>
+
+
+<div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="POST" class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+            {% csrf_token %}
+            <div class="modal-header border-0 pb-0" style="padding: 24px 28px 0;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #ecfdf5; border-radius: 12px; color: #10b981; font-size: 18px;">
+                        <i class="bi bi-plus-lg"></i>
+                    </div>
+                    <h5 class="modal-title fw-bold" style="color: #0f172a; font-size: 18px; margin: 0;">Adicionar {{ title }}</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px 28px;">
+                {% for field in form %}
+                <div class="mb-4 last-mb-0">
+                    <label class="form-label" style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <div style="color:#ef4444;font-size:12px;margin-top:4px;">{% for e in field.errors %}{{ e }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="modal-footer border-0 d-flex justify-content-end" style="padding: 0 24px 24px 24px;">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 6px; font-weight: 600; color: #64748b; border: 1px solid #cbd5e1; background: #ffffff;">Cancelar</button>
+                <button type="submit" class="btn btn-dark" style="border-radius: 6px; font-weight: 600; background: #0f172a; border: none; padding-left: 20px; padding-right: 20px;"><i class="bi bi-check2 me-1"></i> Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Move modal to body to avoid z-index issues
+        document.body.appendChild(document.getElementById('addModal'));
+        
+        var searchInput = document.getElementById('crudSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                var term = e.target.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                var cards = document.querySelectorAll('.crud-item');
+                var hasVisible = false;
+                
+                cards.forEach(function(card) {
+                    var titleEl = card.querySelector('.crud-title');
+                    if (titleEl) {
+                        var textContent = titleEl.textContent.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                        if (textContent.includes(term)) {
+                            card.style.display = '';
+                            hasVisible = true;
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    }
+                });
+                
+                var noResultsState = document.querySelector('.no-results-state');
+                var emptyState = document.querySelector('.empty-state');
+                
+                if (noResultsState) {
+                    if (!hasVisible && term.length > 0 && (!emptyState || emptyState.style.display === 'none')) {
+                        noResultsState.style.display = 'block';
+                    } else {
+                        noResultsState.style.display = 'none';
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,846 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block breadcrumb %}
+<span style="color: #64748b; font-size: 14px; font-weight: 500;">Dashboard</span>
+{% endblock %}
+
+{% block content %}
+<style>
+/* Sesame Dashboard Design System */
+:root {
+    --dash-bg: #f8fafc;
+    --card-bg: #ffffff;
+    --card-border: #e2e8f0;
+    --primary: #4f46e5;
+    --primary-light: #6366f1;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --radius: 16px;
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+}
+
+.helptext {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: block;
+    margin-top: 4px;
+}
+
+.dashboard-masonry {
+    column-count: 1;
+    column-gap: 16px;
+    padding-bottom: 20px;
+}
+@media(min-width: 992px) {
+    .dashboard-masonry { column-count: 3; }
+}
+.dashboard-masonry.admin-grid {
+    column-count: 1;
+}
+@media(min-width: 992px) {
+    .dashboard-masonry.admin-grid { column-count: 2; }
+}
+
+.widget-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    page-break-inside: avoid;
+    width: 100%;
+    box-sizing: border-box;
+    display: inline-block; /* Required for Masonry break-inside avoid in Chrome */
+}
+
+.widget-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.widget-title i { color: #0AA423; font-size: 16px; }
+
+/* 1. Welcome Card */
+.welcome-card {
+    background: linear-gradient(135deg, #5b21b6 0%, #3b82f6 100%);
+    color: white;
+    padding: 20px 24px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+.welcome-card::after {
+    content: ''; position: absolute; right: -20px; bottom: -40px;
+    width: 200px; height: 150px; background: rgba(255,255,255,0.05); transform: rotate(-15deg); border-radius: 40px;
+}
+.welcome-subtitle { font-size: 13px; font-weight: 500; opacity: 0.8; margin-bottom: 2px; }
+.welcome-title { font-size: 18px; font-weight: 700; margin: 0; }
+
+/* Avatars */
+.avatar-group { display: flex; align-items: center; }
+.avatar-group .avatar {
+    width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; margin-left: -12px;
+    object-fit: cover; background: #e2e8f0; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; color: #475569; position: relative;
+}
+.avatar-group .avatar:first-child { margin-left: 0; }
+.avatar-group .avatar-count {
+    width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; margin-left: -12px;
+    background: #f1f5f9; color: var(--primary); display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; z-index: 10;
+}
+
+/* Notifications */
+.notif-list { max-height: 280px; overflow-y: auto; padding-right: 8px; }
+.notif-list::-webkit-scrollbar { width: 6px; }
+.notif-list::-webkit-scrollbar-track { background: transparent; }
+.notif-list::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+.notif-list::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+.notif-item { border-bottom: 1px solid var(--card-border); padding: 16px 0; }
+.notif-item:last-child { border-bottom: none; padding-bottom: 0; }
+.notif-title { font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 4px; }
+.notif-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+.notif-meta { font-size: 12px; color: #f43f5e; display: flex; align-items: center; gap: 4px; font-weight: 500;}
+.notif-meta.meta-blue { color: #3b82f6; }
+
+/* Managers */
+.manager-avatars { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; }
+.manager-block h6 { font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 12px; }
+
+/* Holidays */
+.holiday-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.holiday-row:last-child { margin-bottom: 0; }
+.hs-label { font-size: 13px; color: var(--text-muted); font-weight: 500; max-width: 60%; }
+.hs-value { display: flex; align-items: baseline; gap: 8px; }
+.hs-number { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 12px; font-size: 18px; font-weight: 700; color: var(--text-main); }
+.hs-unit { font-size: 13px; font-weight: 600; color: var(--text-main); }
+
+/* HR Chat */
+.hr-chat-widget { text-align: center; }
+.hr-chat-avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; margin: 0 auto 12px; border: 4px solid #bbf7d0; display: block; }
+.hr-chat-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; color: var(--text-main); }
+.hr-chat-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+.btn-hr { background: #1e293b; color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 600; width: 100%; transition: background 0.2s; }
+.btn-hr:hover { background: #0f172a; color: white; }
+
+/* Announcements */
+.announcement-card { padding: 0; overflow: hidden; }
+.anc-img { width: 100%; height: 160px; object-fit: contain; background-color: #f8fafc; border-radius: var(--radius) var(--radius) 0 0; }
+.anc-content { padding: 20px 24px; }
+.anc-title { font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+.anc-author { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+.anc-body { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px; }
+.anc-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--card-border); padding-top: 16px; }
+.anc-stats { display: flex; gap: 16px; font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.anc-stats i { font-size: 14px; margin-right: 4px; }
+.anc-link { font-size: 13px; color: var(--primary); font-weight: 600; text-decoration: none; }
+
+/* Last Reports */
+.report-link { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #f8fafc; border-radius: 8px; text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 600; margin-bottom: 12px; transition: all 0.2s; }
+.report-link:last-child { margin-bottom: 0; }
+.report-link:hover { background: #f1f5f9; color: var(--primary); }
+.report-link i { color: #10b981; font-size: 16px; }
+</style>
+
+
+
+<div class="welcome-card fade-in-up" style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+        <h2 class="welcome-title mb-1" style="font-size: 22px;">{{ greeting }}, {{ request.user.first_name|default:request.user.username|title }}!</h2>
+        <div class="welcome-subtitle" style="font-size: 15px; font-weight: 400; opacity: 0.9;">
+            O que vamos fazer hoje?
+        </div>
+    </div>
+    <div class="d-none d-md-block" style="opacity: 0.9;">
+        <i class="bi bi-stars" style="font-size: 48px; color: rgba(255,255,255,0.3);"></i>
+    </div>
+</div>
+
+{% if request.user.is_admin or request.user.is_hr or request.user.is_supervisor %}
+<!-- HR Overview Section -->
+<div class="mb-4 fade-in-up">
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="widget-card p-3 mb-0" style="border-left: 4px solid #3b82f6; transition: transform 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                <div class="text-muted" style="font-size: 12px; font-weight: 600; text-transform: uppercase;">Total Ativos</div>
+                <div class="fs-3 fw-bold text-dark mt-1">{{ active_employees }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="widget-card p-3 mb-0" style="border-left: 4px solid #10b981; transition: transform 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                <div class="text-muted" style="font-size: 12px; font-weight: 600; text-transform: uppercase;">Presentes Hoje</div>
+                <div class="fs-3 fw-bold text-dark mt-1">{{ today_attendance }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="widget-card p-3 mb-0" style="border-left: 4px solid #f59e0b; transition: transform 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                <div class="text-muted" style="font-size: 12px; font-weight: 600; text-transform: uppercase;">Atrasos Hoje</div>
+                <div class="fs-3 fw-bold text-dark mt-1">{{ late_today }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="widget-card p-3 mb-0" style="border-left: 4px solid #ef4444; transition: transform 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                <div class="text-muted" style="font-size: 12px; font-weight: 600; text-transform: uppercase;">Ações Pendentes</div>
+                <div class="fs-3 fw-bold text-dark mt-1">{{ pending_leaves|add:pending_adjustments }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <div class="widget-card h-100 mb-0">
+                <h4 class="widget-title mb-3" style="font-size: 14px;">Presença Diária</h4>
+                <div style="position: relative; height: 180px; width: 100%;">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="widget-card h-100 mb-0">
+                <h4 class="widget-title mb-3" style="font-size: 14px;">Volume de Solicitações Pendentes</h4>
+                <div style="position: relative; height: 180px; width: 100%;">
+                    <canvas id="requestsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if request.user.is_admin or request.user.is_hr %}
+<!-- HR Specific Charts Row -->
+<div class="row g-3 mb-3 fade-in-up">
+    <div class="col-md-6">
+        <!-- Recrutamento -->
+        <div class="widget-card h-100 mb-0">
+            <h3 class="widget-title mb-3"><i class="bi bi-person-lines-fill" style="color:var(--primary);"></i> Funil de Recrutamento</h3>
+            
+            <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                <div class="text-center" style="flex:1;">
+                    <div style="font-size:13px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Vagas Abertas</div>
+                    <div style="font-size:28px; font-weight:800; color:#3b82f6;">{{ rec_stats.open_vacancies }}</div>
+                </div>
+                <div class="text-center border-start" style="flex:1;">
+                    <div style="font-size:13px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Total de Vagas</div>
+                    <div style="font-size:28px; font-weight:800; color:var(--text-main);">{{ rec_stats.total_vacancies }}</div>
+                </div>
+            </div>
+
+            <div class="row g-2">
+                <div class="col-6">
+                    <h6 style="font-size: 13px; text-align: center; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Portal de Vagas</h6>
+                    <div style="position: relative; height: 130px; width: 100%;">
+                        <canvas id="publicAppChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <h6 style="font-size: 13px; text-align: center; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Pipeline Global</h6>
+                    <div style="position: relative; height: 130px; width: 100%;">
+                        <canvas id="recruitmentChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+
+        </div>
+    </div>
+    <div class="col-md-6">
+        <!-- Absenteísmo -->
+        <div class="widget-card h-100 mb-0">
+            <h3 class="widget-title mb-2"><i class="bi bi-graph-up-arrow" style="color:var(--primary);"></i> Evolução de Absenteísmo</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Total de ausências aprovadas (6 meses)</p>
+            <div style="position: relative; flex: 1; min-height: 220px; width: 100%;">
+                <canvas id="absenteeismChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="dashboard-masonry {% if request.user.is_admin or request.user.is_hr %}admin-grid{% endif %}">
+    
+    {% if not request.user.is_admin and not request.user.is_hr %}
+    <div class="widget-card">
+        <h3 class="widget-title"><i class="bi bi-people"></i> Sua Equipe</h3>
+            <div class="d-flex align-items-center justify-content-between mt-2">
+                <div class="avatar-group">
+                    {% for teammate in my_team %}
+                        {% if teammate.picture %}
+                            <img src="{{ teammate.picture.picture.url }}" class="avatar" title="{{ teammate.full_name }}">
+                        {% else %}
+                            <div class="avatar" title="{{ teammate.full_name }}">{{ teammate.first_name|first }}{{ teammate.last_name|first }}</div>
+                        {% endif %}
+                    {% empty %}
+                        <span style="font-size:13px; color:#94a3b8;">Nenhum colega encontrado.</span>
+                    {% endfor %}
+                    {% if my_team_count > 6 %}
+                        <div class="avatar-count">+{{ my_team_count|add:"-6" }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% if request.user.employee and request.user.employee.sub_division %}
+            <div class="text-center mt-3" style="font-size: 13px; color: var(--primary); font-weight: 500;">
+                {{ request.user.employee.sub_division }}
+            </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+        {% if not request.user.is_admin and not request.user.is_hr %}
+        <div class="widget-card">
+            <h3 class="widget-title"><i class="bi bi-bell"></i> Notificações</h3>
+            <div class="notif-list">
+                {% for bday in birthdays %}
+                <div class="notif-item d-flex align-items-center gap-3">
+                    {% if bday.picture %}
+                        <img src="{{ bday.picture.picture.url }}" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #e0e7ff;" alt="Avatar">
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; border-radius: 50%; background: #e0e7ff; color: #4f46e5; font-weight: 700; border: 2px solid #e0e7ff; font-size: 15px;">
+                            {{ bday.first_name|first|upper }}{{ bday.last_name|first|upper }}
+                        </div>
+                    {% endif %}
+                    <div>
+                        <div class="notif-title" style="margin-bottom: 2px;">{{ bday.full_name }}</div>
+                        <div class="notif-meta meta-blue" style="font-size: 11px;">
+                            <i class="bi bi-cake2"></i> Aniversário em {{ bday.birthday|date:"d/m" }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% for leave in recent_leaves %}
+                <div class="notif-item d-flex align-items-center gap-3">
+                    {% if leave.employee.picture %}
+                        <img src="{{ leave.employee.picture.picture.url }}" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #f1f5f9;" alt="Avatar">
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; border-radius: 50%; background: #f1f5f9; color: #64748b; font-weight: 700; border: 2px solid #e2e8f0; font-size: 15px;">
+                            <i class="bi bi-file-earmark-medical"></i>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <div class="notif-title" style="margin-bottom: 2px;">{{ leave.leave_type.name }}</div>
+                        <div class="notif-desc" style="font-size: 12px; margin-bottom: 2px; color: var(--text-muted);">{{ leave.get_status_display }}</div>
+                        <div class="notif-meta text-success m-0" style="font-size: 11px;">
+                            <i class="bi bi-clock-history"></i> {{ leave.date_applied|date:"d/m" }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% if not birthdays and not recent_leaves %}
+                <div class="text-center text-muted py-3" style="font-size: 13px;">Tudo limpo! Nenhuma pendência.</div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if pending_surveys %}
+        <div class="widget-card" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid #bbf7d0;">
+            <h3 class="widget-title" style="color: #166534;"><i class="bi bi-clipboard2-check text-success"></i> Pesquisas Pendentes</h3>
+            <p style="font-size: 13px; color: #15803d; margin-bottom: 16px;">Sua opinião é muito importante. Por favor, responda as pesquisas abaixo:</p>
+            <div class="d-flex flex-column gap-2">
+                {% for survey in pending_surveys %}
+                <div class="d-flex justify-content-between align-items-center bg-white p-3 rounded-3" style="box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <div>
+                        <div class="fw-bold" style="color: #0f172a; font-size: 14px;">{{ survey.title }}</div>
+                        <div style="font-size: 11px; color: #64748b;">
+                            {% if survey.is_anonymous %}<i class="bi bi-shield-lock text-success me-1"></i> Anônima {% else %}<i class="bi bi-person text-primary me-1"></i> Nominal {% endif %}
+                        </div>
+                    </div>
+                    <a href="{% url 'survey_take' survey.id %}" class="btn btn-sm btn-success fw-bold" style="border-radius: 8px;">Responder</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not request.user.is_admin and not request.user.is_hr %}
+        <div class="widget-card">
+            <h3 class="widget-title"><i class="bi bi-briefcase"></i> Gestores</h3>
+            <div class="manager-avatars">
+                <div class="manager-block">
+                    <h6>Aprovações Diretas</h6>
+                    <div class="avatar-group">
+                        {% for sup in my_supervisors %}
+                            {% if sup.picture %}
+                                <img src="{{ sup.picture.picture.url }}" class="avatar" title="{{ sup.full_name }}">
+                            {% else %}
+                                <div class="avatar" style="border: 2px solid #3b82f6; z-index: 2;" title="{{ sup.full_name }}">{{ sup.first_name|first }}{{ sup.last_name|first }}</div>
+                            {% endif %}
+                        {% empty %}
+                            <span style="font-size:13px; color:#94a3b8;">Nenhum gestor direto listado.</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="widget-card">
+            <h3 class="widget-title"><i class="bi bi-calendar2-heart"></i> Minhas Ausências</h3>
+            <div class="holiday-row">
+                <div class="hs-label">Folgas pendentes de aprovação</div>
+                <div class="hs-value">
+                    <div class="hs-number">{{ my_leaves_count }}</div>
+                    <div class="hs-unit">Dias</div>
+                </div>
+            </div>
+            <div class="holiday-row border-top pt-4" style="border-color: #f1f5f9 !important;">
+                <div class="hs-label">Folgas futuras já aprovadas</div>
+                <div class="hs-value">
+                    <div class="hs-number">{{ my_upcoming_leaves_count }}</div>
+                    <div class="hs-unit">Dias</div>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <a href="#" data-bs-toggle="modal" data-bs-target="#leaveRequestModal" style="font-size: 13px; color: var(--primary); font-weight: 600; text-decoration: none;">Solicitar Ausência <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+        
+        
+        <div class="widget-card">
+            <h3 class="widget-title"><i class="bi bi-stopwatch"></i> Resumo da Jornada</h3>
+            {% if today_is_workday %}
+                <div class="d-flex justify-content-between mb-2">
+                    <span style="font-size: 13px; font-weight: 600; color: var(--text-main);">Horas Trabalhadas</span>
+                    <span style="font-size: 13px; font-weight: 700; color: var(--primary);"><span id="journey-worked-str">{{ today_worked_str }}</span> <span style="color: var(--text-muted); font-weight: 500;">/ {{ today_expected_str }}</span></span>
+                </div>
+                <div class="progress mb-3" style="height: 8px; border-radius: 4px; background-color: #e2e8f0;">
+                    <div class="progress-bar {% if today_progress_percent >= 100 %}bg-success{% else %}bg-primary{% endif %}" id="journey-progress-bar" role="progressbar" style="width: {{ today_progress_percent }}%;" aria-valuenow="{{ today_progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="d-flex align-items-center justify-content-center px-3 py-2" style="background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">
+                    <i class="bi bi-clock-history text-muted me-2"></i>
+                    <span style="font-size: 13px; font-weight: 500; color: var(--text-muted);">Escala de hoje: <strong style="color: var(--text-main);">{{ today_shift_name }}</strong></span>
+                </div>
+                {% if today_is_working %}
+                <script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        let workedMins = {{ today_worked_mins }};
+                        let theoMins = {{ today_theo_mins }};
+                        
+                        setInterval(function() {
+                            workedMins += 1;
+                            
+                            // Build the formatted string like 1h 05m
+                            let h = Math.floor(workedMins / 60);
+                            let m = workedMins % 60;
+                            document.getElementById("journey-worked-str").textContent = h + "h " + (m < 10 ? "0" + m : m) + "m";
+                            
+                            // Update progress bar length
+                            if (theoMins > 0) {
+                                let pct = Math.min(100, Math.floor((workedMins / theoMins) * 100));
+                                let bar = document.getElementById("journey-progress-bar");
+                                bar.style.width = pct + "%";
+                                bar.setAttribute("aria-valuenow", pct);
+                                if (pct >= 100) {
+                                    bar.classList.remove("bg-primary");
+                                    bar.classList.add("bg-success");
+                                }
+                            }
+                        }, 60000); // Fires exactly every 60 seconds
+                    });
+                </script>
+                {% endif %}
+            {% else %}
+                <div class="text-center pb-2 pt-3">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: #f1f5f9; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                        <i class="bi bi-cup-hot text-muted" style="font-size: 20px;"></i>
+                    </div>
+                    <span style="font-size: 14px; font-weight: 600; color: var(--text-main); display: block;">Hoje é sua folga!</span>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px; margin-bottom: 0;">Aproveite seu dia de descanso e recarregue as energias.</p>
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if latest_changelogs %}
+        <div class="widget-card" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-color: rgba(16,185,129,0.2); margin-bottom: 24px; padding: 22px 24px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:34px;height:34px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-rocket-takeoff" style="color:#10b981;font-size:16px;"></i>
+                    </div>
+                    <span style="font-size:14px;font-weight:700;color:#f1f5f9;">Novidades do Sistema</span>
+                </div>
+                <a href="{% url 'changelog_list' %}" style="font-size:12px;color:#10b981;text-decoration:none;font-weight:600;white-space:nowrap;">
+                    Ver todas <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                {% for post in latest_changelogs %}
+                <a href="{% url 'changelog_list' %}" style="text-decoration:none;display:block;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;transition:all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.1)';this.style.borderColor='rgba(16,185,129,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.borderColor='rgba(255,255,255,0.08)'">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+                        <div style="flex:1;min-width:0;">
+                            {% if post.pinned %}
+                            <span style="font-size:10px;background:rgba(245,158,11,0.2);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);border-radius:6px;padding:1px 7px;font-weight:600;margin-bottom:5px;display:inline-block;">📌 Fixado</span>
+                            {% endif %}
+                            <div style="font-size:13px;font-weight:600;color:#f1f5f9;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ post.title }}</div>
+                            <div style="font-size:11px;color:#64748b;margin-top:3px;">{{ post.published_at|date:"d/m/Y" }}{% if post.version %} · v{{ post.version }}{% endif %}</div>
+                        </div>
+                        <span style="flex-shrink:0;font-size:10px;padding:3px 9px;border-radius:20px;font-weight:600;
+                            {% if post.category == 'feature' %}background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.2);
+                            {% elif post.category == 'fix' %}background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.2);
+                            {% elif post.category == 'improvement' %}background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.2);
+                            {% else %}background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.2);{% endif %}">
+                            {{ post.get_category_display }}
+                        </span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not request.user.is_admin and not request.user.is_hr %}
+        <h3 class="widget-title mb-3" style="font-size: 14px;"><i class="bi bi-megaphone"></i> Comunicados</h3>
+        {% for anc in announcements %}
+        <div class="widget-card announcement-card">
+            {% if anc.image %}
+            <img src="{{ anc.image.url }}" class="anc-img" alt="Capa">
+            {% else %}
+            <div class="anc-img d-flex align-items-center justify-content-center" style="background: linear-gradient(45deg, #1e293b, #334155); color: rgba(255,255,255,0.2);">
+                <i class="bi bi-newspaper" style="font-size: 48px;"></i>
+            </div>
+            {% endif %}
+            
+            <div class="anc-content">
+                <h4 class="anc-title">{{ anc.title }}</h4>
+                <div class="anc-author">{{ anc.author.full_name }} • há {{ anc.created_at|timesince }}</div>
+                <div class="anc-body">
+                    {{ anc.content|striptags|truncatewords:25 }}
+                </div>
+                <div class="anc-footer">
+                    <div class="anc-stats">
+                        
+                    </div>
+                    <a href="{% url 'announcement_detail' anc.id %}" class="anc-link">Ler mais</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="widget-card text-center p-5">
+            <i class="bi bi-box-seam text-muted" style="font-size: 32px; margin-bottom: 12px;"></i>
+            <h6 style="color: var(--text-main); font-weight: 600;">Sem Comunicados</h6>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Nenhum aviso novo na timeline.</p>
+        </div>
+        {% endfor %}
+        
+        {% if request.user.is_supervisor %}
+        <div class="text-center mt-3">
+            <a href="{% url 'announcement_list' %}" class="btn btn-outline-secondary rounded-pill w-100" style="font-size: 13px; font-weight: 600; padding: 8px 0; border: 1px solid var(--card-border); color: var(--text-muted); background: var(--card-bg); transition: 0.2s;">
+                <i class="bi bi-plus-lg me-1"></i> Criar Comunicado
+            </a>
+        </div>
+        {% endif %}
+        {% endif %}
+
+</div>
+
+
+<div class="modal fade" id="leaveRequestModal" tabindex="-1" aria-labelledby="leaveRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+            <div class="modal-header" style="border-bottom: 1px solid #f1f5f9; padding: 1.25rem 1.5rem;">
+                <h5 class="modal-title" id="leaveRequestModalLabel" style="font-weight: 700; color: var(--text-main); font-size: 16px;">
+                    <i class="bi bi-file-earmark-medical text-primary me-2"></i>Nova Solicitação de Licença
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'leave_create' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body" style="padding: 1.5rem;">
+                    <style>
+                        .leave-modal-form label { font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 4px; }
+                        .leave-modal-form .form-control, .leave-modal-form .form-select { border-color: #cbd5e1; font-size: 14px; border-radius: 8px; }
+                        .leave-modal-form .form-control:focus, .leave-modal-form .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.25); }
+                    </style>
+                    <div class="leave-modal-form">
+                        <div class="mb-3">
+                            <label>Tipo de Licença / Ausência</label>
+                            {{ leave_form.leave_type }}
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label>Data Inicial (De)</label>
+                                {{ leave_form.from_date }}
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label>Data Final (Até)</label>
+                                {{ leave_form.to_date }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label>Comentários / Motivo</label>
+                            {{ leave_form.comment }}
+                        </div>
+                        <div class="mb-2 mt-3">
+                            <label style="font-weight: 500; font-size: 13px;">Atestado / Documento <span class="text-danger" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip" data-bs-title="Este anexo e obrigatorio!" style="cursor: help;">*</span></label>
+                            <label for="id_attachment" style="display:block; width:100%; cursor:pointer; margin-top: 8px;">
+                                <div style="border:2px dashed rgba(13,192,42,0.35);border-radius:12px;padding:26px;text-align:center;background:rgba(13,192,42,0.04);transition:.2s;"
+                                     onmouseover="this.style.borderColor='rgba(13,192,42,0.7)'"
+                                     onmouseout="this.style.borderColor='rgba(13,192,42,0.35)'">
+                                    <i class="bi bi-cloud-arrow-up" style="font-size:32px;color:rgba(13,192,42,0.6);display:block;margin-bottom:8px;"></i>
+                                    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px;">Arraste um PDF/Imagem ou clique aqui</div>
+                                    <div id="file-name-display-dash" style="font-size:13px; font-weight:600; color:var(--primary-color);">Nenhum arquivo enviado</div>
+                                </div>
+                            </label>
+                            {{ leave_form.attachment }}
+                            <span class="helptext" style="font-size: 12px; color: var(--text-secondary); margin-top:4px; display:block;">Aceitamos Imagem ou Arquivo PDF.</span>
+
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const fileInput = document.getElementById('id_attachment');
+                                    const fileDisplay = document.getElementById('file-name-display-dash');
+                                    if (fileInput && fileDisplay) {
+                                        fileInput.addEventListener('change', function() {
+                                            if (this.files && this.files.length > 0) {
+                                                fileDisplay.textContent = this.files[0].name;
+                                                fileDisplay.style.color = "var(--success)";
+                                            } else {
+                                                fileDisplay.textContent = "Nenhum arquivo enviado";
+                                                fileDisplay.style.color = "var(--primary-color)";
+                                            }
+                                        });
+                                    }
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #f1f5f9; padding: 1rem 1.5rem;">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="font-size: 13px; font-weight: 600; border-radius: 8px;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="font-size: 13px; font-weight: 600; border-radius: 8px;">Enviar Solicitação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if(document.getElementById('attendanceChart')) {
+            const ctxAtt = document.getElementById('attendanceChart').getContext('2d');
+            const presentes = {{ today_attendance }};
+            let total = {{ active_employees }};
+            if(total < 1) total = 1; // fallback
+            let ausentes = total - presentes;
+            if(ausentes < 0) ausentes = 0;
+
+            new Chart(ctxAtt, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Presentes', 'Ausentes/Não Bateram Ponto'],
+                    datasets: [{
+                        data: [presentes, ausentes],
+                        backgroundColor: ['#10b981', '#f1f5f9'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { family: 'Inter', size: 12 } } },
+                        tooltip: { backgroundColor: '#1e293b', padding: 12, cornerRadius: 8 }
+                    }
+                }
+            });
+
+            const ctxReq = document.getElementById('requestsChart').getContext('2d');
+            new Chart(ctxReq, {
+                type: 'bar',
+                data: {
+                    labels: ['Folgas', 'Ajustes de Ponto', 'Folgas Aprovadas (RH)'],
+                    datasets: [{
+                        label: 'Quantidade',
+                        data: [{{ pending_leaves }}, {{ pending_adjustments }}, {{ supervisor_approved_leaves }}],
+                        backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b'],
+                        borderRadius: 6,
+                        maxBarThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { backgroundColor: '#1e293b', padding: 12, cornerRadius: 8 }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9', drawBorder: false }, ticks: { stepSize: 1, font: { family: 'Inter' } } },
+                        x: { grid: { display: false, drawBorder: false }, ticks: { font: { family: 'Inter' } } }
+                    }
+                }
+            });
+        }
+
+        if(document.getElementById('recruitmentChart')) {
+            const ctxRec = document.getElementById('recruitmentChart').getContext('2d');
+            new Chart(ctxRec, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Contratados', 'Em Andamento', 'Reprovados'],
+                    datasets: [{
+                        data: [{{ rec_stats.candidates_hired|default:"0" }}, {{ rec_stats.candidates_in_progress|default:"0" }}, {{ rec_stats.candidates_rejected|default:"0" }}],
+                        backgroundColor: ['#10b981', '#3b82f6', '#ef4444'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 10, font: { family: 'Inter', size: 12 } } },
+                        tooltip: { backgroundColor: '#1e293b', padding: 12, cornerRadius: 8 }
+                    }
+                }
+            });
+        }
+
+        if(document.getElementById('publicAppChart')) {
+            const ctxPub = document.getElementById('publicAppChart').getContext('2d');
+            new Chart(ctxPub, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Aguardando', 'Aceitos', 'Rejeitados'],
+                    datasets: [{
+                        data: [{{ rec_stats.public_pending|default:"0" }}, {{ rec_stats.public_accepted|default:"0" }}, {{ rec_stats.public_rejected|default:"0" }}],
+                        backgroundColor: ['#f59e0b', '#10b981', '#ef4444'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 10, font: { family: 'Inter', size: 12 } } },
+                        tooltip: { backgroundColor: '#1e293b', padding: 12, cornerRadius: 8 }
+                    }
+                }
+            });
+        }
+
+        if(document.getElementById('absenteeismChart')) {
+            const ctxAbs = document.getElementById('absenteeismChart').getContext('2d');
+            const absLabels = {{ absenteeism_labels|safe|default:"[]" }};
+            const absData = {{ absenteeism_data|safe|default:"[]" }};
+            
+            new Chart(ctxAbs, {
+                type: 'line',
+                data: {
+                    labels: absLabels,
+                    datasets: [{
+                        label: 'Ausências Aprovadas',
+                        data: absData,
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#4f46e5',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: '#1e293b', padding: 12, cornerRadius: 8 }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9', drawBorder: false }, ticks: { stepSize: 1, font: { family: 'Inter' } } },
+                        x: { grid: { display: false, drawBorder: false }, ticks: { font: { family: 'Inter' } } }
+                    }
+                }
+            });
+        }
+        
+        const leaveRules = {{ leave_rules_json|default:"{}"|safe }};
+        const leaveModal = document.getElementById('leaveRequestModal');
+        let tsInstance = null;
+        
+        const fromDateInput = document.getElementById('id_from_date');
+        const toDateInput = document.getElementById('id_to_date');
+
+        // Initialize tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+        function calculateToDate() {
+            if (!tsInstance || !fromDateInput.value) return;
+            const selectedType = tsInstance.getValue();
+            
+            if (leaveRules[selectedType]) {
+                const daysToAdd = parseInt(leaveRules[selectedType], 10);
+                if (daysToAdd > 0) {
+                    // Create date forcing local timezone parsing
+                    const fromDate = new Date(fromDateInput.value + 'T00:00:00');
+                    // Add calendar days. (default_days - 1 because from_date counts as day 1)
+                    fromDate.setDate(fromDate.getDate() + (daysToAdd - 1));
+                    
+                    const yyyy = fromDate.getFullYear();
+                    const mm = String(fromDate.getMonth() + 1).padStart(2, '0');
+                    const dd = String(fromDate.getDate()).padStart(2, '0');
+                    toDateInput.value = `${yyyy}-${mm}-${dd}`;
+                }
+            }
+        }
+
+        // Initialize TomSelect only when the modal is fully opened to prevent width/display issues
+        leaveModal.addEventListener('shown.bs.modal', function () {
+            if (!tsInstance) {
+                tsInstance = new TomSelect("#id_leave_type", {
+                    create: false,
+                    placeholder: "Pesquise ou selecione a licença...",
+                    render: {
+                        no_results: function(data, escape) {
+                            return '<div class="no-results px-3 py-2 text-muted" style="font-size:13px;">Nenhuma licença encontrada</div>';
+                        }
+                    }
+                });
+                
+                // Trigger auto-calculate if type or initial date are changed
+                tsInstance.on('change', calculateToDate);
+                fromDateInput.addEventListener('change', calculateToDate);
+            }
+        });
+    });
+</script>
+<style>
+    .ts-wrapper { width: 100%; border-radius: 8px; }
+    .ts-control { border-radius: 8px !important; border-color: #cbd5e1 !important; font-size: 14px; padding: 8px 12px !important; box-shadow: none !important; }
+    .ts-dropdown { border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; font-size: 14px; z-index: 1060; }
+    .ts-dropdown .active { background-color: var(--hover-bg) !important; color: var(--primary) !important; font-weight: 600; }
+</style>
+{% endblock %}

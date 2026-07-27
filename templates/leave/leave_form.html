@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;">{{ title }}</span>{% endblock %}
+{% block content %}
+<div class="page-header"><h1 class="page-title">{{ title }}</h1><a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Voltar</a></div>
+<div class="row justify-content-center"><div class="col-xl-7 col-lg-9">
+<div class="card"><div class="card-body">
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
+
+<div class="row g-3">
+{% for field in form %}
+    {% if field.name == 'attachment' %}
+        <div class="col-12 mt-4">
+            <label class="form-label mb-1" style="font-weight:600;">
+                <i class="bi bi-paperclip me-1" style="color:var(--primary-color)"></i>
+                Atestado / Documento <span style="font-size:12px;color:var(--text-secondary);font-weight:400;">(obrigatório, exceto Folga/Casamento)</span>
+            </label>
+            <label for="id_attachment" style="display:block; width:100%; cursor:pointer;">
+                <div style="border:2px dashed rgba(13,192,42,0.35);border-radius:12px;padding:30px;text-align:center;background:rgba(13,192,42,0.04);transition:.2s;"
+                     onmouseover="this.style.borderColor='rgba(13,192,42,0.7)'"
+                     onmouseout="this.style.borderColor='rgba(13,192,42,0.35)'">
+                    <i class="bi bi-cloud-arrow-up" style="font-size:36px;color:rgba(13,192,42,0.6);display:block;margin-bottom:10px;"></i>
+                    <div style="font-size:14px;color:var(--text-secondary);margin-bottom:5px;">Arraste um arquivo ou clique para selecionar</div>
+                    <div id="file-name-display" style="font-size:13px; font-weight:600; color:var(--primary-color); margin-top:8px;">Nenhum arquivo de atestado selecionado</div>
+                </div>
+            </label>
+            {{ field }}
+            {% if field.errors %}<div style="color:var(--danger);font-size:12px;margin-top:4px;">{% for e in field.errors %}{{ e }}{% endfor %}</div>{% endif %}
+        </div>
+        <div id="leave-type-data" class="d-none" data-json='{ {% for tp in form.fields.leave_type.queryset %}"{{ tp.id }}": {% if tp.default_days %}{{ tp.default_days }}{% else %}null{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %} }'></div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const form = document.querySelector('form');
+                const dataElement = document.getElementById('leave-type-data');
+                if (form && dataElement) {
+                    let defaultDaysMap = {};
+                    try { defaultDaysMap = JSON.parse(dataElement.getAttribute('data-json') || '{}'); } catch(e) {}
+                    
+                    function autoCalcDate() {
+                        const typeInput = document.getElementById('id_leave_type');
+                        const fromInput = document.getElementById('id_from_date');
+                        const toInput = document.getElementById('id_to_date');
+                        if (typeInput && fromInput && toInput && typeInput.value && fromInput.value) {
+                            const typeId = typeInput.value;
+                            const days = defaultDaysMap[typeId];
+                            if (days !== undefined && days !== null) {
+                                const daysToAdd = days - 1;
+                                if (daysToAdd >= 0) {
+                                    const [y, m, d] = fromInput.value.split('-');
+                                    const baseDate = new Date(y, m - 1, d);
+                                    baseDate.setDate(baseDate.getDate() + daysToAdd);
+                                    const formatNum = (num) => String(num).padStart(2, '0');
+                                    toInput.value = `${baseDate.getFullYear()}-${formatNum(baseDate.getMonth()+1)}-${formatNum(baseDate.getDate())}`;
+                                }
+                            }
+                        }
+                    }
+                    
+                    form.addEventListener('change', function(e) {
+                        if (e.target.id === 'id_leave_type' || e.target.id === 'id_from_date') {
+                            autoCalcDate();
+                        }
+                    });
+                    autoCalcDate();
+                }
+            });
+        </script>
+    {% else %}
+        <div class="{% if field.name == 'leave_type' or field.name == 'comment' %}col-12{% else %}col-6 d-flex flex-column{% endif %}">
+            <label class="form-label {% if field.name == 'from_date' or field.name == 'to_date' %}mt-auto{% endif %}" style="font-weight: 500;">
+                {{ field.label }}
+                {% if field.field.required %}<span style="color:var(--danger)">*</span>{% endif %}
+            </label>
+            {{ field }}
+            {% if field.errors %}<div style="color:var(--danger);font-size:12px;margin-top:4px;">{% for e in field.errors %}{{ e }}{% endfor %}</div>{% endif %}
+        </div>
+    {% endif %}
+{% endfor %}
+</div>
+
+<div class="d-flex gap-2 justify-content-end"><a href="javascript:history.back()" class="btn btn-outline-secondary">Cancelar</a><button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> Salvar</button></div>
+</form>
+</div></div>
+</div></div>
+{% endblock %}

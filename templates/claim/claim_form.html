@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block breadcrumb %}
+<span style="color: var(--text-secondary); font-size: 13px;">
+    <a href="{% url 'claim_list' %}" style="color: var(--text-secondary);">Reembolsos</a> / {{ title }}
+</span>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-receipt text-orange"></i> {{ title }}
+    </h1>
+    <a href="{% url 'claim_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Voltar
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-xl-6 col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        {% for field in form %}
+                        <div class="col-12">
+                            <label class="form-label">
+                                {{ field.label }}
+                                {% if field.field.required %}<span style="color: var(--danger);">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                            <div style="color: var(--danger); font-size: 12px; margin-top: 4px;">{{ field.errors|first }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger mt-3" style="border-radius: 10px; font-size: 13px;">
+                        <i class="bi bi-exclamation-triangle me-2"></i>{{ form.non_field_errors|first }}
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex gap-2 justify-content-end mt-4">
+                        <a href="{% url 'claim_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i> Salvar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

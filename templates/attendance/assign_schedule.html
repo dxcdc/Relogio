@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Associar Escala de Trabalho{% endblock %}
+{% block breadcrumb %}
+<span style="color: var(--text-secondary); font-size: 13px;">
+    <a href="{% url 'employee_list' %}" style="color:var(--text-secondary);">PIM</a> /
+    <a href="{% url 'employee_detail' employee.pk %}" style="color:var(--text-secondary);">{{ employee.full_name }}</a> /
+    Associar Escala
+</span>
+{% endblock %}
+
+{% block content %}
+{% if request.GET.popup %}
+<div class="px-4 py-4 m-0 bg-white" style="height: 100vh;">
+    <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; overflow: hidden;">
+            {% if employee.picture %}
+            <img src="{{ employee.picture.picture.url }}" alt="{{ employee.first_name }}" class="w-100 h-100 object-fit-cover">
+            {% else %}
+            <span class="fs-4 text-secondary">{{ employee.first_name|first }}{{ employee.last_name|first }}</span>
+            {% endif %}
+        </div>
+        <div>
+            <h5 class="mb-0 fw-bold">{{ employee.full_name }}</h5>
+            <small class="text-muted"><i class="bi bi-briefcase me-1"></i> {{ employee.job_title|default:"Sem Cargo" }}</small>
+        </div>
+    </div>
+    <form method="post">
+        <input type="hidden" name="popup" value="1">
+        {% csrf_token %}
+        <div class="mb-4">
+            <label class="form-label fw-bold text-uppercase" style="font-size: 11px; color: #9CA3AF;">Selecione uma Escala de Trabalho</label>
+            <select name="schedule_id" class="form-select form-select-lg mb-3" style="background:#F9FAFB; border:1px solid #E5E7EB; border-radius:8px; font-size:14px; transition:all 0.2s;" onfocus="this.style.background='white';this.style.borderColor='#10B981';" onblur="this.style.background='#F9FAFB';this.style.borderColor='#E5E7EB';">
+                {% for sch in schedules %}
+                <option value="{{ sch.id }}" {% if current_schedule and current_schedule.id == sch.id %}selected{% endif %}>
+                    {{ sch.name }} ({{ sch.entry_time|time:"H:i" }} - {{ sch.exit_time|time:"H:i" }}) — {{ sch.display_hours }}
+                </option>
+                {% endfor %}
+            </select>
+            
+            <label class="form-label fw-bold text-uppercase mt-2" style="font-size: 11px; color: #9CA3AF;">A partir de qual data?</label>
+            <input type="date" name="start_date" class="form-control" style="background:#F9FAFB; border:1px solid #E5E7EB; border-radius:8px; font-size:14px; transition:all 0.2s;" onfocus="this.style.background='white';this.style.borderColor='#10B981';" onblur="this.style.background='#F9FAFB';this.style.borderColor='#E5E7EB';" value="{{ request.resolver_match.kwargs.date|default:'' }}">
+            
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const dateInput = document.querySelector('input[name="start_date"]');
+                    if(!dateInput.value) {
+                        const today = new Date();
+                        const tzOffset = today.getTimezoneOffset() * 60000;
+                        const localISOTime = (new Date(today - tzOffset)).toISOString().split('T')[0];
+                        dateInput.value = localISOTime;
+                    }
+                });
+            </script>
+
+            <div class="form-text mt-2" style="font-size: 12px; color: var(--text-secondary);">Esta alteração protegerá o histórico do funcionário até a véspera desta data.</div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-5">
+            <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" onclick="if(window.parent && window.parent.innerModal) { window.parent.innerModal.hide(); } else { window.history.back(); }">Cancelar</button>
+            <button type="submit" class="btn btn-success px-4 rounded-pill"><i class="bi bi-check-lg me-1"></i> Salvar</button>
+        </div>
+    </form>
+</div>
+{% else %}
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card mt-4">
+            <div class="card-header border-bottom-0 pb-0">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; overflow: hidden;">
+                        {% if employee.picture %}
+                        <img src="{{ employee.picture.picture.url }}" alt="{{ employee.first_name }}" class="w-100 h-100 object-fit-cover">
+                        {% else %}
+                        <span class="fs-4 text-secondary">{{ employee.first_name|first }}{{ employee.last_name|first }}</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-bold">{{ employee.full_name }}</h5>
+                        <small class="text-muted"><i class="bi bi-briefcase me-1"></i> {{ employee.job_title|default:"Sem Cargo" }}</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <hr>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-4 mt-3">
+                        <label class="form-label fw-bold">Selecione uma Escala de Trabalho</label>
+                        <select name="schedule_id" class="form-select form-select-lg">
+                            {% for sch in schedules %}
+                            <option value="{{ sch.id }}" {% if current_schedule and current_schedule.id == sch.id %}selected{% endif %}>
+                                {{ sch.name }} ({{ sch.entry_time|time:"H:i" }} - {{ sch.exit_time|time:"H:i" }}) — {{ sch.display_hours }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text mt-2" style="font-size: 12px;">Esta escala definirá os horários de entrada, almoço, saída e tolerâncias, usados para cálculo de horas líquidas e status de atraso.</div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-2">
+                        <a href="{% url 'employee_detail' employee.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-link-45deg me-1"></i> Associar Escala</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

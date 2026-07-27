@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Netline{% endblock %} | Netline RH</title>
+<link rel="icon" type="image/png" href="/static/img/netline_icon.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="/static/css/orangehrm.css" rel="stylesheet">
+    
+    
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        /* Ajustes Premium Estritos sobre o TomSelect */
+        .ts-wrapper {
+            flex: 1 1 auto; /* Para funcionar perfeitamente dentro de .input-group */
+            width: 100% !important;
+        }
+        /* Remove o conflito com as classes do Bootstrap form-select e form-control no wrapper */
+        .ts-wrapper.form-select, .ts-wrapper.form-control {
+            background-image: none !important; 
+            padding: 0 !important;
+            border: none !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+        }
+        .input-group > .ts-wrapper > .ts-control {
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+            border-left: none !important; /* Mesclar com o icone grey antes */
+        }
+        .ts-control,
+        .ts-wrapper.form-select .ts-control,
+        .ts-wrapper.form-control .ts-control {
+            border-radius: 10px !important;
+            min-height: 42px !important;
+            padding: 8px 14px !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: none !important;
+            font-family: 'Inter', sans-serif !important;
+            color: #334155 !important;
+            background-color: #fff !important;
+            display: flex;
+            align-items: center;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        /* Apenas para selects de opção única (form-select), exibe a setinha chevron do Bootstrap */
+        .ts-wrapper.form-select .ts-control {
+            padding-right: 36px !important; /* Espaço para a setinha */
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 14px center !important;
+            background-size: 16px 12px !important;
+        }
+        .ts-wrapper.multi .ts-control {
+            background-image: none !important;
+            padding-right: 14px !important;
+        }
+        .ts-control.focus,
+        .ts-wrapper.form-select.focus .ts-control,
+        .ts-wrapper.form-control.focus .ts-control {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+        }
+        /* Caixa do Dropdown Flutuante */
+        .ts-dropdown {
+            border-radius: 12px !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+            padding: 6px !important;
+            margin-top: 4px !important;
+            background-color: #ffffff !important;
+            z-index: 9999 !important;
+        }
+        /* Remover o buraco gigante causado pelo placeholder do option vazio */
+        .ts-dropdown .option[data-value=""] {
+            display: none !important;
+        }
+        /* Bloquear o encolhimento automático restritivo perto da borda do Iframe */
+        .ts-dropdown .ts-dropdown-content {
+            max-height: 280px !important;
+        }
+        /* Campo de Busca dentro do Dropdown */
+        .ts-dropdown .dropdown-input-wrap {
+            padding: 8px !important;
+        }
+        .ts-dropdown .dropdown-input {
+            border-radius: 8px !important;
+            border: 1px solid #e2e8f0 !important;
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+            box-shadow: none !important;
+            font-family: 'Inter', sans-serif !important;
+            transition: all 0.2s ease;
+        }
+        .ts-dropdown .dropdown-input:focus {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.1) !important;
+        }
+        /* Item Opção na Lista */
+        .ts-dropdown .option {
+            border-radius: 8px !important;
+            padding: 10px 14px !important;
+            color: #475569 !important;
+            font-size: 14px !important;
+            transition: background 0.15s ease;
+            margin-bottom: 2px;
+        }
+        .ts-dropdown .option.active, .ts-dropdown .option:hover {
+            background-color: #f8fafc !important; /* Fundo neutro bem clarinho */
+            color: #1e293b !important;
+            font-weight: 500 !important;
+        }
+        .ts-dropdown .option.selected {
+            background-color: #f0fdf4 !important; /* Fundo verde super clarinho */
+            color: #166534 !important; /* Verde escuro */
+            font-weight: 600 !important;
+        }
+        .ts-dropdown .option.selected.active, .ts-dropdown .option.selected:hover {
+            background-color: #dcfce7 !important; /* Verde um pouco mais vivo ao passar o mouse */
+            color: #14532d !important;
+        }
+
+        /* Dynamic Premium Page Entry Transition */
+        @keyframes pageContentEntrance {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+                filter: blur(4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                filter: blur(0);
+            }
+        }
+        .page-content {
+            animation: pageContentEntrance 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            will-change: transform, opacity;
+        }
+
+        /* Smooth fading for the global loader overlay */
+        .global-loader {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+            display: flex !important; /* Force flex but manage with opacity/visibility */
+        }
+        .global-loader:not(.d-none) {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+
+    <script>
+        // Apply theme early to prevent FOUC (Dark mode disabled for now)
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.documentElement.setAttribute('data-bs-theme', 'light');
+    </script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+
+<style>
+.global-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.isp-loader {
+    position: relative;
+    width: 120px;
+    height: 70px; 
+    overflow: hidden;
+}
+.signal-dot {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background-color: #10b981;
+    border-radius: 50%;
+    left: 50%;
+    bottom: 5px;
+    transform: translateX(-50%);
+    box-shadow: 0 0 8px #10b981;
+    animation: wifi-dot 1.5s infinite;
+}
+.signal-arc {
+    position: absolute;
+    left: 50%;
+    border: 4px solid transparent;
+    border-top-color: #10b981;
+    border-radius: 50%;
+    opacity: 0;
+    transform-origin: center center;
+}
+.arc-1 {
+    width: 36px; height: 36px;
+    bottom: -7px; 
+    margin-left: -18px; 
+    animation: wifi-arc1 1.5s infinite;
+}
+.arc-2 {
+    width: 66px; height: 66px;
+    bottom: -22px; 
+    margin-left: -33px;
+    border-top-color: #3b82f6;
+    animation: wifi-arc2 1.5s infinite;
+}
+.arc-3 {
+    width: 96px; height: 96px;
+    bottom: -37px; 
+    margin-left: -48px;
+    border-top-color: #10b981;
+    animation: wifi-arc3 1.5s infinite;
+}
+
+@keyframes wifi-dot {
+    0%, 5% { opacity: 0; }
+    15%, 100% { opacity: 1; }
+}
+@keyframes wifi-arc1 {
+    0%, 20% { opacity: 0; }
+    30%, 100% { opacity: 1; }
+}
+@keyframes wifi-arc2 {
+    0%, 40% { opacity: 0; }
+    50%, 100% { opacity: 1; }
+}
+@keyframes wifi-arc3 {
+    0%, 60% { opacity: 0; }
+    70%, 100% { opacity: 1; filter: drop-shadow(0 0 5px currentColor); }
+}
+</style>
+<div id="globalLoader" class="global-loader d-none">
+    <div class="loader-content d-flex flex-column align-items-center">
+        <div class="isp-loader">
+            <div class="signal-arc arc-3"></div>
+            <div class="signal-arc arc-2"></div>
+            <div class="signal-arc arc-1"></div>
+            <div class="signal-dot"></div>
+        </div>
+    </div>
+</div>
+
+{% if user.is_authenticated %}
+{% if not request.GET.popup %}
+<div class="app-wrapper">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    
+    <nav class="sidebar" id="sidebar">
+        <style>
+            .logo-full { display: block; height: 36px; object-fit: contain; margin-right: 18px; }
+            .logo-icon { display: none; height: 32px; object-fit: contain; }
+            .sidebar.collapsed .logo-full { display: none; }
+            .sidebar.collapsed .logo-icon { display: block; margin: 0 auto; }
+            .sidebar.collapsed .sidebar-brand { padding: 20px 0; display: flex; justify-content: center; }
+            .sidebar.collapsed .brand-logo { margin: 0; padding: 0; justify-content: center; width: 100%; }
+            .sidebar.collapsed .sidebar-search { display: none; }
+            .sidebar.collapsed .menu-item { 
+                font-size: 0 !important; 
+                padding: 12px 0 !important; 
+                text-align: center !important; 
+                display: block !important; 
+                margin: 4px 8px !important;
+                width: calc(100% - 16px) !important;
+                transition: background-color 0.2s ease, border-radius 0.2s ease !important;
+            }
+            .sidebar.collapsed .menu-item-group {
+                margin: 0 !important;
+                padding: 0 !important;
+                display: contents !important;
+            }
+            .sidebar.collapsed .menu-item i { 
+                font-size: 20px !important; 
+                margin: 0 !important; 
+                padding: 0 !important;
+                min-width: unset !important; 
+                text-align: center !important; 
+                display: inline-block !important; 
+                float: none !important;
+                transition: transform 0.2s ease, color 0.2s ease !important;
+            }
+            .sidebar.collapsed .menu-item span {
+                display: inline-block !important;
+                text-align: center !important;
+                width: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .sidebar.collapsed .menu-item:hover i {
+                transform: scale(1.18);
+                color: #10b981 !important;
+            }
+            .sidebar.collapsed .logo-icon {
+                transition: transform 0.3s ease, filter 0.3s ease;
+            }
+            .sidebar.collapsed .logo-icon:hover {
+                transform: scale(1.08);
+                filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.45));
+            }
+            .sidebar.collapsed .menu-item i.submenu-arrow {
+                display: none !important;
+                font-size: 0 !important;
+                width: 0 !important;
+                height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                opacity: 0 !important;
+                visibility: hidden !important;
+                overflow: hidden !important;
+            }
+            .sidebar.collapsed .menu-label {
+                display: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                height: 0 !important;
+                overflow: hidden !important;
+            }
+            .sidebar.collapsed .menu-section {
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+            }
+            .sidebar::-webkit-scrollbar, .sidebar-menu::-webkit-scrollbar { display: none; }
+            .sidebar, .sidebar-menu { -ms-overflow-style: none; scrollbar-width: none; overflow-x: hidden; }
+            .sidebar { z-index: 100000 !important; }
+
+            /* Submenu Accordion Premium Styles */
+            .menu-item-group {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+            }
+            .menu-item.has-submenu {
+                display: flex !important;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+            }
+            .submenu-arrow {
+                margin-left: auto;
+                transition: transform 0.25s ease, opacity 0.2s ease, background-color 0.2s ease;
+                font-size: 11px;
+                opacity: 0.7;
+                padding: 6px 10px;
+                margin-right: -6px;
+                cursor: pointer;
+                border-radius: 6px;
+            }
+            .submenu-arrow:hover {
+                opacity: 1;
+                background-color: rgba(255, 255, 255, 0.1);
+            }
+            .submenu-wrapper {
+                max-height: 0;
+                opacity: 0;
+                overflow: hidden;
+                transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+            }
+            .menu-item-group.open .submenu-wrapper,
+            .menu-item-group.active-group .submenu-wrapper {
+                max-height: 350px;
+                opacity: 1;
+                margin-top: 2px;
+                padding-bottom: 2px;
+            }
+            .menu-item-group.open .submenu-arrow,
+            .menu-item-group.active-group .submenu-arrow {
+                transform: rotate(180deg);
+            }
+            .sidebar.collapsed .submenu-arrow {
+                display: none !important;
+            }
+            .sidebar.collapsed .submenu-wrapper {
+                display: none !important;
+            }
+        </style>
+        <script>
+            if (localStorage.getItem('sidebarState') === 'collapsed') {
+                document.getElementById('sidebar').classList.add('collapsed');
+            }
+        </script>
+        <div class="sidebar-brand">
+            <div class="brand-logo" style="justify-content: center; width: 100%;">
+                <img src="/static/img/netline_logo_white.png" alt="Netline Logo" class="logo-full">
+                <img src="/static/img/netline_icon.png" alt="Netline Icon" class="logo-icon">
+            </div>
+        </div>
+
+        <div class="sidebar-menu" id="sidebarMenu">
+            <div class="menu-section">
+                <span class="menu-label">PRINCIPAL</span>
+                <a href="{% url 'dashboard' %}" class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+                <a href="{% url 'changelog_list' %}" class="menu-item {% if 'novidades' in request.path or 'bugs' in request.path %}active{% endif %}" style="position:relative;">
+                    <i class="bi bi-stars"></i> Novidades & Suporte
+                    {% if unread_bugs_count and unread_bugs_count > 0 %}
+                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;">{{ unread_bugs_count }}</span>
+                    {% endif %}
+                </a>
+                {% if user_modules.netgram %}
+                {% if user.is_admin or user.is_hr %}
+                <div class="menu-item-group {% if 'buzz' in request.path and 'novidades' not in request.path and 'bugs' not in request.path and 'netgram-moderation' not in request.path %}active-group{% endif %}">
+                    <a href="{% url 'buzz_feed' %}" class="menu-item {% if 'buzz' in request.path and 'novidades' not in request.path and 'bugs' not in request.path and 'denuncias' not in request.path and 'central-suporte' not in request.path and 'netgram-moderation' not in request.path %}active{% endif %} has-submenu">
+                        <span class="d-flex align-items-center"><i class="bi bi-chat-heart me-2"></i> Netgram</span>
+                        <i class="bi bi-chevron-down submenu-arrow"></i>
+                    </a>
+                    <div class="submenu-wrapper">
+                        <a href="{% url 'central_suporte' %}" class="menu-item {% if 'central-suporte' in request.path %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85; position: relative;">
+                            <i class="bi bi-headset" style="font-size: 13px;"></i> Central de Suporte
+                            {% if pending_reports_count and pending_reports_count > 0 %}
+                            <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;">{{ pending_reports_count }}</span>
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <a href="{% url 'buzz_feed' %}" class="menu-item {% if 'buzz' in request.path and 'novidades' not in request.path and 'bugs' not in request.path and 'netgram-moderation' not in request.path %}active{% endif %}">
+                    <i class="bi bi-chat-heart"></i> Netgram
+                </a>
+                {% endif %}
+                {% endif %}
+                {% if user_modules.org_chart %}
+                <a href="{% url 'org_chart_view' %}" class="menu-item {% if 'org-chart' in request.path %}active{% endif %}">
+                    <i class="bi bi-diagram-3-fill"></i> Organograma
+                </a>
+                {% endif %}
+                {% if user_modules.agenda %}
+                {% if EXIBIR_AGENDA_WEB or user.is_superuser or user.is_admin or user.is_hr %}
+                <div class="menu-item-group {% if request.resolver_match.url_name == 'agenda_calendar' or request.resolver_match.url_name == 'agenda_manage_locations' or request.resolver_match.url_name == 'agenda_manage_event_types' %}active-group{% endif %}">
+                    <a href="{% url 'agenda_calendar' %}" class="menu-item {% if request.resolver_match.url_name == 'agenda_calendar' %}active{% endif %} has-submenu">
+                        <span class="d-flex align-items-center"><i class="bi bi-calendar3 me-2"></i> Agenda Corporativa</span>
+                        <i class="bi bi-chevron-down submenu-arrow"></i>
+                    </a>
+                    <div class="submenu-wrapper">
+                        <a href="{% url 'agenda_manage_locations' %}" class="menu-item {% if request.resolver_match.url_name == 'agenda_manage_locations' %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-building" style="font-size: 13px;"></i> Espaços / Salas
+                        </a>
+                        <a href="{% url 'agenda_manage_event_types' %}" class="menu-item {% if request.resolver_match.url_name == 'agenda_manage_event_types' %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-tags" style="font-size: 13px;"></i> Tipos de Reunião
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                {% endif %}
+
+            </div>
+
+            
+            <div class="menu-section">
+                <span class="menu-label">MEUS DADOS</span>
+                {% if user_modules.attendance %}
+                <div class="menu-item-group {% if request.resolver_match.url_name == 'attendance_stats' or request.resolver_match.url_name == 'attendance_my_calendar' or request.resolver_match.url_name == 'adjustment_list' or request.resolver_match.url_name == 'adjustment_create' %}active-group{% endif %}">
+                    <a href="{% url 'attendance_stats' %}" class="menu-item {% if request.resolver_match.url_name == 'attendance_stats' or request.resolver_match.url_name == 'adjustment_list' or request.resolver_match.url_name == 'adjustment_create' %}active{% endif %} has-submenu">
+                        <span class="d-flex align-items-center"><i class="bi bi-pencil-square me-2"></i> Meus registros de ponto</span>
+                        <i class="bi bi-chevron-down submenu-arrow"></i>
+                    </a>
+                    <div class="submenu-wrapper">
+                        <a href="{% url 'attendance_my_calendar' %}" class="menu-item {% if request.resolver_match.url_name == 'attendance_my_calendar' %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-calendar-range" style="font-size: 13px;"></i> Meu Calendário
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                {% if user_modules.leave %}
+                <div class="menu-item-group {% if request.resolver_match.url_name == 'leave_list' or request.resolver_match.url_name == 'my_absences_calendar' %}active-group{% endif %}">
+                    <a href="{% url 'leave_list' %}?mine=1" class="menu-item {% if request.resolver_match.url_name == 'leave_list' and request.GET.mine %}active{% endif %} has-submenu">
+                        <span class="d-flex align-items-center"><i class="bi bi-calendar-check me-2"></i> Minhas Solicitações</span>
+                        <i class="bi bi-chevron-down submenu-arrow"></i>
+                    </a>
+                    <div class="submenu-wrapper">
+                        <a href="{% url 'my_absences_calendar' %}" class="menu-item {% if request.resolver_match.url_name == 'my_absences_calendar' %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-calendar3" style="font-size: 13px;"></i> Minhas Ausências
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                {% if not user.is_supervisor and not user.is_admin %}
+                {% if user_modules.swap and user.employee and user.employee.sub_division and user.employee.sub_division.allow_shift_swaps %}
+                <a href="{% url 'swap_inbox_page' %}" class="menu-item {% if 'swap' in request.path %}active{% endif %}">
+                    <i class="bi bi-arrow-left-right"></i> Minhas Trocas
+                </a>
+                {% endif %}
+                {% endif %}
+                
+                <a href="{% url 'payroll_dashboard' %}?mine=1" class="menu-item {% if request.resolver_match.url_name == 'payroll_dashboard' and request.GET.mine or request.resolver_match.url_name == 'payslip_detail' and request.GET.mine %}active{% endif %}">
+                    <i class="bi bi-folder2-open"></i> Meus Documentos
+                </a>
+
+            </div>
+
+            
+            {% if user.is_supervisor %}
+            <div class="menu-section">
+                <span class="menu-label">EQUIPE</span>
+                {% if user_modules.team_employees %}
+                <a href="{% url 'employee_list' %}" class="menu-item {% if 'pim' in request.path and 'org-chart' not in request.path and 'onboarding' not in request.path %}active{% endif %}">
+                    <i class="bi bi-people"></i> Funcionários
+                </a>
+
+                {% endif %}
+                
+                {% if user_modules.team_approvals %}
+                <a href="{% url 'leave_list' %}" class="menu-item {% if request.resolver_match.url_name == 'leave_list' and not request.GET.mine %}active{% endif %}">
+                    <i class="bi bi-inboxes"></i> Central de Aprovações
+                </a>
+                {% endif %}
+                
+                {% if user_modules.team_attendance %}
+                {% if request.user.role == 'Supervisor' %}
+                <a href="{% url 'attendance_list' %}" class="menu-item {% if request.resolver_match.url_name == 'attendance_list' %}active{% endif %}">
+                    <i class="bi bi-list-check"></i> Ponto da Equipe
+                </a>
+                {% endif %}
+                
+                {% if request.user.role == 'Admin' or request.user.role == 'HR' %}
+                <a href="{% url 'attendance_reports' %}" class="menu-item {% if request.resolver_match.url_name == 'attendance_reports' %}active{% endif %}">
+                    <i class="bi bi-graph-up"></i> Relatórios de Ponto
+                </a>
+                {% endif %}
+                {% endif %}
+
+                {% if user_modules.claim %}
+                <a href="{% url 'claim_list' %}" class="menu-item {% if request.resolver_match.url_name == 'claim_list' and not request.GET.mine %}active{% endif %}">
+                    <i class="bi bi-receipt-cutoff"></i> Todos Reembolsos
+                </a>
+                {% endif %}
+                
+                {% if user_modules.performance %}
+                <a href="{% url 'survey_ranking_list' %}" class="menu-item {% if request.resolver_match.url_name == 'survey_ranking_list' or 'surveys/rankings' in request.path %}active{% endif %}">
+                    <i class="bi bi-trophy"></i> Rankings de Liderança
+                </a>
+                {% endif %}
+
+            </div>
+
+            {% endif %}
+
+            
+            {% if user.is_admin or user.is_hr %}
+            <div class="menu-section">
+                <span class="menu-label">ADMINISTRAÇÃO</span>
+                {% if user_modules.admin_core %}
+                <!-- Empresas & Estrutura -->
+                <div class="menu-item-group {% if 'legal-entities' in request.path or 'subunit' in request.resolver_match.url_name or 'location' in request.resolver_match.url_name and 'agenda' not in request.resolver_match.url_name or 'city' in request.resolver_match.url_name or 'job_title' in request.resolver_match.url_name %}active-group{% endif %}">
+                    <a href="{% url 'legal_entity_list' %}" class="menu-item {% if 'legal-entities' in request.path %}active{% endif %} has-submenu">
+                        <span class="d-flex align-items-center"><i class="bi bi-buildings me-2"></i> Empresas / Filiais</span>
+                        <i class="bi bi-chevron-down submenu-arrow"></i>
+                    </a>
+                    <div class="submenu-wrapper">
+                        <a href="{% url 'subunit_list' %}" class="menu-item {% if 'subunit' in request.resolver_match.url_name %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-diagram-3" style="font-size: 13px;"></i> Departamentos
+                        </a>
+                        <a href="{% url 'location_list' %}" class="menu-item {% if 'location' in request.resolver_match.url_name and 'agenda' not in request.resolver_match.url_name %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-geo-alt" style="font-size: 13px;"></i> Localizações
+                        </a>
+                        <a href="{% url 'city_list' %}" class="menu-item {% if 'city' in request.resolver_match.url_name %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-pin-map" style="font-size: 13px;"></i> Cidades Base
+                        </a>
+                        <a href="{% url 'job_title_list' %}" class="menu-item {% if 'job_title' in request.resolver_match.url_name %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-award" style="font-size: 13px;"></i> Cargos
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Documentos Administrativos -->
+                <a href="{% url 'payroll_dashboard' %}" class="menu-item {% if request.resolver_match.url_name == 'payroll_dashboard' and not request.GET.mine or request.resolver_match.url_name == 'payslip_detail' and not request.GET.mine %}active{% endif %}">
+                    <i class="bi bi-folder2-open"></i> Documentos
+                </a>
+
+                <!-- Configurações de RH -->
+                <div class="menu-item-group {% if 'leave_type' in request.resolver_match.url_name or 'holiday' in request.resolver_match.url_name or 'termination_reason' in request.resolver_match.url_name %}active-group{% endif %}">
+                    <a href="{% url 'leave_type_list' %}" class="menu-item {% if 'leave_type' in request.resolver_match.url_name %}active{% endif %} has-submenu">
+                        <span class="d-flex align-items-center"><i class="bi bi-calendar-event me-2"></i> Tipos de Licença</span>
+                        <i class="bi bi-chevron-down submenu-arrow"></i>
+                    </a>
+                    <div class="submenu-wrapper">
+                        <a href="{% url 'holiday_list' %}" class="menu-item {% if 'holiday' in request.resolver_match.url_name %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-calendar-x" style="font-size: 13px;"></i> Feriados
+                        </a>
+                        <a href="{% url 'termination_reason_list' %}" class="menu-item {% if 'termination_reason' in request.resolver_match.url_name %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-box-arrow-right" style="font-size: 13px;"></i> Tipos de Desligamento
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Recrutamento -->
+                {% if request.user.is_admin or request.user.is_hr %}
+                <div class="menu-item-group {% if request.resolver_match.url_name == 'candidate_pipeline' or request.resolver_match.url_name == 'candidate_list' or 'jobs' in request.path or 'metrics' in request.path or request.resolver_match.url_name == 'skill_list' %}active-group{% endif %}">
+                    <a href="{% url 'candidate_pipeline' %}" class="menu-item has-submenu">
+                        <span class="d-flex align-items-center"><i class="bi bi-person-workspace me-2"></i> Recrutamento</span>
+                        <i class="bi bi-chevron-down submenu-arrow"></i>
+                    </a>
+                    <div class="submenu-wrapper">
+                        <a href="{% url 'candidate_list' %}" class="menu-item {% if request.resolver_match.url_name == 'candidate_list' %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-people" style="font-size: 13px;"></i> Candidatos
+                        </a>
+                        <a href="{% url 'job_list' %}" class="menu-item {% if 'jobs' in request.path %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-briefcase" style="font-size: 13px;"></i> Vagas
+                        </a>
+                        <a href="{% url 'skill_list' %}" class="menu-item {% if request.resolver_match.url_name == 'skill_list' %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-tags-fill" style="font-size: 13px;"></i> Skills
+                        </a>
+                        <a href="{% url 'recruitment_metrics' %}" class="menu-item {% if 'metrics' in request.path %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-graph-up-arrow" style="font-size: 13px;"></i> Métricas
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Escalas & Fechamento -->
+                {% if user_modules.admin_attendance %}
+                <div class="menu-item-group {% if request.resolver_match.url_name == 'schedule_list' or request.resolver_match.url_name == 'schedule_create' or request.resolver_match.url_name == 'schedule_edit' or request.resolver_match.url_name == 'roster_builder' or 'payroll_closing' in request.resolver_match.url_name %}active-group{% endif %}">
+                    <a href="{% url 'schedule_list' %}" class="menu-item {% if request.resolver_match.url_name == 'schedule_list' or request.resolver_match.url_name == 'schedule_create' or request.resolver_match.url_name == 'schedule_edit' %}active{% endif %} has-submenu">
+                        <span class="d-flex align-items-center"><i class="bi bi-calendar3 me-2"></i> Escalas de Trabalho</span>
+                        <i class="bi bi-chevron-down submenu-arrow"></i>
+                    </a>
+                    <div class="submenu-wrapper">
+                        <a href="{% url 'roster_builder' %}" class="menu-item {% if request.resolver_match.url_name == 'roster_builder' %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-calendar-range" style="font-size: 13px;"></i> Escala Personalizada
+                        </a>
+                        <a href="{% url 'payroll_closing_list' %}" class="menu-item {% if 'payroll_closing' in request.resolver_match.url_name %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-safe2-fill" style="font-size: 13px;"></i> Fechamento de Ponto
+                        </a>
+                    </div>
+                </div>
+                
+                {% if user_modules.performance %}
+                <a href="{% url 'survey_list' %}" class="menu-item {% if 'survey' in request.path and 'surveys/rankings' not in request.path %}active{% endif %}">
+                    <i class="bi bi-clipboard2-data"></i> Pesquisas
+                </a>
+                {% endif %}
+                {% endif %}
+                
+                <!-- Comunicações -->
+                <a href="{% url 'email_template_list' %}" class="menu-item {% if 'templates' in request.path %}active{% endif %}">
+                    <i class="bi bi-envelope-paper"></i> Comunicações
+                </a>
+                
+                <!-- Usuários & Segurança -->
+                <div class="menu-item-group {% if 'users' in request.path or 'module-permissions' in request.path or request.resolver_match.url_name == 'audit_log' or 'integrations' in request.path or 'netgram-moderation' in request.path %}active-group{% endif %}">
+                    {% if user_modules.admin_core %}
+                    <a href="{% url 'user_list' %}" class="menu-item {% if 'users' in request.path %}active{% endif %} has-submenu">
+                        <span class="d-flex align-items-center"><i class="bi bi-person-gear me-2"></i> Usuários</span>
+                        <i class="bi bi-chevron-down submenu-arrow"></i>
+                    </a>
+                    {% endif %}
+                    <div class="submenu-wrapper">
+                        {% if user.is_admin %}
+                        {% if user_modules.admin_core %}
+                        <a href="{% url 'module_permissions_list' %}" class="menu-item {% if 'module-permissions' in request.path %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-ui-checks" style="font-size: 13px;"></i> Permissões de Módulos
+                        </a>
+                        {% endif %}
+                        {% if user_modules.audit %}
+                        <a href="{% url 'audit_log' %}" class="menu-item {% if request.resolver_match.url_name == 'audit_log' %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-shield-check" style="font-size: 13px;"></i> Log de Auditoria
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'netgram_user_moderation' %}" class="menu-item {% if request.resolver_match.url_name == 'netgram_user_moderation' %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-person-x" style="font-size: 13px;"></i> Moderação Netgram
+                        </a>
+                        {% if user_modules.integrations and user.role == 'Admin' %}
+                        {% if EXIBIR_INTEGRACOES_WEB or user.is_superuser %}
+                        <a href="{% url 'integrations' %}" class="menu-item {% if 'integrations' in request.path %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
+                            <i class="bi bi-plug-fill" style="font-size: 13px;"></i> Central de Integrações
+                        </a>
+                        {% endif %}
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <a href="{% url 'announcement_list' %}" class="menu-item {% if 'announcement' in request.path %}active{% endif %}">
+                    <i class="bi bi-megaphone"></i> Mural de Avisos
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="sidebar-footer">
+            <a href="{% url 'profile' %}" class="menu-item {% if 'profile' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-person-circle"></i> {{ user.get_full_name|default:user.username }}
+            </a>
+            <form method="post" action="{% url 'logout' %}" style="margin: 0;">
+                {% csrf_token %}
+                <button type="submit" class="menu-item text-danger-light w-100" style="background: none; border: none; cursor: pointer; text-align: left;">
+                    <i class="bi bi-box-arrow-right"></i> Sair
+                </button>
+            </form>
+        </div>
+        <script>
+            // Restore sidebar and menu scroll positions synchronously after the sidebar is fully parsed and height is computed
+            (function() {
+                const sidebarEl = document.getElementById('sidebar');
+                const sidebarMenuEl = document.getElementById('sidebarMenu');
+                
+                const savedSidebarScroll = localStorage.getItem('sidebarScrollTop');
+                if (savedSidebarScroll && sidebarEl) {
+                    sidebarEl.scrollTop = parseInt(savedSidebarScroll, 10);
+                }
+                
+                const savedMenuScroll = localStorage.getItem('sidebarMenuScrollTop');
+                if (savedMenuScroll && sidebarMenuEl) {
+                    sidebarMenuEl.scrollTop = parseInt(savedMenuScroll, 10);
+                }
+            })();
+        </script>
+    </nav>
+
+    
+    <div class="main-content">
+        
+        {% if not request.GET.popup %}
+        <header class="topbar sticky-top" style="z-index: 1020; background: var(--card-bg); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; gap: 16px;">
+            <!-- Grupo da Esquerda (Hamburger + Logo Mobile + Breadcrumb + Busca) -->
+            <div class="d-flex align-items-center gap-3 flex-grow-1" style="max-width: 650px;">
+                <button class="btn btn-link sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+                <!-- Logo Netline na topbar — visível somente quando o sidebar está oculto (<992px) -->
+                <a href="{% url 'dashboard' %}" class="d-flex align-items-center gap-2 text-decoration-none d-lg-none" style="flex-shrink: 0;">
+                    <img src="/static/img/netline_icon.png" alt="Netline" style="height: 30px; width: 30px; object-fit: contain;">
+                    <span style="font-size: 15px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px;">Netline <span style="font-weight: 300; opacity: 0.5; margin-left: 2px;">RH</span></span>
+                </a>
+                <div class="topbar-breadcrumb d-none d-lg-block flex-shrink-0">
+                    {% block breadcrumb %}{% endblock %}
+                </div>
+                
+                <!-- Busca perfeitamente integrada no fluxo natural -->
+                <div class="topbar-search d-none d-xl-flex position-relative flex-grow-1 ms-3" style="max-width: 380px; z-index: 1000;">
+                    <i class="bi bi-search position-absolute" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; color: #8e8e93; pointer-events: none;"></i>
+                    <input type="text" id="globalSearchInput" class="form-control border-0 shadow-none w-100" placeholder="Pesquisar" style="background: rgba(118, 118, 128, 0.12); color: #000; height: 40px; padding-left: 40px; border-radius: 10px; font-size: 17px; letter-spacing: -0.4px; font-weight: 400; transition: background 0.2s;">
+                    
+                    <div id="globalSearchResults" class="dropdown-menu shadow-lg border-0 w-100 mt-2 p-2 rounded-4" style="position: absolute; top: 100%; left: 0; display: none; max-height: 350px; overflow-y: auto; z-index: 1050;">
+                        <div id="searchSuggestions"></div>
+                        <div id="searchNoResults" class="text-center p-3 d-none text-muted" style="font-size: 13px;">Nenhum resultado encontrado.</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grupo da Direita (Notificações + Widget de Ponto + Dropdown de Perfil) com gap e alinhamento consistentes -->
+            <div class="topbar-right d-flex align-items-center gap-3">
+                
+                <div class="dropdown me-2 d-none d-md-block">
+                    <button class="btn btn-icon position-relative border-0" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--text-secondary); background: transparent;">
+                        <i class="bi bi-bell fs-5"></i>
+                        {% if unread_count > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 9px; padding: 3px 5px; margin-top: 5px; margin-left: -10px;">
+                            {{ unread_count }}
+                        </span>
+                        {% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" aria-labelledby="notifDropdown" style="width: 320px; max-height: 400px; overflow-y: auto; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden;">
+                        <li>
+                            <div class="dropdown-header d-flex justify-content-between align-items-center fw-bold border-bottom pb-3 pt-3 mb-0" style="color: var(--text-primary); background: var(--hover-bg); padding-left: 20px; padding-right: 20px;">
+                                <span style="font-size: 14px;">Notificações</span>
+                                {% if unread_count > 0 %}
+                                <form action="{% url 'mark_notifications_read' %}" method="POST" style="margin: 0; padding: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-link p-0 text-decoration-none d-flex align-items-center" style="color: var(--accent-color); font-size: 12px; font-weight: 600; transition: opacity 0.15s ease;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                                        <i class="bi bi-trash3 me-1" style="font-size: 12px;"></i>Limpar
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </li>
+                        {% for notif in unread_notifications %}
+                        <li>
+                            <a class="dropdown-item d-flex align-items-start py-3 border-bottom" href="{{ notif.link|default:'#' }}" style="border-color: var(--border-color) !important;">
+                                <div class="me-2 text-primary mt-1"><i class="bi bi-info-circle-fill" style="color: var(--accent-color);"></i></div>
+                                <div>
+                                    <div style="white-space: normal; font-size: 13px; line-height: 1.4; color: var(--text-primary);">{{ notif.message }}</div>
+                                    <small class="text-muted mt-1 d-block" style="font-size: 11px;">{{ notif.created_at|timesince }} atrás</small>
+                                </div>
+                            </a>
+                        </li>
+                        {% empty %}
+                        <li><span class="dropdown-item-text text-muted text-center py-5 d-block" style="font-size: 13px;">Nenhuma nova notificação</span></li>
+                        {% endfor %}
+                        {% if unread_count > 0 %}
+                        <li>
+                            <form action="{% url 'mark_notifications_read' %}" method="POST" style="margin: 0; padding: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item text-center fw-bold pt-3 pb-3 w-100 border-0" style="font-size: 13px; color: var(--accent-color); background: var(--hover-bg); border-radius: 0 0 16px 16px;">
+                                    Marcar todas como lidas
+                                </button>
+                            </form>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+ 
+                
+                <button class="btn btn-icon theme-toggle shadow-none border-0 d-none" title="Alternar Tema">
+                    <i class="bi bi-moon-stars"></i>
+                </button>
+                
+                <div id="topbar-punch-widget" class="d-flex align-items-center rounded-pill ms-1 ms-md-3 bg-white" style="border: 1px solid var(--border-color); padding: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    {% if punch_active %}
+                    
+                    <div class="d-flex align-items-center px-2 px-sm-3" style="font-family: 'Inter', sans-serif; font-size: 14px;">
+                        <span id="punch-timer" class="ms-1" data-seconds="{{ punch_worked_sec }}" data-ticking="{{ punch_is_ticking|yesno:'true,false' }}" style="color: #1e293b; font-weight: 600; letter-spacing: 0.5px;">{{ punch_worked_str }}</span>
+                        <span class="mx-1 d-none d-lg-inline" style="color: #94a3b8;">/</span>
+                        <span class="d-none d-lg-inline" style="color: #64748b; font-weight: 400; margin-right: 12px;">{{ punch_theo_str }}</span>
+                        
+                        {% if punch_next_action != 'DONE' %}
+                        <form id="topbarPunchForm" method="post" action="{% url 'punch_action' %}" class="d-flex align-items-center gap-2 m-0 p-0">
+                            {% csrf_token %}
+                            <input type="hidden" name="punch_action_type" id="topbarPunchActionType" value="">
+                            <input type="hidden" name="photo_base64" id="topbarPhotoBase64" value="">
+                            <input type="hidden" name="lat" id="topbarLat" value="">
+                            <input type="hidden" name="lng" id="topbarLng" value="">
+                            {% if punch_next_action == 'IN' %}
+<button type="button" onclick="topbarPunch(this, 'IN')" class="btn rounded-pill text-white px-3 py-1 d-flex align-items-center justify-content-center flex-shrink-0 ms-2 ms-sm-0" style="background: #10B981; border: none; font-size: 14px; font-weight: 600; height: 40px; min-width: 40px; white-space: nowrap; transition: background 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10B981'"><i class="bi bi-play-circle fs-5 me-0 me-md-2"></i> <span class="d-none d-md-inline">Iniciar</span></button>
+{% elif punch_next_action == 'OUT' %}
+<button type="button" onclick="topbarPunch(this, 'OUT')" class="btn rounded-pill text-white px-3 py-1 d-flex align-items-center justify-content-center flex-shrink-0 ms-2 ms-sm-0" style="background: #EF4444; border: none; font-size: 14px; font-weight: 600; height: 40px; min-width: 40px; white-space: nowrap; transition: background 0.2s;" onmouseover="this.style.background='#DC2626'" onmouseout="this.style.background='#EF4444'"><i class="bi bi-pause-circle fs-5 me-0 me-md-2"></i> <span class="d-none d-md-inline">Pausar</span></button>
+{% endif %}
+                        </form>
+                        {% else %}
+                        {% if punch_is_pending %}
+                        <div class="rounded-pill px-3 py-1 d-flex align-items-center justify-content-center flex-shrink-0 ms-2 ms-sm-0 shadow-sm" style="background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%); border: 1px solid #fde047; color: #a16207; font-size: 13px; font-weight: 600; height: 40px; min-width: 40px; white-space: nowrap; user-select: none; opacity: 0.9;" title="Sua batida está aguardando aprovação do supervisor">
+                            <i class="bi bi-hourglass-split fs-5 me-0 me-md-2" style="animation: spin 3s linear infinite;"></i> <span class="d-none d-md-inline">Pendente</span>
+                        </div>
+                        <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
+                        {% else %}
+                        <div class="rounded-pill px-3 py-1 d-flex align-items-center justify-content-center flex-shrink-0 ms-2 ms-sm-0" style="background: #f8fafc; border: 1px dashed #cbd5e1; color: #64748b; font-size: 13px; font-weight: 600; height: 40px; min-width: 40px; white-space: nowrap; user-select: none;" title="Ação de ponto indisponível no momento">
+                            <i class="bi bi-lock-fill fs-5 me-0 me-md-2" style="color: #94a3b8;"></i> <span class="d-none d-md-inline">{{ punch_block_reason|default:"Bloqueado" }}</span>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                    
+                    <div style="width: 1px; height: 20px; background: #e2e8f0; margin: 0 4px;"></div>
+                    {% endif %}
+                    
+                    
+                    <div class="dropdown px-2">
+                        <a class="text-decoration-none d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--text-primary); font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;">
+                            {% if user.employee and user.employee.picture %}
+                                <img src="{{ user.employee.picture.picture.url }}" alt="Avatar" class="rounded-circle me-2 flex-shrink-0" style="width: 26px; height: 26px; object-fit: cover; border: 1px solid rgba(0,0,0,0.1);">
+                            {% else %}
+                                <div class="d-flex justify-content-center align-items-center rounded-circle me-2 fw-bold flex-shrink-0" style="width: 26px; height: 26px; font-size: 12px; background: rgba(79, 70, 229, 0.1); color: #4f46e5; border: 1px solid rgba(79, 70, 229, 0.2);">
+                                    {{ user.get_full_name|default:user.username|make_list|first|upper }}
+                                </div>
+                            {% endif %}
+                            <span class="d-none d-lg-inline" style="letter-spacing: 0.3px; white-space: nowrap;">{{ user.get_full_name|default:user.username|upper }}</span>
+                            <i class="bi bi-chevron-down ms-2 text-muted" style="font-size: 10px;"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" style="border-radius: 12px; background: var(--card-bg); font-family: 'Inter', sans-serif;">
+                            <li class="px-3 py-2 border-bottom mb-1" style="border-color: var(--border-color) !important;">
+                                <div class="fw-bold" style="font-size: 13px; color: var(--text-primary);">{{ user.get_full_name|default:user.username }}</div>
+                                <div class="text-muted" style="font-size: 11px;">{{ user.get_role_display }}</div>
+                            </li>
+                            <li><a class="dropdown-item py-2" href="{% url 'profile' %}" style="font-size: 13px; color: var(--text-primary);"><i class="bi bi-person me-2"></i> Meu Perfil</a></li>
+                            <li><hr class="dropdown-divider" style="border-color: var(--border-color);"></li>
+                            <li>
+                                <form method="post" action="{% url 'logout' %}" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item py-2 text-danger" style="font-size: 13px;"><i class="bi bi-box-arrow-right me-2"></i> Sair</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </header>
+        {% endif %}
+
+        
+        {% if messages %}
+        <style>
+        .toast-messages-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 1050;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+        .toast-messages-container .alert {
+            pointer-events: auto;
+            min-width: 320px;
+            max-width: 450px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: none;
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            animation: slideInDown 0.4s ease-out forwards;
+        }
+        @keyframes slideInDown {
+            0% { transform: translateY(-30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        /* Theme Overrides for Alerts */
+        .toast-messages-container .alert-success { background: #ecfdf5; color: #065f46; border-left: 6px solid #10b981; }
+        .toast-messages-container .alert-error, .toast-messages-container .alert-danger { background: #fef2f2; color: #991b1b; border-left: 6px solid #ef4444; }
+        .toast-messages-container .alert-warning { background: #fffbeb; color: #92400e; border-left: 6px solid #f59e0b; }
+        .toast-messages-container .alert-info { background: #eff6ff; color: #1e40af; border-left: 6px solid #3b82f6; }
+        .toast-messages-container .alert .bi { font-size: 1.3rem; }
+        .toast-messages-container .btn-close { padding: 1.15rem 1rem; }
+        </style>
+        
+        <div class="toast-messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                <i class="bi {% if 'success' in message.tags %}bi-check-circle-fill{% elif 'error' in message.tags or 'danger' in message.tags %}bi-x-circle-fill{% elif 'warning' in message.tags %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %}"></i>
+                <div class="flex-grow-1">{{ message|safe }}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        
+        {% else %}
+<div class="popup-wrapper" style="background: #fff; min-height: auto; overflow-x: hidden; position: relative; padding: 0;">
+    {% if messages %}
+    <div class="messages-container mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert" style="border-radius: 8px;">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('form').forEach(f => {
+                let action = f.getAttribute('action') || window.location.href;
+                if(action && !action.includes('popup=')) {
+                    let url = new URL(action, window.location.origin);
+                    url.searchParams.set('popup', '1');
+                    if (action.startsWith('/')) {
+                        f.setAttribute('action', action + (action.includes('?') ? '&' : '?') + 'popup=1');
+                    } else {
+                        f.setAttribute('action', url.toString() + (url.toString().includes('?') ? '&' : '?') + 'popup=1');
+                    }
+                }
+            });
+        });
+    </script>
+{% endif %}
+        <div class="page-content" {% if request.GET.popup %}style="padding: 0;"{% endif %}>
+            {% block content %}{% endblock %}
+        </div>
+{% if not request.GET.popup %}
+    </div>
+</div>
+{% else %}
+</div>
+{% endif %}
+{% else %}
+{% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<style>
+@keyframes scannerPulse {
+    0% { box-shadow: 0 0 0 0 rgba(16,185,129, 0.5); }
+    70% { box-shadow: 0 0 0 25px rgba(16,185,129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16,185,129, 0); }
+}
+.camera-overlay-box {
+    background: rgba(22, 28, 45, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 28px;
+    padding: 40px 32px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    text-align: center;
+    max-width: 420px;
+    width: 90%;
+    position: relative;
+    overflow: hidden;
+}
+.camera-overlay-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 5px;
+    background: linear-gradient(90deg, #10b981, #059669);
+}
+.camera-wrapper {
+    position: relative;
+    width: 260px; 
+    height: 260px; 
+    border-radius: 50%;
+    border: 4px solid #10b981;
+    overflow: hidden;
+    margin: 0 auto 32px auto;
+    animation: scannerPulse 2s infinite;
+    background-color: #000;
+}
+</style>
+
+
+<div id="topbarCameraModal" class="d-none" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:99999;flex-direction:column;align-items:center;justify-content:center;">
+    <div class="camera-overlay-box">
+        <h4 class="text-white fw-bold mb-2 tracking-tight">
+            <i class="bi bi-person-bounding-box text-success me-2"></i> Validação Facial
+        </h4>
+        <p class="text-white-50 mb-4" style="font-size:14.5px; line-height: 1.5;">
+            Posicione seu rosto no centro do leitor para registrar a sua batida de forma segura.
+        </p>
+        
+        <div class="camera-wrapper">
+            <video id="topbarCameraFeed" autoplay playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
+            
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);width: 80%;height: 80%;border: 2px dashed rgba(255,255,255,0.25);border-radius:50%;pointer-events:none;"></div>
+        </div>
+        
+        <canvas id="topbarCameraCanvas" style="display:none;"></canvas>
+        
+        <div class="d-flex flex-column gap-3 mt-2">
+            <button type="button" class="btn btn-success py-3 fw-bold rounded-pill shadow" onclick="topbarTakePhoto()" id="topbarBtnTakePhoto" style="font-size: 1.05rem; letter-spacing: 0.5px;">
+                <i class="bi bi-camera-fill me-2"></i> Tirar Foto e Validar
+            </button>
+            <button type="button" class="btn btn-dark py-2 rounded-pill text-white-50 border-0 bg-transparent hover-white" onclick="topbarCloseCamera()" style="font-size: 0.95rem; text-decoration: none;">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    
+    if (window.innerWidth <= 991) {
+        // Mobile drawer behavior
+        sidebar.classList.toggle('mobile-open');
+        if (overlay) overlay.classList.toggle('show', sidebar.classList.contains('mobile-open'));
+    } else {
+        // Desktop collapse behavior
+        sidebar.classList.toggle('collapsed');
+        if (sidebar.classList.contains('collapsed')) {
+            localStorage.setItem('sidebarState', 'collapsed');
+        } else {
+            localStorage.setItem('sidebarState', 'expanded');
+        }
+        document.dispatchEvent(new Event('sidebarToggled'));
+    }
+}
+// Auto-dismiss alerts after 5 seconds
+setTimeout(() => {
+    document.querySelectorAll('.alert').forEach(a => {
+        const bsAlert = bootstrap.Alert.getOrCreateInstance(a);
+        bsAlert.close();
+    });
+}, 5000);
+
+// Theme Toggle Logic
+function toggleTheme() {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    html.setAttribute('data-theme', newTheme);
+    html.setAttribute('data-bs-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+}
+
+function updateThemeIcon(theme) {
+    const icons = document.querySelectorAll('.theme-toggle i');
+    icons.forEach(icon => {
+        if (theme === 'dark') {
+            icon.className = 'bi bi-sun-fill text-warning';
+        } else {
+            icon.className = 'bi bi-moon-stars text-secondary';
+        }
+    });
+}
+
+// Set initial icon state
+document.addEventListener('DOMContentLoaded', () => {
+    updateThemeIcon(document.documentElement.getAttribute('data-theme'));
+    
+    // Auto-scroll sidebar to the active item ONLY if no scroll position was saved in localStorage
+    setTimeout(() => {
+        if (!localStorage.getItem('sidebarScrollTop') && !localStorage.getItem('sidebarMenuScrollTop')) {
+            const activeItem = document.querySelector('.sidebar .menu-item.active');
+            if (activeItem) {
+                activeItem.scrollIntoView({ behavior: 'auto', block: 'center' });
+            }
+        }
+    }, 100);
+});
+
+// Punch Timer Logic
+const timerElement = document.getElementById('punch-timer');
+if (timerElement) {
+    let isTicking = timerElement.getAttribute('data-ticking') === 'true';
+    let baseSeconds = parseInt(timerElement.getAttribute('data-seconds')) || 0;
+    
+    if (isTicking) {
+        if (window._punchIntervalId) clearInterval(window._punchIntervalId);
+        let startTime = Date.now();
+        window._punchIntervalId = setInterval(() => {
+            let elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+            let totalSeconds = baseSeconds + elapsedSeconds;
+            const h = Math.floor(totalSeconds / 3600);
+            const m = Math.floor((totalSeconds % 3600) / 60);
+            const s = totalSeconds % 60;
+            const timeString = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            
+            timerElement.textContent = timeString;
+            const dropdownTimer = document.getElementById('punch-timer-dropdown');
+            if (dropdownTimer) {
+                dropdownTimer.textContent = timeString;
+            }
+        }, 1000);
+    }
+}
+
+// ── Global Topbar Polling (DOM Morphing) ──────────────────────────────────
+// Mantém a cápsula do topo sincronizada com batidas do aplicativo móvel
+(function startGlobalPunchPolling() {
+    let knownPunches = {{ punch_count|default:0 }};
+    async function checkPunchStatus() {
+        try {
+            const resp = await fetch('/attendance/punch/status.json', { credentials: 'same-origin' });
+            if (!resp.ok) return;
+            const data = await resp.json();
+            
+            if (data.total_punches !== knownPunches) {
+                // Estado mudou: busca o HTML atualizado da mesma página silenciosamente
+                const pageResp = await fetch(window.location.href);
+                const html = await pageResp.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                const currentWidget = document.getElementById('topbar-punch-widget');
+                const newWidget = doc.getElementById('topbar-punch-widget');
+                
+                if (currentWidget && newWidget) {
+                    // Substitui apenas a cápsula do topo
+                    currentWidget.innerHTML = newWidget.innerHTML;
+                    knownPunches = data.total_punches;
+                    
+                    // Reinicializa o timer interno da nova cápsula
+                    const newTimer = document.getElementById('punch-timer');
+                    if (newTimer) {
+                        let isTicking = newTimer.getAttribute('data-ticking') === 'true';
+                        let baseSec = parseInt(newTimer.getAttribute('data-seconds')) || 0;
+                        if (isTicking) {
+                            if (window._punchIntervalId) clearInterval(window._punchIntervalId);
+                            let startTime = Date.now();
+                            window._punchIntervalId = setInterval(() => {
+                                let elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+                                let totalSec = baseSec + elapsedSec;
+                                const h = Math.floor(totalSec / 3600);
+                                const m = Math.floor((totalSec % 3600) / 60);
+                                const s = totalSec % 60;
+                                newTimer.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                            }, 1000);
+                        } else {
+                            if (window._punchIntervalId) clearInterval(window._punchIntervalId);
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            // falha de rede ignorada
+        }
+    }
+    // Roda a cada 2 segundos para uma experiência mais em tempo real
+    setInterval(checkPunchStatus, 2000);
+})();
+
+
+
+// Topbar Punch Camera Logic
+let _topbarStream = null;
+let _topbarNeedsCamera = false;
+
+function topbarPunch(btn, actionType) {
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+    document.getElementById('topbarPunchActionType').value = actionType;
+
+    // Foto obrigatória APENAS se não há nenhum punch aprovado hoje (primeiro IN real)
+    // Usa punch_count do backend — correto mesmo após cancelamento de ponto pendente
+    let isFirstPunch = {{ punch_count|default:0 }} === 0;
+    let requirePhotoAll = {{ require_photo_all_punches|yesno:"true,false" }};
+    
+    if (requirePhotoAll || (actionType === 'IN' && isFirstPunch)) {
+        _topbarNeedsCamera = true;
+        topbarOpenCamera();
+    } else {
+        _topbarNeedsCamera = false;
+        topbarGetGPSAndSubmit();
+    }
+}
+
+function topbarOpenCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Seu navegador ou conexão não permite acessar a câmera (necessita HTTPS ou localhost). O ponto será registrado sem foto.');
+        topbarGetGPSAndSubmit();
+        return;
+    }
+    const modal = document.getElementById('topbarCameraModal');
+    modal.classList.remove('d-none');
+    modal.style.display = 'flex';
+    document.getElementById('topbarBtnTakePhoto').innerHTML = '<i class="bi bi-camera-fill me-2"></i> Tirar Foto e Validar';
+    document.getElementById('topbarBtnTakePhoto').disabled = false;
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+        .then(stream => {
+            _topbarStream = stream;
+            document.getElementById('topbarCameraFeed').srcObject = stream;
+        })
+        .catch(err => {
+            console.error('Camera error:', err);
+            alert('Não foi possível acessar a câmera. O ponto será registrado sem foto.');
+            topbarCloseCamera();
+            topbarGetGPSAndSubmit();
+        });
+}
+
+function topbarCloseCamera() {
+    const modal = document.getElementById('topbarCameraModal');
+    modal.classList.add('d-none');
+    modal.style.display = 'none';
+    if (_topbarStream) {
+        _topbarStream.getTracks().forEach(t => t.stop());
+        _topbarStream = null;
+    }
+}
+
+function topbarTakePhoto() {
+    document.getElementById('topbarBtnTakePhoto').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Processando...';
+    document.getElementById('topbarBtnTakePhoto').disabled = true;
+    const video = document.getElementById('topbarCameraFeed');
+    const canvas = document.getElementById('topbarCameraCanvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    document.getElementById('topbarPhotoBase64').value = canvas.toDataURL('image/jpeg', 0.8);
+    topbarCloseCamera();
+    topbarGetGPSAndSubmit();
+}
+
+// ── GPS Pre-fetch ─────────────────────────────────────────────────────────
+// Busca localização logo que a página carrega em background.
+// Quando o utilizador clicar no botão, a posição já está em cache.
+let _cachedPosition = null;
+if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(
+        pos  => { _cachedPosition = pos; },
+        _err => { /* silencioso — apenas pre-fetch */ },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+    );
+}
+
+function topbarGetGPSAndSubmit() {
+    const form = document.getElementById('topbarPunchForm');
+    if (!('geolocation' in navigator)) {
+        form.submit();
+        return;
+    }
+
+    function _applyAndSubmit(pos) {
+        document.getElementById('topbarLat').value = pos.coords.latitude;
+        document.getElementById('topbarLng').value = pos.coords.longitude;
+        form.submit();
+    }
+
+    function _onError(err) {
+        console.warn('GPS error:', err);
+        if (confirm('Não foi possível obter sua localização. Deseja registrar o ponto assim mesmo? Ele ficará marcado para auditoria.')) {
+            form.submit();
+        } else {
+            document.getElementById('topbarPhotoBase64').value = '';
+            document.querySelectorAll('#topbarPunchForm button').forEach(b => { b.disabled = false; b.style.opacity = '1'; });
+        }
+    }
+
+    // Se já temos posição em cache (< 60s), usa imediatamente — sem espera
+    if (_cachedPosition) {
+        _applyAndSubmit(_cachedPosition);
+    } else {
+        navigator.geolocation.getCurrentPosition(
+            _applyAndSubmit,
+            _onError,
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 }
+        );
+    }
+}
+
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const loader = document.getElementById('globalLoader');
+    // Mapeia links que podem demorar
+    const navLinks = document.querySelectorAll('a.menu-item, .ts-month-picker a, .btn-solicitar, table a, .btn');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            // Ignorar links falsos, exports (downloads não causam navegação), modais ou marcados pra ignorar
+            if (this.classList.contains('no-loader') || this.hasAttribute('onclick')) return;
+            if (this.href && !this.href.startsWith('javascript:') && !this.target && !this.hasAttribute('data-bs-toggle') && this.getAttribute('href') !== '#' && !this.href.includes('export=')) {
+                loader.classList.remove('d-none');
+            }
+        });
+    });
+    // Trancar form submits tbm ajuda!
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            // Se foi disparado por botão de exportação, aborta loader
+            if (e.submitter && (e.submitter.classList.contains('btn-filter-excel') || e.submitter.classList.contains('no-loader'))) {
+                return;
+            }
+            // Apenas formulários não-AJAX
+            if (!this.classList.contains('ajax-form')) {
+                // Wait briefly over execution to avoid blocking validate
+                setTimeout(() => loader.classList.remove('d-none'), 50);
+            }
+        });
+    });
+});
+
+window.addEventListener("pageshow", function (event) {
+  if (event.persisted) { // Back button from cache
+    document.getElementById('globalLoader').classList.add('d-none');
+  }
+  // Restore scroll position of sidebar on pageshow
+  const sidebarEl = document.getElementById('sidebar');
+  const sidebarMenuEl = document.getElementById('sidebarMenu');
+  
+  const savedSidebarScroll = localStorage.getItem('sidebarScrollTop');
+  if (savedSidebarScroll && sidebarEl) {
+      sidebarEl.scrollTop = parseInt(savedSidebarScroll, 10);
+  }
+  
+  const savedMenuScroll = localStorage.getItem('sidebarMenuScrollTop');
+  if (savedMenuScroll && sidebarMenuEl) {
+      sidebarMenuEl.scrollTop = parseInt(savedMenuScroll, 10);
+  }
+});
+
+// Global Topbar Search
+const searchInput = document.getElementById('globalSearchInput');
+const searchResults = document.getElementById('globalSearchResults');
+const searchSuggestions = document.getElementById('searchSuggestions');
+const searchNoResults = document.getElementById('searchNoResults');
+
+if (searchInput) {
+    let allMenuItems = [];
+    
+    // Extract all navigable items from sidebar
+    document.querySelectorAll('.sidebar-menu .menu-item, .sidebar-menu .submenu-item').forEach(el => {
+        const href = el.getAttribute('href');
+        // Ignore links that don't go anywhere or are just collapses
+        if (href && href !== '#' && !el.hasAttribute('data-bs-toggle')) {
+            const icon = el.querySelector('i') ? el.querySelector('i').className : 'bi bi-arrow-right-short';
+            // Get clean text without the notification badges if any
+            let text = el.textContent.replace(/[0-9]+$/, '').trim();
+            
+            // Find parent category context if it's a submenu item
+            let category = '';
+            if (el.classList.contains('submenu-item')) {
+                const parentCollapse = el.closest('.collapse');
+                if (parentCollapse) {
+                    const parentToggle = document.querySelector(`[data-bs-target="#${parentCollapse.id}"]`);
+                    if (parentToggle) category = parentToggle.textContent.trim() + ' > ';
+                }
+            } else {
+                const section = el.closest('.menu-section');
+                if (section) {
+                    const label = section.querySelector('.menu-label');
+                    if (label) category = label.textContent.trim() + ' > ';
+                }
+            }
+            
+            allMenuItems.push({ text: text, href: href, icon: icon, category: category });
+        }
+    });
+
+    searchInput.addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase().trim();
+        searchSuggestions.innerHTML = '';
+        
+        if (!term) {
+            searchResults.style.display = 'none';
+            return;
+        }
+        
+        searchResults.style.display = 'block';
+        let matchCount = 0;
+        
+        allMenuItems.forEach(item => {
+            const fullText = (item.category + item.text).toLowerCase();
+            if (fullText.includes(term)) {
+                matchCount++;
+                const a = document.createElement('a');
+                a.href = item.href;
+                a.className = 'dropdown-item d-flex align-items-center py-2 px-3 rounded-3 mb-1';
+                a.style.transition = 'background 0.2s';
+                a.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-center rounded-circle me-3" style="width: 32px; height: 32px; background: #f8fafc; color: #4f46e5;">
+                        <i class="${item.icon}"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; color: #1e293b; font-size: 13px;">${item.text}</div>
+                        ${item.category ? `<small style="font-size: 11px; color: #94a3b8;">${item.category.replace(' > ', '')}</small>` : ''}
+                    </div>
+                `;
+                searchSuggestions.appendChild(a);
+            }
+        });
+        
+        if (matchCount === 0) {
+            searchNoResults.classList.remove('d-none');
+        } else {
+            searchNoResults.classList.add('d-none');
+        }
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.style.display = 'none';
+        }
+    });
+    
+    // Re-open on focus if has value
+    searchInput.addEventListener('focus', function(e) {
+        if (e.target.value.trim() !== '') {
+            searchResults.style.display = 'block';
+        }
+    });
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Inicializador universal de Selects Premium para todo o projeto
+    const initTomSelectGlobal = () => {
+        document.querySelectorAll('select').forEach((el) => {
+            // Não aplicar em selects que já foram transformados, ignorados ou pertencentes ao Flatpickr
+            if (!el.classList.contains('tomselected') && !el.classList.contains('no-ts') && !el.classList.contains('flatpickr-monthDropdown-months') && !el.closest('.flatpickr-calendar')) {
+                let placeholderText = el.getAttribute('placeholder') || 'Selecione uma opção...';
+                if(el.options.length > 0 && el.options[0].text.includes('---')) {
+                    placeholderText = "Selecione uma opção...";
+                }
+                
+                let pluginsList = [];
+                // Aplica o filtro de busca interno apenas se for de múltipla seleção (para selects únicos, a digitação ocorre no próprio input)
+                if (el.hasAttribute('multiple')) {
+                    pluginsList.push('dropdown_input');
+                }
+
+                new TomSelect(el, {
+                    dropdownParent: 'body', // Fix vital: joga pro nível máximo evitando cortes por overflow de divs/iframes
+                    create: false,
+                    placeholder: placeholderText,
+                    sortField: [], // Mantem a ordenação nativa do Django (garante os '---' ou selecione primeiro)
+                    plugins: pluginsList,
+                    render: {
+                        no_results: function(data, escape) {
+                            return '<div class="no-results" style="padding: 10px; color: #94a3b8; font-size: 13px;">Nenhuma opção encontrada...</div>';
+                        }
+                    }
+                });
+            }
+        });
+    };
+    
+    // Inicializa a primeira vez
+    initTomSelectGlobal();
+    
+    // Configura um MutationObserver para lidar com selects que aparecem em Dropdowns/Modais futuros de forma assíncrona
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.addedNodes.length) {
+                // Ao em vez de iterar em todos nós, só chama o runner pra pegar os selects novos desprotegidos
+                initTomSelectGlobal();
+            }
+        });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Submenu accordion dynamic toggling logic via Chevron click
+    document.querySelectorAll('.submenu-arrow').forEach(arrow => {
+        arrow.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation(); // Evita propagação para o link pai (impede navegação)
+            
+            const group = this.closest('.menu-item-group');
+            const sidebar = document.getElementById('sidebar');
+            const globalLoader = document.getElementById('globalLoader');
+            
+            if (globalLoader) globalLoader.classList.add('d-none'); // Evita que a animação de loader trave a tela
+            
+            // Se a barra lateral estiver minimizada (collapsed), expande primeiro e mostra o submenu
+            if (sidebar && sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+                localStorage.setItem('sidebarState', 'expanded');
+                group.classList.add('open');
+                return;
+            }
+            
+            const isExpanded = group.classList.contains('open') || group.classList.contains('active-group');
+            
+            if (isExpanded) {
+                // Se já estiver aberto, fecha o submenu
+                group.classList.remove('open');
+                group.classList.remove('active-group');
+            } else {
+                // Fecha os outros submenus abertos e abre o atual para manter a tela limpa
+                document.querySelectorAll('.menu-item-group').forEach(g => {
+                    if (g !== group) {
+                        g.classList.remove('open');
+                        g.classList.remove('active-group');
+                    }
+                });
+                group.classList.add('open');
+            }
+        });
+    });
+
+    // Auto-generate helper tooltips for the collapsed sidebar icons
+    // Only activate when sidebar is actually collapsed (not expanded)
+    function updateSidebarTooltips() {
+        const sidebar = document.getElementById('sidebar');
+        const isCollapsed = sidebar && sidebar.classList.contains('collapsed');
+        document.querySelectorAll('.sidebar .menu-item').forEach(item => {
+            if (isCollapsed) {
+                // Get only first meaningful text node (icon text excluded)
+                const text = item.innerText.replace(/[\n\r↕↑↓v^]/g, ' ').trim().split(/\s{2,}/)[0].trim();
+                if (text) item.setAttribute('title', text);
+            } else {
+                item.removeAttribute('title');
+            }
+        });
+    }
+    // Run once on load
+    updateSidebarTooltips();
+    // Re-run whenever the sidebar toggle changes
+    document.addEventListener('sidebarToggled', updateSidebarTooltips);
+
+    // Save sidebar scroll positions on scroll events
+    const sidebarEl = document.getElementById('sidebar');
+    const sidebarMenuEl = document.getElementById('sidebarMenu');
+    if (sidebarEl) {
+        sidebarEl.addEventListener('scroll', () => {
+            localStorage.setItem('sidebarScrollTop', sidebarEl.scrollTop);
+        }, { passive: true });
+    }
+    if (sidebarMenuEl) {
+        sidebarMenuEl.addEventListener('scroll', () => {
+            localStorage.setItem('sidebarMenuScrollTop', sidebarMenuEl.scrollTop);
+        }, { passive: true });
+    }
+});
+</script>
+
+{% block extra_js %}{% endblock %}
+
+<!-- Modal Global para Iframe -->
+<div class="modal fade" id="globalIframeModal" tabindex="-1" aria-labelledby="globalIframeModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 15px 35px rgba(0,0,0,.15); overflow: visible;">
+      <div class="modal-header border-0 p-3" style="position: absolute; top: 0; right: 0; z-index: 10;">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background-color: #f1f5f9; border-radius: 50%; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,.05);"></button>
+      </div>
+      <div class="modal-body p-0 position-relative" style="min-height: 200px; display: flex; flex-direction: column; background: #fff; border-radius: 16px; overflow: hidden;">
+        <div id="iframeLoader" class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="top:0; left:0; background: #fff; z-index: 5;">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div>
+        </div>
+        <iframe id="globalIframe" src="" style="width: 100%; height: 400px; border: none; position: relative; z-index: 6;"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function openModalIframe(url) {
+    const iframe = document.getElementById('globalIframe');
+    const loader = document.getElementById('iframeLoader');
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('globalIframeModal'));
+
+    // Reset estado
+    iframe.style.height = '350px';
+    iframe.style.opacity = '0';
+    if (loader) { loader.classList.remove('d-none'); loader.classList.add('d-flex'); }
+
+    const hideLoader = function() {
+        if (loader) { loader.classList.remove('d-flex'); loader.classList.add('d-none'); }
+        iframe.style.opacity = '1';
+    };
+
+    // Remove listener de load antigo — não usamos mais onload para detectar salvamento
+    iframe.onload = function() {
+        // Apenas exibe o conteúdo quando terminar de carregar (qualquer carga)
+        hideLoader();
+    };
+
+    // Cache buster + popup flag
+    const sep = url.includes('?') ? '&' : '?';
+    iframe.src = url + sep + 'popup=1&_t=' + Date.now();
+
+    modal.show();
+
+    // Fallback: esconde loader após 4s caso onload não dispare
+    setTimeout(hideLoader, 4000);
+}
+
+// ── Ouvinte de mensagens do IFRAME ────────────────────────────────────────────
+window.addEventListener('message', function(e) {
+    // Ajuste de altura (ResizeObserver do iframe)
+    if (e.data && e.data.type === 'resizeIframe') {
+        const iframe = document.getElementById('globalIframe');
+        if (iframe) iframe.style.height = (e.data.height + 48) + 'px';
+    }
+
+    // Formulário salvo com sucesso — fecha modal e recarrega a página
+    if (e.data && e.data.type === 'iframeFormSaved') {
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('globalIframeModal'));
+        modal.hide();
+        // Pequeno delay para a animação de fechar terminar
+        setTimeout(() => window.location.reload(), 350);
+    }
+
+    // Cancelar dentro do popup — apenas fecha o modal, sem recarregar
+    if (e.data === 'iframeModalClose' || (e.data && e.data.type === 'iframeModalClose')) {
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('globalIframeModal'));
+        modal.hide();
+    }
+});
+
+// ── Código que roda DENTRO do IFRAME ─────────────────────────────────────────
+// (base.html é carregado tanto no pai quanto no iframe; o if abaixo garante
+//  que apenas o contexto do iframe execute estes listeners)
+(function() {
+    if (window === window.top) return; // Não é iframe, sai
+    if (!window.location.href.includes('popup=1')) return; // Não é popup, sai
+
+    // Reporta a altura ao pai sempre que o conteúdo mudar
+    const reportHeight = () => {
+        const wrapper = document.querySelector('.popup-wrapper') || document.body;
+        const h = wrapper.scrollHeight || document.documentElement.scrollHeight;
+        window.parent.postMessage({ type: 'resizeIframe', height: h }, '*');
+    };
+
+    // Envia na carga inicial
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', reportHeight);
+    } else {
+        reportHeight();
+    }
+    window.addEventListener('load', reportHeight);
+
+    // Observa mudanças de tamanho (ex: TomSelect abrindo dropdowns)
+    if (window.ResizeObserver) {
+        new ResizeObserver(reportHeight).observe(document.body);
+    }
+})();
+</script>
+</body>
+</html>

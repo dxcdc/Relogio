@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+{% block title %}Departamentos{% endblock %}
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;">Admin / Departamentos</span>{% endblock %}
+
+{% block content %}
+<style>
+    .type-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 20px -4px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    .table-modern {
+        margin: 0;
+    }
+    .table-modern thead th {
+        background: #f8fafc;
+        color: #64748b;
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 16px 20px;
+    }
+    .table-modern tbody td {
+        padding: 16px 20px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+        font-size: 14px;
+        transition: background 0.2s;
+    }
+    .table-modern tbody tr:last-child td {
+        border-bottom: none;
+    }
+    .table-modern tbody tr:hover td {
+        background: #f8fafc;
+    }
+    .type-name {
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 14px;
+    }
+    .hover-danger:hover {
+        background: #fee2e2 !important;
+        color: #ef4444 !important;
+    }
+    .hover-primary:hover {
+        background: #eff6ff !important;
+        color: #3b82f6 !important;
+    }
+    .badge-supervisor {
+        background: #eff6ff;
+        color: #3b82f6;
+        border: 1px solid #bfdbfe;
+        font-weight: 600;
+        font-size: 12px;
+        padding: 6px 12px;
+        border-radius: 20px;
+    }
+</style>
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+            <i class="bi bi-diagram-3-fill"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 22px;">Departamentos / Unidades</h1>
+            <p class="text-muted mb-0" style="font-size: 13px;">{{ subunits.count }} unidade(s) cadastrada(s)</p>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <div class="position-relative">
+            <i class="bi bi-search position-absolute text-muted" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 14px;"></i>
+            <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="Pesquisar unidades..." style="padding-left: 38px; border-radius: 12px; border: 1px solid #e2e8f0; width: 280px; font-size: 14px; padding-top: 10px; padding-bottom: 10px; outline: none; transition: border-color 0.2s;">
+            <style>#searchInput:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.15) !important; background-color: #fff; }</style>
+        </div>
+        <button type="button" data-bs-toggle="modal" data-bs-target="#createSubunitModal" class="btn btn-dark d-flex align-items-center gap-2 px-4 shadow-sm" style="border-radius: 12px; font-weight: 600; background: #0f172a; border: none; padding: 10px 20px;">
+            <i class="bi bi-plus-lg"></i> Nova Unidade
+        </button>
+    </div>
+</div>
+
+<div class="row g-4" id="cardsContainer">
+    {% for sub in subunits %}
+    <div class="col-md-6 col-lg-4 subunit-item" data-title="{{ sub.name|lower }}">
+        <div class="card h-100" style="border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); transition: transform 0.2s ease, box-shadow 0.2s ease; overflow: visible !important;">
+            <style>
+                .subunit-item .card:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+                }
+            </style>
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        {% if sub.parent %}
+                        <div style="width: 44px; height: 44px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 18px;">
+                            <i class="bi bi-diagram-2"></i>
+                        </div>
+                        {% else %}
+                        <div style="width: 44px; height: 44px; background: #ecfdf5; color: #10b981; border: 1px solid #d1fae5; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h5 class="mb-1" style="font-weight: 700; color: #0f172a; font-size: 16px;">{{ sub.name }}</h5>
+                            <span style="color: #64748b; font-size: 12px; font-weight: 600;">
+                                {% if sub.parent %}Subordinado a {{ sub.parent.name }}{% else %}Unidade Principal{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light border-0" type="button" data-bs-toggle="dropdown" style="background: transparent; padding: 4px;">
+                            <i class="bi bi-three-dots-vertical text-muted"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 12px; border: 1px solid #e2e8f0; padding: 8px;">
+                            <li><button type="button" data-bs-toggle="modal" data-bs-target="#editSubunitModal{{ sub.pk }}" class="dropdown-item d-flex align-items-center gap-2" style="font-size: 13px; font-weight: 500; border-radius: 6px; padding: 8px 16px; width: 100%; border: none; background: none; text-align: left;">
+                                <i class="bi bi-pencil-square" style="color: #3b82f6;"></i> Editar
+                            </button></li>
+                            <li><a class="dropdown-item text-danger d-flex align-items-center gap-2 mt-1" href="{% url 'delete_generic' 'subunit' sub.pk %}" onclick="return confirm('Atenção: Certeza que deseja remover a unidade {{ sub.name }}?')" style="font-size: 13px; font-weight: 500; border-radius: 6px; padding: 8px 16px;">
+                                <i class="bi bi-trash3-fill"></i> Remover
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Descrição</span>
+                    <p style="color: #475569; font-size: 13px; font-weight: 500; margin-bottom: 0; margin-top: 4px; line-height: 1.4;">
+                        {{ sub.description|default:"Nenhuma descrição informada."|truncatechars:60 }}
+                    </p>
+                </div>
+                
+                <div class="mt-auto pt-3 border-top">
+                    {% if sub.supervisor %}
+                    <span class="badge" style="background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; font-weight: 600; font-size: 11px; padding: 6px 12px; border-radius: 8px;">
+                        <i class="bi bi-person-fill me-1"></i> Líder: {{ sub.supervisor.full_name }}
+                    </span>
+                    {% else %}
+                    <span class="badge" style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; font-weight: 600; font-size: 11px; padding: 6px 12px; border-radius: 8px;">
+                        <i class="bi bi-person-x-fill me-1"></i> Sem Líder/Supervisor
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 py-5 text-center">
+        <i class="bi bi-diagram-3 text-muted" style="font-size: 48px; opacity: 0.5;"></i>
+        <h5 class="mt-3 fw-bold" style="color: #475569;">Nenhuma unidade cadastrada</h5>
+        <p class="text-muted mb-0">Adicione divisões organizacionais para separar as equipes.</p>
+        <button type="button" data-bs-toggle="modal" data-bs-target="#createSubunitModal" class="btn text-white rounded-pill px-4 py-2 mt-4 shadow-sm" style="background: #0f172a; border: none; font-weight: 600;">
+            <i class="bi bi-plus-lg me-1"></i> Criar Unidade
+        </button>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    #createSubunitModal .form-control, #createSubunitModal .form-select {
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        padding: 10px 14px;
+        box-shadow: none;
+        color: #334155;
+    }
+    #createSubunitModal .form-control:focus, #createSubunitModal .form-select:focus {
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+</style>
+
+
+<div class="modal fade" id="createSubunitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <form method="POST" action="{% url 'subunit_create' %}" class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+            {% csrf_token %}
+            
+            <div class="modal-header border-0 pb-0" style="padding: 32px 32px 0 32px;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background: #ecfdf5; border-radius: 12px; color: #10b981; font-size: 20px;">
+                        <i class="bi bi-diagram-3-fill"></i>
+                    </div>
+                    <h5 class="modal-title fw-bold" style="color: #0f172a; font-size: 20px; margin: 0;">Novo Departamento</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body" style="padding: 24px 32px;">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px;">NOME DA UNIDADE <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0" style="border-radius: 10px 0 0 10px; border-color: #cbd5e1;"><i class="bi bi-building text-muted"></i></span>
+                            {{ form.name }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px;">UNIDADE PAI (VINCULAÇÃO)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0" style="border-radius: 10px 0 0 10px; border-color: #cbd5e1;"><i class="bi bi-diagram-2 text-muted"></i></span>
+                            {{ form.parent }}
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label" style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px;">SUPERVISOR / LÍDER DO DEPARTAMENTO</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0" style="border-radius: 10px 0 0 10px; border-color: #cbd5e1;"><i class="bi bi-person-badge text-muted"></i></span>
+                            {{ form.supervisor }}
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label" style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px;">PERMISSÕES</label>
+                        <div class="form-check form-switch mt-1">
+                            {{ form.allow_shift_swaps }}
+                            <label class="form-check-label fw-bold" style="color: #475569;" for="{{ form.allow_shift_swaps.id_for_label }}">Permitir Trocas de Turno neste Departamento</label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px;">DESCRIÇÃO OPCIONAL</label>
+                        {{ form.description }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer border-0 d-flex justify-content-end gap-2" style="padding: 0 32px 32px 32px;">
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 10px; font-weight: 600; color: #475569; background: #f1f5f9; border: none;">Cancelar</button>
+                <button type="submit" class="btn btn-dark px-4" style="border-radius: 10px; font-weight: 600; background: #0f172a; border: none;"><i class="bi bi-check-circle me-2"></i> Criar Departamento</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+{% for sub in subunits %}
+<div class="modal fade edit-modal-class" id="editSubunitModal{{ sub.pk }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <form method="POST" action="{% url 'subunit_edit' sub.pk %}" class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+            {% csrf_token %}
+            
+            <div class="modal-header border-0 pb-0" style="padding: 32px 32px 0 32px;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background: #eff6ff; border-radius: 12px; color: #3b82f6; font-size: 20px;">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <h5 class="modal-title fw-bold" style="color: #0f172a; font-size: 20px; margin: 0;">Editar Departamento</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body" style="padding: 24px 32px;">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px;">NOME DA UNIDADE <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0" style="border-radius: 10px 0 0 10px; border-color: #cbd5e1;"><i class="bi bi-building text-muted"></i></span>
+                            {{ sub.edit_form.name }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px;">UNIDADE PAI (VINCULAÇÃO)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0" style="border-radius: 10px 0 0 10px; border-color: #cbd5e1;"><i class="bi bi-diagram-2 text-muted"></i></span>
+                            {{ sub.edit_form.parent }}
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label" style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px;">SUPERVISOR / LÍDER DO DEPARTAMENTO</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0" style="border-radius: 10px 0 0 10px; border-color: #cbd5e1;"><i class="bi bi-person-badge text-muted"></i></span>
+                            {{ sub.edit_form.supervisor }}
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label" style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px;">PERMISSÕES</label>
+                        <div class="form-check form-switch mt-1">
+                            {{ sub.edit_form.allow_shift_swaps }}
+                            <label class="form-check-label fw-bold" style="color: #475569;" for="{{ sub.edit_form.allow_shift_swaps.id_for_label }}">Permitir Trocas de Turno neste Departamento</label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px;">DESCRIÇÃO OPCIONAL</label>
+                        {{ sub.edit_form.description }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer border-0 d-flex justify-content-end gap-2" style="padding: 0 32px 32px 32px;">
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 10px; font-weight: 600; color: #475569; background: #f1f5f9; border: none;">Cancelar</button>
+                <button type="submit" class="btn btn-dark px-4" style="border-radius: 10px; font-weight: 600; background: #0f172a; border: none;"><i class="bi bi-check-circle me-2"></i> Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.body.appendChild(document.getElementById('createSubunitModal'));
+        
+        // Mover também todos os modais de edição
+        document.querySelectorAll('.edit-modal-class').forEach(function(modal) {
+            document.body.appendChild(modal);
+        });
+        
+        // Estiliza a text area
+        let textareas = document.querySelectorAll('textarea');
+        textareas.forEach(desc => {
+            desc.style.borderRadius = '10px';
+        });
+
+        // Lógica de pesquisa da grid de cards
+        var searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                var term = e.target.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                var cards = document.querySelectorAll('.subunit-item');
+                
+                cards.forEach(function(card) {
+                    var title = (card.getAttribute('data-title') || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    if (title.includes(term)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,6 @@
+<ul class="nav nav-tabs mb-4" style="border-bottom: 2px solid #e2e8f0;">
+  <li class="nav-item"><a class="nav-link {% if 'schedule_list' in request.resolver_match.url_name %}active fw-bold{% endif %}" href="{% url 'schedule_list' %}" style="color: #1e293b;"><i class="bi bi-clock"></i> Turnos Base</a></li>
+  <li class="nav-item"><a class="nav-link {% if 'shift_pattern' in request.resolver_match.url_name %}active fw-bold{% endif %}" href="{% url 'shift_pattern_list' %}" style="color: #1e293b;"><i class="bi bi-calendar-week"></i> Padrões de Turno</a></li>
+  <li class="nav-item"><a class="nav-link {% if 'shift_override' in request.resolver_match.url_name %}active fw-bold{% endif %}" href="{% url 'shift_override_list' %}" style="color: #1e293b;"><i class="bi bi-calendar-x"></i> Exceções</a></li>
+  <li class="nav-item"><a class="nav-link {% if 'shift_assignment' in request.resolver_match.url_name %}active fw-bold{% endif %}" href="{% url 'shift_assignment_list' %}" style="color: #1e293b;"><i class="bi bi-people"></i> Atribuições</a></li>
+</ul>

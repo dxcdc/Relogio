@@ -1,0 +1,530 @@
+{% extends "base.html" %}
+{% block title %}Tipos de Reunião{% endblock %}
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;">Agenda / Categorias</span>{% endblock %}
+
+{% block content %}
+<!-- Pickr CSS & JS CDN (Premium Figma-like Color Picker) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+            <i class="bi bi-tag-fill"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 22px;">Tipos de Reunião</h1>
+            <p class="text-muted mb-0" style="font-size: 13px;">{{ event_types.count }} tipo(s) cadastrado(s)</p>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <div class="position-relative">
+            <i class="bi bi-search position-absolute text-muted" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 14px;"></i>
+            <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="Pesquisar tipos..." style="padding-left: 38px; border-radius: 12px; border: 1px solid #e2e8f0; width: 280px; font-size: 14px; padding-top: 10px; padding-bottom: 10px; outline: none; transition: border-color 0.2s;">
+            <style>#searchInput:focus { border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139,92,246,0.15) !important; background-color: #fff; }</style>
+        </div>
+        <button type="button" onclick="openCreateModal()" class="btn btn-dark d-flex align-items-center gap-2 px-4 shadow-sm" style="border-radius: 12px; font-weight: 600; background: #0f172a; border: none; padding: 10px 20px;">
+            <i class="bi bi-plus-lg"></i> Novo Tipo
+        </button>
+    </div>
+</div>
+
+<div class="row g-4" id="cardsContainer">
+    {% for type in event_types %}
+    <div class="col-md-6 col-lg-4 type-card" data-title="{{ type.name|lower }}">
+        <div class="card h-100" style="border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); transition: transform 0.2s ease, box-shadow 0.2s ease; overflow: visible !important;">
+            <style>
+                .type-card {
+                    position: relative;
+                    transition: z-index 0.15s ease;
+                }
+                .type-card:hover,
+                .type-card:focus-within {
+                    z-index: 10 !important;
+                }
+                .type-card .card:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+                }
+                /* Picker de cores por bolinhas */
+                .color-dot-container {
+                    display: flex;
+                    gap: 10px;
+                    flex-wrap: wrap;
+                    margin-top: 8px;
+                }
+                .color-dot {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 14px;
+                    transition: transform 0.15s ease, border-color 0.15s ease;
+                    border: 2px solid transparent;
+                    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+                }
+                .color-dot:hover {
+                    transform: scale(1.15);
+                }
+                .color-dot.active {
+                    border-color: #0f172a;
+                    box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+                }
+                #customColorDot:not(.active) {
+                    background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red) !important;
+                }
+                .custom-color-dot * {
+                    pointer-events: none !important;
+                }
+                
+                /* Pickr Premium Light Theme Overrides */
+                .pcr-app {
+                    background: #ffffff !important;
+                    border-radius: 14px !important;
+                    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+                    border: 1px solid #e2e8f0 !important;
+                    padding: 12px !important;
+                }
+                .pcr-app .pcr-interaction input {
+                    background: #f8fafc !important;
+                    color: #0f172a !important;
+                    border-radius: 8px !important;
+                    border: 1px solid #cbd5e1 !important;
+                    font-size: 12px !important;
+                    font-weight: 500 !important;
+                    padding: 6px 10px !important;
+                }
+                .pcr-app .pcr-interaction input:focus {
+                    border-color: #3b82f6 !important;
+                    background: #ffffff !important;
+                }
+                .pcr-app .pcr-interaction .pcr-type {
+                    background: #f1f5f9 !important;
+                    color: #64748b !important;
+                    border-radius: 8px !important;
+                    font-size: 11px !important;
+                    font-weight: 700 !important;
+                    border: 1px solid #e2e8f0 !important;
+                    padding: 6px 12px !important;
+                    transition: all 0.2s ease !important;
+                    box-shadow: none !important;
+                    outline: none !important;
+                }
+                .pcr-app .pcr-interaction .pcr-type:hover {
+                    background: #e2e8f0 !important;
+                    color: #334155 !important;
+                    border-color: #cbd5e1 !important;
+                }
+                .pcr-app .pcr-interaction .pcr-type.active {
+                    background: #0f172a !important;
+                    color: #ffffff !important;
+                    border-color: #0f172a !important;
+                }
+                .pcr-app .pcr-interaction .pcr-save {
+                    background: #10b981 !important;
+                    color: #ffffff !important;
+                    border-radius: 8px !important;
+                    font-size: 12px !important;
+                    font-weight: 700 !important;
+                    padding: 6px 16px !important;
+                    border: none !important;
+                    outline: none !important;
+                    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2) !important;
+                    transition: all 0.2s ease !important;
+                }
+                .pcr-app .pcr-interaction .pcr-save:hover {
+                    background: #059669 !important;
+                    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3) !important;
+                }
+            </style>
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- Colored Circle Representing the Predefined Color -->
+                        <div style="width: 44px; height: 44px; background: {{ type.color }}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
+                            <i class="bi bi-tag-fill"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1" style="font-weight: 700; color: #0f172a; font-size: 16px;">{{ type.name }}</h5>
+                            <span class="badge bg-light text-secondary border px-2 py-1" style="font-size: 11px; border-radius: 6px; font-weight: 600;">
+                                Código: {{ type.name|lower }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light border-0" type="button" data-bs-toggle="dropdown" style="background: transparent; padding: 4px;">
+                            <i class="bi bi-three-dots-vertical text-muted"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 12px; border: 1px solid #e2e8f0; padding: 8px; z-index: 1000;">
+                            <li><a class="dropdown-item d-flex align-items-center gap-2" href="javascript:void(0)" onclick="openEditModal({{ type.id }}, '{{ type.name|escapejs }}', '{{ type.color|escapejs }}')" style="font-size: 13px; font-weight: 500; border-radius: 6px; padding: 8px 16px;">
+                                <i class="bi bi-pencil-square" style="color: #3b82f6;"></i> Editar
+                            </a></li>
+                            <li><a class="dropdown-item text-danger d-flex align-items-center gap-2 mt-1" href="javascript:void(0)" onclick="deleteType({{ type.id }}, '{{ type.name|escapejs }}')" style="font-size: 13px; font-weight: 500; border-radius: 6px; padding: 8px 16px;">
+                                <i class="bi bi-trash3-fill"></i> Excluir
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5" style="color:#94a3b8; width: 100%;">
+        <div style="width: 64px; height: 64px; background: #f8fafc; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #cbd5e1; font-size: 28px;">
+            <i class="bi bi-tags"></i>
+        </div>
+        <h5 style="color: #64748b; font-weight: 600;">Nenhum tipo de reunião cadastrado</h5>
+        <p style="font-size: 14px;">Utilize o botão acima para começar a preencher sua base.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- ============================================== -->
+<!-- MODAL: CADASTRAR / EDITAR TIPO DE REUNIÃO      -->
+<!-- ============================================== -->
+<div class="modal fade" id="typeModal" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 14px;">
+            <div class="modal-header border-bottom py-3 px-4">
+                <h5 class="modal-title fw-bold" id="typeModalTitle" style="font-size: 16px; color: #0f172a;">Novo Tipo de Reunião</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="typeForm" class="ajax-form" onsubmit="submitTypeForm(event)">
+                <input type="hidden" id="typeId">
+                <input type="hidden" id="typeAction">
+                <div class="modal-body py-4 px-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label style="font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; display: block;">Nome do Tipo *</label>
+                            <input type="text" id="typeName" class="form-control" placeholder="Ex: Treinamento Operacional" style="border-radius: 10px; border: 1px solid #cbd5e1; padding: 10px 14px; font-size: 14px;" required>
+                        </div>
+                        <div class="col-12">
+                            <label style="font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; display: block;">Escolha a Cor de Exibição *</label>
+                            <div class="color-dot-container mt-1" id="modalColorPicker">
+                                <div class="color-dot active" style="background: #3b82f6;" data-color="#3b82f6" onclick="selectModalColor(this)"><i class="bi bi-check"></i></div>
+                                <div class="color-dot" style="background: #10b981;" data-color="#10b981" onclick="selectModalColor(this)"><i class="bi bi-check d-none"></i></div>
+                                <div class="color-dot" style="background: #f59e0b;" data-color="#f59e0b" onclick="selectModalColor(this)"><i class="bi bi-check d-none"></i></div>
+                                <div class="color-dot" style="background: #8b5cf6;" data-color="#8b5cf6" onclick="selectModalColor(this)"><i class="bi bi-check d-none"></i></div>
+                                <div class="color-dot" style="background: #ef4444;" data-color="#ef4444" onclick="selectModalColor(this)"><i class="bi bi-check d-none"></i></div>
+                                <div class="color-dot" style="background: #64748b;" data-color="#64748b" onclick="selectModalColor(this)"><i class="bi bi-check d-none"></i></div>
+                                <div class="color-dot" style="background: #ec4899;" data-color="#ec4899" onclick="selectModalColor(this)"><i class="bi bi-check d-none"></i></div>
+                                <div class="color-dot" style="background: #06b6d4;" data-color="#06b6d4" onclick="selectModalColor(this)"><i class="bi bi-check d-none"></i></div>
+                                <div class="color-dot" style="background: #84cc16;" data-color="#84cc16" onclick="selectModalColor(this)"><i class="bi bi-check d-none"></i></div>
+                                <div class="color-dot" style="background: #6366f1;" data-color="#6366f1" onclick="selectModalColor(this)"><i class="bi bi-check d-none"></i></div>
+                                
+                                <!-- RGB Custom Color Picker Dot -->
+                                <div class="color-dot custom-color-dot" id="customColorDot" style="background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); position: relative; border: 1.5px dashed rgba(255,255,255,0.4);" title="Escolher cor personalizada (RGB)">
+                                    <i class="bi bi-palette" id="customColorIcon" style="font-size: 13.5px; text-shadow: 0 1px 2px rgba(0,0,0,0.35);"></i>
+                                    <i class="bi bi-check d-none" id="customColorCheck" style="font-size: 14px; text-shadow: 0 1px 2px rgba(0,0,0,0.35);"></i>
+                                </div>
+                            </div>
+                            <input type="hidden" id="typeColor" value="#3b82f6">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-3 px-4 d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal" style="border-radius: 10px; font-weight: 600;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold" style="border-radius: 10px; background-color: #10b981; border-color: #10b981; color: #ffffff;">Salvar Tipo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let typeModalInstance;
+    let modalPickr;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalEl = document.getElementById('typeModal');
+        if (modalEl) {
+            document.body.appendChild(modalEl); // Fix stacking context
+            typeModalInstance = new bootstrap.Modal(modalEl);
+        }
+
+        // Initialize Pickr safely as a popover triggered by the custom dot itself
+        try {
+            if (typeof Pickr !== 'undefined') {
+                modalPickr = Pickr.create({
+                    el: '#customColorDot',
+                    theme: 'classic',
+                    inline: false,
+                    useAsButton: true,
+                    default: '#3b82f6',
+                    
+                    components: {
+                        preview: true,
+                        opacity: false,
+                        hue: true,
+                        
+                        interaction: {
+                            hex: true,
+                            rgba: true,
+                            input: true,
+                            save: true
+                        }
+                    },
+                    i18n: {
+                        'btn:save': 'Confirmar'
+                    }
+                });
+                
+                // When color changes inside the pickr popover
+                modalPickr.on('change', (color, instance) => {
+                    const hexColor = color.toHEXA().toString();
+                    document.getElementById('typeColor').value = hexColor;
+                    
+                    const customDot = document.getElementById('customColorDot');
+                    if (customDot) customDot.style.background = hexColor;
+                    
+                    // Show check icon on custom dot
+                    document.getElementById('customColorIcon').classList.add('d-none');
+                    document.getElementById('customColorCheck').classList.remove('d-none');
+                    customDot.classList.add('active');
+                    
+                    // Deactivate other predefined dots
+                    document.querySelectorAll('#modalColorPicker .color-dot').forEach(el => {
+                        if (el !== customDot) {
+                            el.classList.remove('active');
+                            const check = el.querySelector('i');
+                            if (check) check.classList.add('d-none');
+                        }
+                    });
+                });
+
+                // When pickr is opened, automatically highlight the custom dot
+                modalPickr.on('show', (color, instance) => {
+                    instance.adjustPosition();
+                    const customDot = document.getElementById('customColorDot');
+                    if (customDot) {
+                        customDot.classList.add('active');
+                        document.getElementById('customColorIcon').classList.add('d-none');
+                        document.getElementById('customColorCheck').classList.remove('d-none');
+                    }
+                    
+                    // Deactivate predefined dots
+                    document.querySelectorAll('#modalColorPicker .color-dot').forEach(el => {
+                        if (el !== customDot) {
+                            el.classList.remove('active');
+                            const check = el.querySelector('i');
+                            if (check) check.classList.add('d-none');
+                        }
+                    });
+                    
+                    // Update Pickr's color to whatever color is currently set
+                    const currentColor = document.getElementById('typeColor').value || '#3b82f6';
+                    instance.setColor(currentColor);
+                });
+
+                modalPickr.on('save', (color, instance) => {
+                    instance.hide();
+                });
+                
+                window.modalPickr = modalPickr;
+            } else {
+                console.warn('Pickr library is not loaded.');
+            }
+        } catch (e) {
+            console.error('Error initializing Pickr:', e);
+        }
+
+        // Real-time Search
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                const term = e.target.value.toLowerCase().trim();
+                const cards = document.querySelectorAll('.type-card');
+                
+                cards.forEach(card => {
+                    const title = card.getAttribute('data-title') || '';
+                    if (title.includes(term)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Manual click trigger to be 100% sure it opens
+        const customDot = document.getElementById('customColorDot');
+        if (customDot) {
+            customDot.addEventListener('click', () => {
+                if (modalPickr) {
+                    modalPickr.show();
+                }
+            });
+        }
+    });
+
+    function selectModalColor(element) {
+        document.querySelectorAll('#modalColorPicker .color-dot').forEach(el => {
+            el.classList.remove('active');
+            const check = el.querySelector('i');
+            if (check) check.classList.add('d-none');
+        });
+
+        element.classList.add('active');
+        const check = element.querySelector('i');
+        if (check) check.classList.remove('d-none');
+        document.getElementById('typeColor').value = element.getAttribute('data-color');
+        
+        // Reset the custom color dot state
+        const customDot = document.getElementById('customColorDot');
+        if (customDot) {
+            customDot.classList.remove('active');
+            customDot.style.background = 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)';
+            document.getElementById('customColorIcon').classList.remove('d-none');
+            document.getElementById('customColorCheck').classList.add('d-none');
+        }
+    }
+
+    function openCreateModal() {
+        document.getElementById('typeForm').reset();
+        document.getElementById('typeId').value = '';
+        document.getElementById('typeAction').value = 'create';
+        document.getElementById('typeColor').value = '#3b82f6';
+        document.getElementById('typeModalTitle').innerText = 'Novo Tipo de Reunião';
+        
+        // Reset color picker active dot
+        document.querySelectorAll('#modalColorPicker .color-dot').forEach(el => {
+            el.classList.remove('active');
+            const check = el.querySelector('i');
+            if (check) check.classList.add('d-none');
+        });
+        
+        // Reset custom color dot
+        const customDot = document.getElementById('customColorDot');
+        if (customDot) {
+            customDot.classList.remove('active');
+            customDot.style.background = 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)';
+            document.getElementById('customColorIcon').classList.remove('d-none');
+            document.getElementById('customColorCheck').classList.add('d-none');
+        }
+
+        const defaultDot = document.querySelector('#modalColorPicker .color-dot[data-color="#3b82f6"]');
+        if (defaultDot) {
+            defaultDot.classList.add('active');
+            defaultDot.querySelector('i').classList.remove('d-none');
+        }
+        
+        typeModalInstance.show();
+    }
+
+    function openEditModal(id, name, color) {
+        document.getElementById('typeForm').reset();
+        document.getElementById('typeId').value = id;
+        document.getElementById('typeAction').value = 'update';
+        document.getElementById('typeModalTitle').innerText = 'Editar Tipo de Reunião';
+        document.getElementById('typeName').value = name;
+        document.getElementById('typeColor').value = color;
+
+        // Set color picker active dot
+        document.querySelectorAll('#modalColorPicker .color-dot').forEach(el => {
+            el.classList.remove('active');
+            const check = el.querySelector('i');
+            if (check) check.classList.add('d-none');
+        });
+        
+        // Reset custom color dot
+        const customDot = document.getElementById('customColorDot');
+        if (customDot) {
+            customDot.classList.remove('active');
+            customDot.style.background = 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)';
+            document.getElementById('customColorIcon').classList.remove('d-none');
+            document.getElementById('customColorCheck').classList.add('d-none');
+        }
+
+        const dot = document.querySelector(`#modalColorPicker .color-dot[data-color="${color}"]`);
+        if (dot) {
+            dot.classList.add('active');
+            dot.querySelector('i').classList.remove('d-none');
+        } else {
+            // It is a custom RGB color!
+            if (customDot) {
+                customDot.classList.add('active');
+                customDot.style.background = color;
+                document.getElementById('customColorIcon').classList.add('d-none');
+                document.getElementById('customColorCheck').classList.remove('d-none');
+                
+                if (window.modalPickr) {
+                    window.modalPickr.setColor(color);
+                }
+            }
+        }
+        
+        typeModalInstance.show();
+    }
+
+    function submitTypeForm(event) {
+        event.preventDefault();
+        
+        const id = document.getElementById('typeId').value;
+        const action = document.getElementById('typeAction').value;
+        const name = document.getElementById('typeName').value;
+        const color = document.getElementById('typeColor').value;
+
+        const formData = new FormData();
+        formData.append('action', action);
+        if (id) formData.append('id', id);
+        formData.append('name', name);
+        formData.append('color', color);
+
+        fetch("{% url 'agenda_manage_event_types' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                typeModalInstance.hide();
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert("Erro: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro de rede.");
+        });
+    }
+
+    function deleteType(id, name) {
+        if (!confirm(`Tem certeza de que deseja excluir permanentemente o tipo de reunião "${name}"?`)) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('action', 'delete');
+        formData.append('id', id);
+
+        fetch("{% url 'agenda_manage_event_types' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert("Erro: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro ao excluir tipo de reunião.");
+        });
+    }
+</script>
+{% endblock %}

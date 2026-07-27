@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+{% block title %}Criar Pesquisa{% endblock %}
+
+{% block content %}
+<style>
+.builder-card { background: white; border-radius: 16px; border: none; box-shadow: 0 4px 24px rgba(0,0,0,0.03); padding: 28px; margin-bottom: 24px; }
+.question-item { background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #4f46e5; border-radius: 12px; padding: 24px; margin-bottom: 20px; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: all 0.2s; }
+.question-item:hover { box-shadow: 0 8px 16px rgba(0,0,0,0.05); transform: translateY(-2px); border-color: #cbd5e1; }
+.remove-q-btn { position: absolute; top: 16px; right: 16px; background: #f8fafc; border: 1px solid #e2e8f0; color: #94a3b8; font-size: 14px; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+.remove-q-btn:hover { background: #fee2e2; color: #ef4444; border-color: #fecdd3; }
+.custom-input { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; transition: all 0.2s; font-size: 14px; color: #334155; }
+.custom-input:focus { background-color: #ffffff; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); outline: none; }
+.section-icon { width: 36px; height: 36px; background: #f1f5f9; border-radius: 10px; color: #64748b; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.empty-state { background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 60px 20px; text-align: center; transition: all 0.2s; }
+.empty-state:hover { border-color: #94a3b8; background: #f1f5f9; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+            <i class="bi bi-ui-checks-grid"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 24px;">{% if survey_data %}Editar Pesquisa{% else %}Nova Pesquisa{% endif %}</h1>
+            <p class="text-muted mt-1 mb-0" style="font-size: 14px;">{% if survey_data %}Continue editando o seu rascunho.{% else %}Crie perguntas dinâmicas e defina o público alvo.{% endif %}</p>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'survey_list' %}" class="btn btn-light fw-bold" style="border-radius: 12px; padding: 10px 20px; color: #475569;">Cancelar</a>
+        <button id="btnSaveDraft" class="btn text-white fw-bold d-flex align-items-center gap-2" style="background: #64748b; border:none; border-radius: 12px; padding: 10px 20px; box-shadow: 0 4px 10px rgba(100, 116, 139, 0.2);"><i class="bi bi-save"></i> Salvar Rascunho</button>
+        <button id="btnPublish" class="btn text-white fw-bold d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #10b981, #059669); border:none; border-radius: 12px; padding: 10px 24px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);"><i class="bi bi-broadcast"></i> Publicar Agora</button>
+    </div>
+</div>
+
+<div class="row">
+    
+    <div class="col-md-4">
+        <div class="builder-card">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="section-icon"><i class="bi bi-gear-fill"></i></div>
+                <h5 class="fw-bold mb-0" style="color: #0f172a;">Configurações</h5>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Título da Pesquisa</label>
+                <input type="text" id="surveyTitle" class="form-control custom-input" placeholder="Ex: Pesquisa de Clima Q3">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Instruções (Opcional)</label>
+                <textarea id="surveyDesc" class="form-control custom-input" rows="3" placeholder="Explique o propósito da pesquisa..."></textarea>
+            </div>
+            
+            <hr class="my-4" style="border-color: #e2e8f0;">
+            
+            <h6 class="fw-bold mb-3 text-uppercase" style="font-size: 11px; color: #64748b; letter-spacing: 0.5px;">Privacidade e Público</h6>
+            
+            <div class="p-3 mb-3" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
+                <div class="form-check form-switch mb-0 d-flex align-items-center gap-2">
+                    <input class="form-check-input" type="checkbox" id="surveyAnon" style="width: 36px; height: 18px; margin-top: 0;">
+                    <div>
+                        <label class="form-check-label fw-bold mb-0" for="surveyAnon" style="font-size: 13px; color: #1e293b;">Pesquisa Anônima</label>
+                        <div class="text-muted" style="font-size: 11px; line-height: 1.2; mt-1">Nomes não serão mostrados nas respostas.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-3 mb-4" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
+                <div class="form-check form-switch mb-0 d-flex align-items-center gap-2">
+                    <input class="form-check-input" type="checkbox" id="surveyLeadership" style="width: 36px; height: 18px; margin-top: 0;">
+                    <div>
+                        <label class="form-check-label fw-bold mb-0" for="surveyLeadership" style="font-size: 13px; color: #1e293b;">Pesquisa de Liderança</label>
+                        <div class="text-muted" style="font-size: 11px; line-height: 1.2; mt-1">Vincula as respostas ao líder e setor do funcionário.</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Prazo de Encerramento (Opcional)</label>
+                <input type="datetime-local" id="surveyEndDate" class="form-control custom-input">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Enviar para:</label>
+                <select id="surveyTarget" class="form-select custom-input" onchange="toggleTargetFields()">
+                    <option value="ALL">Todos os Funcionários</option>
+                    <option value="LEGAL_ENTITY">Empresa / CNPJ</option>
+                    <option value="CITY">Filial Específica (Cidade)</option>
+                    <option value="SUBUNIT">Departamento Específico</option>
+                </select>
+            </div>
+            
+            <div id="divEntity" class="mb-3" style="display:none;">
+                <select id="targetEntity" class="form-select custom-input">
+                    {% for e in legal_entities %}<option value="{{ e.id }}">{{ e.name }}</option>{% endfor %}
+                </select>
+            </div>
+            
+            <div id="divCity" class="mb-3" style="display:none;">
+                <select id="targetCity" class="form-select custom-input">
+                    {% for c in cities %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+                </select>
+            </div>
+            
+            <div id="divSubunit" class="mb-3" style="display:none;">
+                <select id="targetSubunit" class="form-select custom-input">
+                    {% for s in subunits %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="col-md-8">
+        <div class="builder-card" style="background: transparent; border: none; box-shadow: none; padding: 0;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="section-icon"><i class="bi bi-list-task"></i></div>
+                    <h5 class="fw-bold mb-0" style="color: #0f172a;">Formulário</h5>
+                </div>
+                <button id="btnAddQuestion" class="btn fw-bold rounded-pill d-flex align-items-center gap-2" style="background: #e0e7ff; color: #4f46e5; border: none; padding: 8px 16px; transition: all 0.2s;" onmouseover="this.style.background='#c7d2fe'" onmouseout="this.style.background='#e0e7ff'"><i class="bi bi-plus-circle-fill"></i> Adicionar Pergunta</button>
+            </div>
+            
+            <div id="questionsContainer">
+                
+            </div>
+            
+            <div id="emptyQuestions" class="empty-state mt-2">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 64px; height: 64px; background: #ffffff; color: #94a3b8; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                    <i class="bi bi-pencil-square" style="font-size: 28px;"></i>
+                </div>
+                <h5 class="fw-bold mb-1" style="color: #334155;">Nenhuma pergunta adicionada</h5>
+                <p class="text-muted mb-4" style="font-size: 14px;">Comece a construir seu formulário adicionando a primeira pergunta.</p>
+                <button class="btn btn-outline-primary fw-bold rounded-pill px-4" onclick="document.getElementById('btnAddQuestion').click()" style="border-width: 2px;">Adicionar Primeira Pergunta</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let questions = [];
+let isEditing = false;
+let editSurveyId = null;
+
+function toggleTargetFields() {
+    const val = document.getElementById('surveyTarget').value;
+    document.getElementById('divEntity').style.display = val === 'LEGAL_ENTITY' ? 'block' : 'none';
+    document.getElementById('divCity').style.display = val === 'CITY' ? 'block' : 'none';
+    document.getElementById('divSubunit').style.display = val === 'SUBUNIT' ? 'block' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    {% if survey_data %}
+        try {
+            const data = JSON.parse('{{ survey_data|escapejs }}');
+            isEditing = true;
+            editSurveyId = data.id;
+            
+            document.getElementById('surveyTitle').value = data.title;
+            document.getElementById('surveyDesc').value = data.description;
+            document.getElementById('surveyAnon').checked = data.is_anonymous;
+            document.getElementById('surveyLeadership').checked = data.is_leadership_survey || false;
+            if (data.end_date) {
+                document.getElementById('surveyEndDate').value = data.end_date;
+            }
+            
+            document.getElementById('surveyTarget').value = data.target_type;
+            toggleTargetFields();
+            
+            if (data.target_type === 'LEGAL_ENTITY' && data.legal_entity_id) {
+                document.getElementById('targetEntity').value = data.legal_entity_id;
+            } else if (data.target_type === 'SUBUNIT' && data.subunit_id) {
+                document.getElementById('targetSubunit').value = data.subunit_id;
+            } else if (data.target_type === 'CITY' && data.city_id) {
+                document.getElementById('targetCity').value = data.city_id;
+            }
+            
+            if (data.questions && data.questions.length > 0) {
+                questions = data.questions;
+                renderQuestions();
+            }
+        } catch(e) {
+            console.error("Error parsing survey data", e);
+        }
+    {% endif %}
+});
+
+
+function renderQuestions() {
+    const container = document.getElementById('questionsContainer');
+    const empty = document.getElementById('emptyQuestions');
+    container.innerHTML = '';
+    
+    if (questions.length === 0) {
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+    
+    questions.forEach((q, index) => {
+        const div = document.createElement('div');
+        div.className = 'question-item';
+        div.innerHTML = `
+            <button class="remove-q-btn" onclick="removeQuestion(${index})" title="Remover pergunta"><i class="bi bi-trash3-fill"></i></button>
+            <div class="row align-items-end mb-3">
+                <div class="col-md-8 pe-md-4">
+                    <label class="form-label fw-bold text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Pergunta ${index + 1}</label>
+                    <input type="text" class="form-control custom-input" value="${q.text}" oninput="updateQ(${index}, 'text', this.value)" placeholder="Escreva a pergunta aqui..." style="font-weight: 600;">
+                </div>
+                <div class="col-md-4 mt-3 mt-md-0">
+                    <label class="form-label fw-bold text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Tipo de Resposta</label>
+                    <select class="form-select custom-input" onchange="updateQ(${index}, 'type', this.value)">
+                        <option value="TEXT" ${q.type === 'TEXT' ? 'selected' : ''}>Texto Escrito</option>
+                        <option value="RATING_10" ${q.type === 'RATING_10' ? 'selected' : ''}>Escala de 1 a 10</option>
+                        <option value="GOOD_BAD" ${q.type === 'GOOD_BAD' ? 'selected' : ''}>Bom, Regular, Ruim</option>
+                        <option value="MULTIPLE_CHOICE" ${q.type === 'MULTIPLE_CHOICE' ? 'selected' : ''}>Múltipla Escolha</option>
+                    </select>
+                </div>
+            </div>
+            ${q.type === 'MULTIPLE_CHOICE' ? `
+                <div class="p-3 mt-3" style="background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <label class="form-label fw-bold text-muted mb-2" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;"><i class="bi bi-list-ul me-1"></i> Opções de Resposta</label>
+                    <input type="text" class="form-control custom-input" value="${q.choices}" oninput="updateQ(${index}, 'choices', this.value)" placeholder="Ex: Opção A; Opção B; Opção C (separe por ponto e vírgula)">
+                    <div class="form-text mt-2" style="font-size: 11px; color: #64748b;">As opções aparecerão como botões clicáveis para o funcionário.</div>
+                </div>
+            ` : ''}
+        `;
+        container.appendChild(div);
+    });
+}
+
+function updateQ(index, field, value) {
+    questions[index][field] = value;
+    if (field === 'type' && value === 'MULTIPLE_CHOICE' && !questions[index].choices) {
+        questions[index].choices = '';
+        renderQuestions();
+    } else if (field === 'type') {
+        renderQuestions();
+    }
+}
+
+function removeQuestion(index) {
+    questions.splice(index, 1);
+    renderQuestions();
+}
+
+document.getElementById('btnAddQuestion').addEventListener('click', () => {
+    questions.push({ text: '', type: 'TEXT', choices: '' });
+    renderQuestions();
+});
+
+function submitSurvey(status) {
+    const title = document.getElementById('surveyTitle').value;
+    if (!title) { alert('Dê um título à pesquisa.'); return; }
+    if (questions.length === 0) { alert('Adicione pelo menos uma pergunta.'); return; }
+    
+    // validate questions
+    for (let q of questions) {
+        if (!q.text) { alert('Todas as perguntas precisam de um texto.'); return; }
+        if (q.type === 'MULTIPLE_CHOICE' && !q.choices) { alert('Preencha as opções da múltipla escolha.'); return; }
+    }
+    
+    const payload = {
+        title: title,
+        description: document.getElementById('surveyDesc').value,
+        is_anonymous: document.getElementById('surveyAnon').checked,
+        is_leadership_survey: document.getElementById('surveyLeadership').checked,
+        target_type: document.getElementById('surveyTarget').value,
+        legal_entity_id: document.getElementById('targetEntity').value,
+        subunit_id: document.getElementById('targetSubunit').value,
+        city_id: document.getElementById('targetCity').value,
+        end_date: document.getElementById('surveyEndDate').value || null,
+        status: status,
+        questions: questions.map(q => ({
+            question_text: q.text,
+            question_type: q.type,
+            choices: q.choices,
+            is_required: true
+        }))
+    };
+    
+    const url = isEditing ? '{% url "survey_edit" 99999 %}'.replace('99999', editSurveyId) : '{% url "survey_create" %}';
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '{% url "survey_list" %}';
+        } else {
+            alert('Erro: ' + data.message);
+        }
+    })
+    .catch(err => alert('Erro ao salvar pesquisa.'));
+}
+
+document.getElementById('btnSaveDraft').addEventListener('click', () => submitSurvey('DRAFT'));
+document.getElementById('btnPublish').addEventListener('click', () => submitSurvey('PUBLISHED'));
+</script>
+{% endblock %}

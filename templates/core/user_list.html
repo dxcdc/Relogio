@@ -1,0 +1,433 @@
+{% extends "base.html" %}
+{% block title %}Usuários do Sistema{% endblock %}
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;">Admin / Usuários</span>{% endblock %}
+
+{% block content %}
+<style>
+/* ── Page header ─────────────────────────────────────────────── */
+.emp-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+.emp-page-icon {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 22px;
+    box-shadow: 0 4px 14px rgba(16,185,129,.35);
+    flex-shrink: 0;
+}
+
+/* ── Filter card ─────────────────────────────────────────────── */
+.filter-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.filter-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 0px;
+}
+.filter-search-wrapper {
+    position: relative;
+    width: 280px;
+    flex-shrink: 0;
+}
+.filter-search-wrapper i {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 14px;
+    pointer-events: none;
+}
+.filter-search-wrapper input {
+    padding-left: 36px;
+    border-radius: 50px;
+    border: 1px solid #e2e8f0;
+    height: 40px;
+    font-size: 13px;
+    width: 100%;
+    transition: border-color .2s, box-shadow .2s;
+}
+.filter-search-wrapper input:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79,70,229,.15);
+    outline: none;
+}
+.filter-select {
+    height: 40px;
+    border-radius: 50px;
+    border: 1px solid #e2e8f0;
+    font-size: 13px;
+    padding: 0 16px;
+    background: #fff;
+    color: #0f172a;
+    cursor: pointer;
+    transition: border-color .2s, box-shadow .2s;
+    width: 180px;
+    flex-shrink: 0;
+    appearance: auto;
+}
+.filter-select:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79,70,229,.15);
+    outline: none;
+}
+.filter-card .ts-wrapper .ts-control {
+    border-radius: 50px !important;
+    min-height: 40px !important;
+    padding-left: 16px !important;
+}
+
+.btn-filter {
+    height: 40px;
+    padding: 0 24px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 6px;
+    text-decoration: none;
+}
+.btn-filter-primary { background: #0f172a; color: #fff; }
+.btn-filter-primary:hover { background: #1e293b; color: #fff; }
+.btn-filter-clear { background: #f1f5f9; color: #64748b; }
+.btn-filter-clear:hover { background: #e2e8f0; color: #0f172a; }
+
+/* ── Employee grid ───────────────────────────────────────────── */
+.emp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 18px;
+    margin-bottom: 32px;
+}
+
+/* ── Employee card ───────────────────────────────────────────── */
+.emp-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 24px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+}
+.emp-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #10b981, #06b6d4);
+    opacity: 0;
+    transition: opacity .2s;
+}
+.emp-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,.1);
+    border-color: #d1fae5;
+    color: inherit;
+    text-decoration: none;
+}
+.emp-card:hover::before { opacity: 1; }
+
+/* Avatar */
+.emp-avatar {
+    width: 68px; height: 68px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    border: 3px solid #fff;
+    outline: 2px solid #e2e8f0;
+}
+.usr-avatar-admin    { background: linear-gradient(135deg,#ef4444,#dc2626); }
+.usr-avatar-super    { background: linear-gradient(135deg,#6366f1,#4f46e5); }
+.usr-avatar-ess      { background: linear-gradient(135deg,#1e293b,#334155); }
+
+.emp-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 2px;
+    line-height: 1.3;
+}
+.emp-job {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+    margin-bottom: 12px;
+    text-transform: none;
+}
+
+.emp-status-active {
+    display: inline-block;
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+.emp-status-inactive {
+    display: inline-block;
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.role-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 10px; font-weight: 700;
+    white-space: nowrap; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.role-admin { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.role-supervisor { background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; }
+.role-ess { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+.emp-link { font-size: 12px; font-weight: 600; color: #10b981; text-decoration: none; display: inline-block; margin-top: 10px;}
+.emp-link:hover { text-decoration: underline; color: #059669; }
+.emp-none { font-size: 12px; color: #cbd5e1; font-style: italic; display: inline-block; margin-top: 10px;}
+
+.usr-actions {
+    display: flex; gap: 6px; justify-content: center; width: 100%; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f1f5f9;
+}
+
+.action-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%; border: none;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px; text-decoration: none;
+    transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #f8fafc;
+    cursor: pointer;
+}
+.action-btn:hover { transform: translateY(-2px); }
+.action-edit   { color: #64748b; }
+.action-edit:hover   { background: #eff6ff; color: #3b82f6; box-shadow: 0 4px 12px rgba(59,130,246,.15); }
+.action-key    { color: #64748b; }
+.action-key:hover    { background: #fffbeb; color: #f59e0b; box-shadow: 0 4px 12px rgba(245,158,11,.15); }
+.action-toggle-off   { color: #ef4444; }
+.action-toggle-off:hover  { background: #fef2f2; color: #dc2626; box-shadow: 0 4px 12px rgba(239,68,68,.15); }
+.action-toggle-on    { color: #10b981; }
+.action-toggle-on:hover   { background: #d1fae5; color: #059669; box-shadow: 0 4px 12px rgba(16,185,129,.15); }
+.action-del    { color: #64748b; }
+.action-del:hover    { background: #fef2f2; color: #ef4444; box-shadow: 0 4px 12px rgba(239,68,68,.15); }
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.emp-empty {
+    text-align: center;
+    padding: 80px 24px;
+    color: #94a3b8;
+    grid-column: 1 / -1;
+}
+.emp-empty i { font-size: 52px; margin-bottom: 16px; display: block; }
+.emp-empty h3 { font-size: 17px; font-weight: 700; color: #475569; margin-bottom: 6px; }
+
+@media (max-width: 768px) {
+    .filter-grid { grid-template-columns: 1fr; }
+    .emp-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+    .emp-card { padding: 20px 14px 16px; }
+    .emp-avatar { width: 58px; height: 58px; font-size: 18px; }
+}
+</style>
+
+
+<div class="emp-page-header">
+    <div class="d-flex align-items-center gap-3">
+        <div class="emp-page-icon"><i class="bi bi-people-fill"></i></div>
+        <div>
+            <h1 style="font-weight: 800; color: #0f172a; font-size: 22px; margin: 0;">Usuários do Sistema</h1>
+            <p style="color: #64748b; font-size: 13px; margin: 0;">{{ users.count }} usuário(s) encontrado(s)</p>
+        </div>
+    </div>
+    <button onclick="openUserCreatePopup('{% url 'user_create' %}')"
+            class="btn-filter btn-filter-primary">
+        <i class="bi bi-person-plus-fill"></i> Novo Usuário
+    </button>
+</div>
+
+
+<div class="filter-card">
+    <form method="get" id="filterForm">
+        <div class="filter-grid">
+            <div class="filter-search-wrapper">
+                <i class="bi bi-search"></i>
+                <input id="q" type="text" name="q" placeholder="Buscar por nome, usuário ou email..." value="{{ q }}">
+            </div>
+            
+            <select name="role" class="filter-select">
+                <option value="">Todos os perfis</option>
+                <option value="Admin"      {% if selected_role == 'Admin'      %}selected{% endif %}>Administrador</option>
+                <option value="Supervisor" {% if selected_role == 'Supervisor' %}selected{% endif %}>Supervisor</option>
+                <option value="ESS"        {% if selected_role == 'ESS'        %}selected{% endif %}>Funcionário (ESS)</option>
+            </select>
+            
+            <button type="submit" class="btn-filter btn-filter-primary">
+                <i class="bi bi-funnel-fill"></i> Filtrar
+            </button>
+            <a href="{% url 'user_list' %}" class="btn-filter btn-filter-clear">
+                <i class="bi bi-x-lg"></i> Limpar
+            </a>
+        </div>
+    </form>
+</div>
+
+
+<div class="emp-grid">
+    {% for u in users %}
+    <div class="emp-card">
+        <div class="emp-avatar
+            {% if u.role == 'Admin' %}usr-avatar-admin
+            {% elif u.role == 'Supervisor' %}usr-avatar-super
+            {% else %}usr-avatar-ess{% endif %}">
+            {{ u.first_name|first|default:u.username|first|upper }}
+        </div>
+        
+        <div class="emp-name">{% if u.get_full_name %}{{ u.get_full_name }}{% else %}{{ u.username }}{% endif %}</div>
+        <div class="emp-job">@{{ u.username }}</div>
+        
+        <div class="d-flex align-items-center gap-2 mb-2">
+            {% if u.role == 'Admin' %}
+            <span class="role-badge role-admin"><i class="bi bi-shield-lock-fill"></i> Admin</span>
+            {% elif u.role == 'Supervisor' %}
+            <span class="role-badge role-supervisor"><i class="bi bi-person-check-fill"></i> Supervisor</span>
+            {% else %}
+            <span class="role-badge role-ess"><i class="bi bi-person-fill"></i> ESS</span>
+            {% endif %}
+            
+            {% if u.is_active %}
+            <span class="emp-status-active">Ativo</span>
+            {% else %}
+            <span class="emp-status-inactive">Inativo</span>
+            {% endif %}
+        </div>
+
+        <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">{{ u.email|default:"Sem e-mail" }}</div>
+
+        {% if u.employee %}
+        <a href="{% url 'employee_detail' u.employee.pk %}" class="emp-link" title="Ver funcionário">
+            <i class="bi bi-person-badge"></i> {{ u.employee.full_name }}
+        </a>
+        {% else %}
+        <span class="emp-none">Sem vínculo</span>
+        {% endif %}
+
+        <div class="usr-actions">
+            <a href="javascript:void(0);" onclick="openUserCreatePopup('{% url 'user_edit' u.pk %}')" class="action-btn action-edit" title="Editar">
+                <i class="bi bi-pencil-fill"></i>
+            </a>
+            <a href="javascript:void(0);" onclick="openUserCreatePopup('{% url 'user_reset_password' u.pk %}')" class="action-btn action-key" title="Redefinir Senha">
+                <i class="bi bi-key-fill"></i>
+            </a>
+            <a href="{% url 'user_toggle_active' u.pk %}"
+               class="action-btn {% if u.is_active %}action-toggle-off{% else %}action-toggle-on{% endif %}"
+               title="{% if u.is_active %}Desativar{% else %}Ativar{% endif %}"
+               onclick="return confirm('{% if u.is_active %}Desativar{% else %}Ativar{% endif %} o usuário {{ u.username }}?')">
+                <i class="bi {% if u.is_active %}bi-person-dash-fill{% else %}bi-person-check-fill{% endif %}"></i>
+            </a>
+            {% if u != request.user %}
+            <a href="{% url 'user_delete' u.pk %}" class="action-btn action-del" title="Excluir"
+               onclick="return confirm('Excluir permanentemente o usuário {{ u.username }}?')">
+                <i class="bi bi-trash-fill"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="emp-empty">
+        <i class="bi bi-people"></i>
+        <h3>Nenhum usuário encontrado</h3>
+        <p style="margin:0 0 16px;font-size:13px;">Tente ajustar os filtros ou crie um novo usuário.</p>
+        <button onclick="openUserCreatePopup('{% url 'user_create' %}')" class="btn-filter btn-filter-primary mx-auto">
+            <i class="bi bi-person-plus-fill"></i> Novo Usuário
+        </button>
+    </div>
+    {% endfor %}
+</div>
+
+
+<div class="modal fade" id="userCreateModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="border-radius:20px; overflow:hidden; border:none; box-shadow:0 25px 50px -12px rgba(0,0,0,.25);">
+      <div class="modal-body p-0 bg-white" style="position:relative; overflow:hidden; height:650px; max-height:90vh;">
+        <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Fechar" style="z-index:1050;top:24px;right:24px;"></button>
+        <div id="createUserModalSpinner" class="position-absolute top-50 start-50 translate-middle text-center">
+            <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;"></div>
+            <div class="mt-2 text-muted fw-bold" style="font-size:14px;">Preparando formulário...</div>
+        </div>
+        <iframe id="userCreateIframe" src=""
+            style="position:absolute;top:0;left:0;bottom:0;right:0;width:100%;height:100%;border:none;visibility:hidden;transition:visibility .2s;"
+            onload="document.getElementById('createUserModalSpinner').style.display='none'; this.style.visibility='visible';">
+        </iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openUserCreatePopup(url) {
+    const modal   = new bootstrap.Modal(document.getElementById('userCreateModal'));
+    const iframe  = document.getElementById('userCreateIframe');
+    const spinner = document.getElementById('createUserModalSpinner');
+    const modalBody = document.querySelector('#userCreateModal .modal-body');
+
+    // Ajuste dinâmico de altura dependendo do formulário
+    if (url.includes('reset-password')) {
+        modalBody.style.height = '440px';
+    } else if (url.includes('edit') || url.includes('update')) {
+        modalBody.style.height = '560px';
+    } else {
+        modalBody.style.height = '650px';
+    }
+
+    spinner.style.display   = 'block';
+    iframe.style.visibility = 'hidden';
+    iframe.src = url + (url.includes('?') ? '&' : '?') + 'popup=1';
+    modal.show();
+
+    iframe.addEventListener('load', function() {
+        try {
+            let loc = this.contentWindow.location.pathname;
+            if (loc === window.location.pathname) {
+                modal.hide();
+                window.location.reload();
+            }
+        } catch(e) {}
+    });
+}
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.modal').forEach(m => document.body.appendChild(m));
+});
+</script>
+{% endblock %}

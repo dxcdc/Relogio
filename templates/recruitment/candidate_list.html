@@ -1,0 +1,442 @@
+{% extends "base.html" %}
+{% load recruitment_tags %}
+{% block title %}Banco de Candidatos{% endblock %}
+{% block breadcrumb %}<span style="color:var(--text-secondary);font-size:13px;">Recrutamento / Candidatos</span>{% endblock %}
+
+{% block content %}
+<style>
+    /* Stats Cards */
+    .stat-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1.5px solid #e4ecf4;
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        height: 100%;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(32, 42, 68, 0.08);
+    }
+    .icon-box {
+        width: 44px; height: 44px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px; color: #fff; flex-shrink: 0;
+    }
+    .icon-box.total { background: linear-gradient(135deg, #202a44, #3b4869); }
+    .icon-box.progress { background: linear-gradient(135deg, #1e7abf, #155e99); }
+    .icon-box.hired { background: linear-gradient(135deg, #0dc02a, #0a9b21); }
+    .icon-box.rejected { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+
+    .stat-value { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.1; }
+    .stat-label { font-size: 12px; font-weight: 600; color: #64748b; margin-top: 2px; }
+
+    /* Filter Bar Styling */
+    .filter-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1.5px solid #e4ecf4;
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+    .filter-card .form-control, .filter-card .form-select {
+        border-radius: 10px;
+        border: 1.5px solid #e2e8f0;
+        padding: 9px 12px;
+        font-size: 13px;
+        color: #334155;
+        font-weight: 500;
+        transition: border-color 0.15s ease;
+    }
+    .filter-card .form-control:focus, .filter-card .form-select:focus {
+        border-color: #0dc02a;
+        box-shadow: none;
+    }
+    .filter-card label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+
+    /* Candidate Cards Grid */
+    .cand-grid-card {
+        background: #fff;
+        border-radius: 18px;
+        border: 1px solid #e2e8f0;
+        padding: 24px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+    .cand-grid-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
+        border-color: #cbd5e1;
+    }
+
+    /* Avatar styling */
+    .cand-avatar {
+        width: 48px; height: 48px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 18px; color: #fff;
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+    /* Initials colors */
+    .av-A,.av-B { background: linear-gradient(135deg,#202a44,#3b4869); }
+    .av-C,.av-D { background: linear-gradient(135deg,#0dc02a,#059669); }
+    .av-E,.av-F { background: linear-gradient(135deg,#1e7abf,#155e99); }
+    .av-G,.av-H { background: linear-gradient(135deg,#0a9b21,#047857); }
+    .av-I,.av-J { background: linear-gradient(135deg,#12182b,#202a44); }
+    .av-K,.av-L { background: linear-gradient(135deg,#2563eb,#1d4ed8); }
+    .av-M,.av-N { background: linear-gradient(135deg,#0dc02a,#0a9b21); }
+    .av-O,.av-P { background: linear-gradient(135deg,#3b4869,#202a44); }
+    .av-Q,.av-R { background: linear-gradient(135deg,#1e7abf,#0dc02a); }
+    .av-S,.av-T { background: linear-gradient(135deg,#202a44,#0a9b21); }
+    .av-U,.av-V { background: linear-gradient(135deg,#0369a1,#0284c7); }
+    .av-W,.av-X { background: linear-gradient(135deg,#475569,#334155); }
+    .av-Y,.av-Z { background: linear-gradient(135deg,#0dc02a,#12182b); }
+
+    /* Badges */
+    .badge-stage {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 5px 10px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .badge-stage.screening { background: #f1f5f9; color: #475569; }
+    .badge-stage.interview { background: #ecfdf5; color: #059669; }
+    .badge-stage.psych_test { background: #f0f9ff; color: #0284c7; }
+    .badge-stage.practical_test { background: #f5f3ff; color: #7c3aed; }
+    .badge-stage.probation_45 { background: #fffbeb; color: #d97706; }
+    .badge-stage.probation_90 { background: #fff7ed; color: #c2410c; }
+    .badge-stage.hired { background: #f8fafc; color: #0f172a; }
+
+    .badge-status {
+        font-size: 10px;
+        font-weight: 800;
+        padding: 5px 10px;
+        border-radius: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .badge-status.in_progress { background: #f1f5f9; color: #64748b; }
+    .badge-status.hired { background: #dcfce7; color: #16a34a; }
+    .badge-status.rejected { background: #fee2e2; color: #ef4444; }
+
+    /* Match Score compact */
+    .match-compact {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 8px 12px;
+        border: 1px solid #f1f5f9;
+    }
+    .match-bar-mini {
+        flex-grow: 1;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .match-bar-mini-fill {
+        height: 100%;
+        border-radius: 10px;
+    }
+
+    /* Buttons */
+    .action-btn-primary {
+        background: linear-gradient(135deg, #1e293b, #0f172a);
+        border: none;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        border-radius: 10px;
+        padding: 9px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        width: 100%;
+    }
+    .action-btn-primary:hover {
+        background: linear-gradient(135deg, #0f172a, #020617);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+    }
+    .action-btn-secondary {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 10px;
+        padding: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    .action-btn-secondary:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #0f172a;
+    }
+</style>
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-3">
+        <div style="width:50px;height:50px;background:linear-gradient(135deg,#0dc02a,#0a9b21);border-radius:15px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;box-shadow:0 6px 16px rgba(13,192,42,0.35);">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <div>
+            <h1 style="font-size:22px;font-weight:800;color:#0f172a;margin:0;">Banco de Candidatos</h1>
+            <p style="color:#64748b;font-size:13px;margin:0;">Gerenciamento unificado dos candidatos cadastrados no pipeline</p>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+
+        {% if request.user.is_admin or request.user.is_hr %}
+        <a href="javascript:void(0)" onclick="openModalIframe('{% url 'candidate_create' %}')"
+           style="background:#202a44;border:none;border-radius:11px;font-size:13px;font-weight:700;padding:9px 20px;color:#fff;text-decoration:none;display:flex;align-items:center;gap:7px;box-shadow:0 4px 12px rgba(32,42,68,0.3);">
+            <i class="bi bi-plus-lg"></i> Novo Candidato
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- STATS CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="icon-box total">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ total_count }}</div>
+                <div class="stat-label">Total Candidatos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="icon-box progress">
+                <i class="bi bi-arrow-repeat"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ in_progress_count }}</div>
+                <div class="stat-label">Em Andamento</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="icon-box hired">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ hired_count }}</div>
+                <div class="stat-label">Contratados</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="icon-box rejected">
+                <i class="bi bi-x-circle-fill"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ rejected_count }}</div>
+                <div class="stat-label">Reprovados</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FILTERS CARD -->
+<div class="filter-card">
+    <form method="GET" action="{% url 'candidate_list' %}" class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label for="search">Busca</label>
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-end-0" style="border: 1.5px solid #e2e8f0; border-radius: 10px 0 0 10px; color: #94a3b8;">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" id="search" name="search" value="{{ search_query }}" placeholder="Nome ou e-mail..." class="form-control border-start-0" style="border: 1.5px solid #e2e8f0; border-radius: 0 10px 10px 0;">
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <label for="job_opening">Vaga Pretendida</label>
+            <select id="job_opening" name="job_opening" class="form-select">
+                <option value="">Todas as Vagas</option>
+                {% for job in jobs %}
+                <option value="{{ job.id }}" {% if selected_job == job.id %}selected{% endif %}>{{ job.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 col-sm-6">
+            <label for="stage">Etapa Atual</label>
+            <select id="stage" name="stage" class="form-select">
+                <option value="">Todas as Etapas</option>
+                {% for stage_key, stage_name in stages %}
+                <option value="{{ stage_key }}" {% if selected_stage == stage_key %}selected{% endif %}>{{ stage_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 col-sm-6">
+            <label for="status">Situação</label>
+            <select id="status" name="status" class="form-select">
+                <option value="">Todas as Situações</option>
+                {% for status_key, status_name in statuses %}
+                <option value="{{ status_key }}" {% if selected_status == status_key %}selected{% endif %}>{{ status_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 col-sm-6">
+            <label for="order_by">Ordenação</label>
+            <select id="order_by" name="order_by" class="form-select">
+                <option value="-created_at" {% if selected_order_by == '-created_at' %}selected{% endif %}>Mais Recentes</option>
+                <option value="created_at" {% if selected_order_by == 'created_at' %}selected{% endif %}>Mais Antigos</option>
+                <option value="-match_score" {% if selected_order_by == '-match_score' %}selected{% endif %}>Maior Match Score</option>
+                <option value="name" {% if selected_order_by == 'name' %}selected{% endif %}>Nome (A-Z)</option>
+                <option value="-name" {% if selected_order_by == '-name' %}selected{% endif %}>Nome (Z-A)</option>
+            </select>
+        </div>
+        <div class="col-12 d-flex justify-content-end gap-2 mt-3">
+            {% if search_query or selected_job or selected_stage or selected_status or selected_order_by != '-created_at' %}
+            <a href="{% url 'candidate_list' %}" class="btn btn-light" style="border-radius:10px; font-size:13px; font-weight:600; padding:9px 18px; border: 1.5px solid #e2e8f0;">
+                <i class="bi bi-x-circle me-1"></i> Limpar Filtros
+            </a>
+            {% endif %}
+            <button type="submit" class="btn" style="background:#202a44; color:#fff; border-radius:10px; font-size:13px; font-weight:700; padding:9px 24px; transition: opacity 0.15s ease;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                <i class="bi bi-funnel-fill me-1"></i> Filtrar
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- CANDIDATE GRID -->
+<div class="row g-4">
+    {% for candidate in candidates %}
+    <div class="col-md-6 col-lg-4">
+        <div class="cand-grid-card">
+            <!-- Top info with Avatar & Name -->
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div class="d-flex align-items-center gap-3" style="min-width:0;">
+                    <div class="cand-avatar av-{{ candidate.name|slice:':1'|upper }}">
+                        {{ candidate.name|slice:":1"|upper }}
+                    </div>
+                    <div style="min-width:0;">
+                        <h5 class="mb-1" style="font-size:15.5px; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="{{ candidate.name }}">
+                            {{ candidate.name }}
+                        </h5>
+                        <div style="color:#64748b; font-size:12px; font-weight:500; display:flex; align-items:center; gap:4px;">
+                            <i class="bi bi-envelope"></i>
+                            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ candidate.email }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% if request.user.is_admin or request.user.is_hr %}
+                <div class="dropdown flex-shrink-0 ms-2">
+                    <button class="btn btn-sm p-0" type="button" data-bs-toggle="dropdown" style="border:none;background:transparent;color:#94a3b8;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px; transition: background 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius:12px;border:1px solid #e2e8f0;padding:8px;font-size:13px;min-width:160px;">
+                        <li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="javascript:void(0)" onclick="openModalIframe('{% url 'candidate_edit' candidate.pk %}')" style="border-radius:6px;"><i class="bi bi-pencil-square" style="color:#64748b;"></i> Editar Candidato</a></li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger" href="{% url 'candidate_delete' candidate.pk %}" onclick="return confirm('Deseja mesmo remover o candidato {{ candidate.name }}?')" style="border-radius:6px;"><i class="bi bi-trash3"></i> Excluir</a></li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Job details -->
+            <div style="background: #f8fafc; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid #f1f5f9;">
+                <div style="font-size:13px; color:#1e293b; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                    <i class="bi bi-briefcase text-muted"></i>
+                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ candidate.job_opening.title }}">{{ candidate.job_opening.title }}</span>
+                </div>
+                <div class="d-flex gap-3 align-items-center">
+                    {% if candidate.phone %}
+                    <span style="color:#64748b; font-size:12px; font-weight:500; display:flex; align-items:center; gap:4px;"><i class="bi bi-telephone"></i>{{ candidate.phone }}</span>
+                    {% endif %}
+                    <div class="d-flex gap-2 ms-auto">
+                        {% if candidate.linkedin_url %}
+                        <a href="{{ candidate.linkedin_url }}" target="_blank" style="color:#0284c7; text-decoration:none;" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                        {% endif %}
+                        {% if candidate.resume %}
+                        <a href="{{ candidate.resume.url }}" target="_blank" style="color:#d97706; text-decoration:none;" title="Currículo PDF"><i class="bi bi-file-earmark-pdf-fill"></i></a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stage & Status Pills -->
+            <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+                <span class="badge-stage {{ candidate.current_stage }}">
+                    <i class="bi bi-{% if candidate.current_stage == 'screening' %}funnel{% elif candidate.current_stage == 'interview' %}chat-quote{% elif candidate.current_stage == 'psych_test' %}puzzle{% elif candidate.current_stage == 'practical_test' %}tools{% elif candidate.current_stage == 'probation_45' %}clock-history{% elif candidate.current_stage == 'probation_90' %}stopwatch{% elif candidate.current_stage == 'hired' %}patch-check{% endif %}"></i>
+                    {{ candidate.get_current_stage_display }}
+                </span>
+                <span class="badge-status {% if candidate.status == 'HIRED' %}hired{% elif candidate.status == 'REJECTED' %}rejected{% else %}in_progress{% endif %}">
+                    {{ candidate.get_status_display }}
+                </span>
+            </div>
+
+            <!-- Match Score Progress -->
+            <div class="mt-auto">
+                <div class="match-compact mb-4">
+                    <span style="font-size:11px; font-weight:700; color:#64748b; margin-right:4px;">MATCH</span>
+                    <div class="match-bar-mini">
+                        <div class="match-bar-mini-fill" style="width: {{ candidate.match_score }}%; background: {% if candidate.match_score >= 80 %}#16a34a{% elif candidate.match_score >= 50 %}#d97706{% else %}#ef4444{% endif %};"></div>
+                    </div>
+                    <span style="font-size:13px; font-weight:800; color: {% if candidate.match_score >= 80 %}#16a34a{% elif candidate.match_score >= 50 %}#d97706{% else %}#ef4444{% endif %}; min-width:32px; text-align:right;">
+                        {{ candidate.match_score|floatformat:0 }}%
+                    </span>
+                </div>
+
+                <!-- Action button -->
+                <div class="d-flex gap-2">
+                    <a href="{% url 'candidate_profile' candidate.pk %}" class="action-btn-primary">
+                        Ver Perfil Completo
+                    </a>
+                    <a href="{% url 'interview_schedule' candidate.pk %}" class="action-btn-secondary" title="Agendar Entrevista">
+                        <i class="bi bi-calendar-plus" style="font-size: 16px;"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 py-5 text-center">
+        <div style="width:72px; height:72px; background:#f1f5f9; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; color:#94a3b8; font-size:32px;">
+            <i class="bi bi-people"></i>
+        </div>
+        <h5 style="font-weight:800; color:#475569;">Nenhum candidato encontrado</h5>
+        <p class="text-muted mb-4">Nenhum candidato corresponde aos filtros ou busca selecionados.</p>
+        {% if search_query or selected_job or selected_stage or selected_status %}
+        <a href="{% url 'candidate_list' %}" class="btn" style="background: linear-gradient(135deg, #202a44, #0a9b21); border:none; color:#fff; font-size:13px; font-weight:700; border-radius:10px; padding:10px 20px;">
+            <i class="bi bi-x-circle me-1"></i> Limpar Filtros
+        </a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

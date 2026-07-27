@@ -1,0 +1,581 @@
+{% extends "base.html" %}
+{% load recruitment_tags %}
+{% block title %}Perfil — {{ candidate.name }}{% endblock %}
+{% block breadcrumb %}
+<span style="color:var(--text-secondary);font-size:13px;">Recrutamento / Candidatos / {{ candidate.name }}</span>
+{% endblock %}
+
+{% block content %}
+<style>
+/* ─── Font & Smoothing ─── */
+* { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+.cp-banner h1, .cp-name, .cp-sidebar-card h2,
+.cp-content-head-title, .cp-tabs .cp-tab {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+}
+
+/* ─── Reset ─── */
+.page-content { padding: 0 !important; }
+
+/* ─── TOPBAR ─── */
+.cp-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px;
+  background: #fff;
+  border-bottom: 1px solid #e8edf2;
+  position: sticky; top: 0; z-index: 50;
+}
+
+/* ─── MAIN LAYOUT ─── */
+.cp-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  padding: 24px 32px 40px;
+  position: relative; z-index: 10;
+}
+@media (max-width: 1024px) {
+  .cp-layout { grid-template-columns: 1fr; }
+}
+
+/* ─── SIDEBAR CARD ─── */
+.cp-sidebar-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e8edf2;
+  box-shadow: 0 4px 16px rgba(0,0,0,.07);
+  overflow: hidden;
+}
+.cp-sidebar-avatar {
+  background: #fff;
+  padding: 32px 24px 24px;
+  text-align: center;
+  border-bottom: 1px solid #f1f5f9;
+}
+.cp-avatar-circle {
+  width: 80px; height: 80px; border-radius: 20px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 32px; font-weight: 800; color: #fff;
+  box-shadow: 0 8px 20px rgba(99,102,241,.3);
+  margin-bottom: 16px;
+}
+.cp-name { font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 4px; line-height: 1.2; }
+.cp-role { font-size: 12px; font-weight: 600; color: #64748b; margin: 0; }
+
+/* ─── SIDEBAR SECTIONS ─── */
+.cp-sidebar-section { padding: 18px 20px; border-top: 1px solid #f1f5f9; }
+.cp-sidebar-section:first-of-type { border-top: none; }
+.cp-section-heading {
+  font-size: 10px; font-weight: 700; color: #94a3b8;
+  text-transform: uppercase; letter-spacing: 1.3px;
+  margin: 0 0 12px;
+}
+.cp-info-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 10px;
+  transition: background .15s;
+}
+.cp-info-row:hover { background: #f8fafc; }
+.cp-info-icon {
+  width: 32px; height: 32px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
+.cp-info-key { font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cp-info-val { font-size: 12.5px; color: #0f172a; font-weight: 600; word-break: break-word; }
+
+/* ─── MATCH SCORE ─── */
+.cp-score-ring { position: relative; width: 72px; height: 72px; flex-shrink: 0; }
+.cp-score-text {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: #6366f1;
+  line-height: 1;
+}
+.cp-score-sub { font-size: 8px; color: #94a3b8; font-weight: 600; margin-top: 2px; }
+
+/* ─── STATUS BADGE ─── */
+.cp-status {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 700;
+  padding: 4px 10px; border-radius: 20px;
+}
+.cp-status-hired { background: #dcfce7; color: #15803d; }
+.cp-status-progress { background: #ede9fe; color: #6d28d9; }
+.cp-status-rejected { background: #fee2e2; color: #991b1b; }
+
+/* ─── TABS ─── */
+.cp-tabs {
+  display: flex; gap: 2px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 20px;
+}
+.cp-tab {
+  flex: 1; text-align: center;
+  padding: 9px 16px; border-radius: 9px;
+  font-size: 12.5px; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+  color: #64748b; border: none; background: transparent;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.cp-tab.active {
+  background: #fff; color: #0f172a;
+  box-shadow: 0 1px 6px rgba(0,0,0,.1);
+}
+.cp-tab-panel { display: none; }
+.cp-tab-panel.active { display: flex; flex-direction: column; gap: 16px; }
+
+/* ─── CONTENT CARDS ─── */
+.cp-content-card {
+  background: #fff; border-radius: 14px;
+  border: 1px solid #e8edf2;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  overflow: hidden;
+}
+.cp-content-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cp-content-head-title {
+  font-size: 13px; font-weight: 700; color: #0f172a;
+  display: flex; align-items: center; gap: 8px;
+}
+.cp-content-body { padding: 16px 18px; }
+
+/* ─── TIMELINE ─── */
+.tl-track { display: flex; align-items: flex-start; padding: 12px 0 4px; }
+.tl-node { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.tl-circle {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11.5px; font-weight: 800; position: relative; z-index: 1;
+}
+.tl-done   { background: #6366f1; color: #fff; box-shadow: 0 2px 8px rgba(99,102,241,.3); }
+.tl-active { background: #10b981; color: #fff; box-shadow: 0 2px 8px rgba(16,185,129,.3); }
+.tl-idle   { background: #f8fafc; color: #cbd5e1; border: 1.5px solid #e2e8f0; }
+.tl-lbl { font-size: 10.5px; font-weight: 700; color: #94a3b8; margin-top: 8px; text-align: center; }
+.tl-lbl-on { color: #1e293b; }
+.tl-connector { flex: 1; height: 2px; margin: 0 -3px; margin-top: 13px; }
+.tl-con-done { background: linear-gradient(90deg, #6366f1, #818cf8); }
+.tl-con-idle { background: #e2e8f0; }
+
+/* ─── IV & FB ─── */
+.iv-card { border: 1px solid #e8edf2; border-radius: 13px; overflow: hidden; }
+.iv-head { padding: 11px 14px; background: #f8fafc; border-bottom: 1px solid #e8edf2; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.iv-body { padding: 14px; }
+.pill { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+.pill-purple { background: #ede9fe; color: #6d28d9; }
+.pill-blue   { background: #dbeafe; color: #1d4ed8; }
+.pill-green  { background: #dcfce7; color: #15803d; }
+.pill-gray   { background: #f1f5f9; color: #475569; }
+.chip { font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 8px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
+
+/* ─── ACTION BUTTONS ─── */
+.btn-dark-sm {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #0f172a; color: #fff;
+  border: none; border-radius: 10px;
+  padding: 8px 14px; font-size: 12.5px; font-weight: 600;
+  text-decoration: none; cursor: pointer; transition: all .2s;
+}
+.btn-dark-sm:hover { background: #1e293b; color: #fff; }
+.btn-outline-sm {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 1px solid #e2e8f0; background: #fff; color: #475569;
+  border-radius: 9px; padding: 6px 12px;
+  font-size: 12px; font-weight: 600; text-decoration: none; transition: all .2s;
+}
+.btn-outline-sm:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+
+/* ─── EMPTY STATE ─── */
+.cp-empty { text-align: center; padding: 40px 20px; }
+.cp-empty-icon {
+  width: 60px; height: 60px; border-radius: 18px;
+  background: #f1f5f9; display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px; font-size: 24px; color: #cbd5e1;
+}
+.cp-empty p { font-size: 13px; color: #94a3b8; margin: 0; font-weight: 500; }
+
+/* ─── COMPAT GRID ─── */
+.cmp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.cmp-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 12px;
+  border: 1.5px solid #f1f5f9; background: #fafafa;
+  transition: all .15s;
+}
+.cmp-card:hover { background: #f1f5f9; border-color: #e2e8f0; }
+.cmp-card.current { background: #f0fdf4; border-color: #bbf7d0; }
+</style>
+
+<!-- ══════════════════ TOPBAR ══════════════════ -->
+<div class="cp-topbar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="{% url 'candidate_pipeline' %}" class="btn-outline-sm" style="color:#0f172a;"><i class="bi bi-arrow-left"></i> Pipeline</a>
+    <div style="width:1px;height:20px;background:#e2e8f0;"></div>
+    <span style="font-size:13px;font-weight:600;color:#0f172a;">{{ candidate.name }}</span>
+    <span class="cp-status {% if candidate.status == 'HIRED' %}cp-status-hired{% elif candidate.status == 'REJECTED' %}cp-status-rejected{% else %}cp-status-progress{% endif %}">
+      <span style="width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.7;"></span>
+      {{ candidate.get_status_display }}
+    </span>
+  </div>
+  <div style="display:flex;gap:8px;">
+    {% if request.user.is_admin or request.user.is_hr %}
+    <a href="javascript:void(0)" onclick="openModalIframe('{% url 'candidate_edit' candidate.pk %}')" class="btn-outline-sm"><i class="bi bi-pencil"></i> Editar</a>
+    <a href="{% url 'candidate_delete' candidate.pk %}" onclick="return confirm('Remover candidato?')"
+       class="btn-outline-sm" style="color:#dc2626;border-color:#fecaca;">
+      <i class="bi bi-trash3"></i> Excluir
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ══════════════════ MAIN LAYOUT ══════════════════ -->
+<div class="cp-layout">
+
+  <!-- ─── SIDEBAR ─── -->
+  <div class="cp-sidebar-card" style="align-self: start; position: sticky; top: 70px;">
+
+    <!-- Avatar Section -->
+    <div class="cp-sidebar-avatar">
+      <div class="cp-avatar-circle" style="width:72px;height:72px;font-size:28px;">{{ candidate.name|slice:":1"|upper }}</div>
+      <p class="cp-name">{{ candidate.name }}</p>
+      <p class="cp-role">{{ candidate.job_opening.title }}</p>
+      <div style="margin-top:12px;">
+        <span class="cp-status {% if candidate.status == 'HIRED' %}cp-status-hired{% elif candidate.status == 'REJECTED' %}cp-status-rejected{% else %}cp-status-progress{% endif %}">
+          {{ candidate.get_status_display }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Match Score -->
+    <div class="cp-sidebar-section" style="display:flex;align-items:center;gap:14px;">
+      <div class="cp-score-ring">
+        <svg width="72" height="72" viewBox="0 0 72 72" style="transform:rotate(-90deg)">
+          <circle cx="36" cy="36" r="30" fill="none" stroke="#e2e8f0" stroke-width="5"/>
+          <circle cx="36" cy="36" r="30" fill="none"
+            stroke="{% if candidate.match_score >= 70 %}#6366f1{% elif candidate.match_score >= 40 %}#f59e0b{% else %}#ef4444{% endif %}"
+            stroke-width="5" stroke-linecap="round"
+            stroke-dasharray="{{ candidate.match_score|floatformat:0 }} 100" pathLength="100"/>
+        </svg>
+        <div class="cp-score-text">
+          <span>{{ candidate.match_score|floatformat:0 }}%</span>
+          <span class="cp-score-sub">MATCH</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#0f172a;">Compatibilidade</div>
+        <div style="font-size:11.5px;color:#64748b;margin-top:3px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:140px;line-height:1.3;" title="{{ candidate.job_opening.title }}">Vaga: <strong>{{ candidate.job_opening.title }}</strong></div>
+        <div style="margin-top:8px;">
+          <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;
+            {% if candidate.match_score >= 70 %}background:#dcfce7;color:#15803d;{% elif candidate.match_score >= 40 %}background:#fef3c7;color:#b45309;{% else %}background:#fee2e2;color:#991b1b;{% endif %}">
+            {% if candidate.match_score >= 70 %}Alta{% elif candidate.match_score >= 40 %}Média{% else %}Baixa{% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contato -->
+    <div class="cp-sidebar-section">
+      <p class="cp-section-heading">Informações de Contato</p>
+
+      <div class="cp-info-row">
+        <div class="cp-info-icon" style="background:#ede9fe;color:#7c3aed;"><i class="bi bi-envelope-fill"></i></div>
+        <div style="min-width:0;">
+          <div class="cp-info-key">E-mail</div>
+          <div class="cp-info-val" style="font-size:12px;">{{ candidate.email }}</div>
+        </div>
+      </div>
+
+      <div class="cp-info-row">
+        <div class="cp-info-icon" style="background:#dcfce7;color:#16a34a;"><i class="bi bi-telephone-fill"></i></div>
+        <div style="flex:1;">
+          <div class="cp-info-key">Telefone</div>
+          <div class="cp-info-val">{{ candidate.phone|default:"Não informado" }}</div>
+        </div>
+        {% if candidate.phone %}
+        <a href="https://wa.me/55{{ candidate.phone|cut:' '|cut:'('|cut:')'|cut:'-' }}" target="_blank"
+           style="width:30px;height:30px;background:#25d366;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;"
+           onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        </a>
+        {% endif %}
+      </div>
+
+      <div class="cp-info-row">
+        <div class="cp-info-icon" style="background:#fef3c7;color:#d97706;"><i class="bi bi-calendar3"></i></div>
+        <div>
+          <div class="cp-info-key">Cadastrado em</div>
+          <div class="cp-info-val">{{ candidate.created_at|date:"d/m/Y" }}</div>
+        </div>
+      </div>
+
+      {% if candidate.linkedin_url %}
+      <a href="{{ candidate.linkedin_url }}" target="_blank" class="cp-info-row" style="text-decoration:none;">
+        <div class="cp-info-icon" style="background:#dbeafe;color:#2563eb;"><i class="bi bi-linkedin"></i></div>
+        <div>
+          <div class="cp-info-key">LinkedIn</div>
+          <div class="cp-info-val" style="color:#2563eb;">Ver perfil →</div>
+        </div>
+      </a>
+      {% endif %}
+    </div>
+
+    <!-- Currículo -->
+    <div class="cp-sidebar-section">
+      <p class="cp-section-heading">Currículo</p>
+      {% if candidate.resume %}
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:10px;border:1px solid #e8edf2;">
+        <div style="width:36px;height:36px;border-radius:9px;background:#fee2e2;display:flex;align-items:center;justify-content:center;color:#ef4444;font-size:18px;flex-shrink:0;">
+          <i class="bi bi-file-earmark-pdf-fill"></i>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:12.5px;font-weight:600;color:#0f172a;">Curriculo.pdf</div>
+          <div style="font-size:10.5px;color:#94a3b8;">Arquivo enviado</div>
+        </div>
+        <a href="{{ candidate.resume.url }}" target="_blank" class="btn-dark-sm" style="padding:6px 10px;font-size:11.5px;">
+          <i class="bi bi-download"></i>
+        </a>
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:20px;border:1.5px dashed #e2e8f0;border-radius:10px;background:#fafafa;">
+        <i class="bi bi-file-earmark-x" style="font-size:22px;color:#cbd5e1;"></i>
+        <p style="font-size:11.5px;color:#94a3b8;margin:6px 0 0;">Nenhum arquivo</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- ─── MAIN CONTENT ─── -->
+  <div>
+
+    <!-- TIMELINE -->
+    <div class="cp-content-card" style="margin-bottom:20px;">
+      <div class="cp-content-head">
+        <div class="cp-content-head-title">
+          <i class="bi bi-signpost-2-fill" style="color:#6366f1;"></i> Progresso no Processo Seletivo
+        </div>
+        <span style="font-size:11.5px;color:#94a3b8;font-weight:600;">Etapa atual: <strong style="color:#0f172a;">{{ candidate.get_current_stage_display }}</strong></span>
+      </div>
+      <div class="cp-content-body">
+        {% with s=candidate.current_stage %}
+        <div class="tl-track">
+
+          {% for step_data in "0123456" %}{% with n=forloop.counter0 %}
+          <div class="tl-node">
+            <div class="tl-circle
+              {% if n == 0 %}{% if s == 'screening' %}tl-active{% else %}tl-done{% endif %}
+              {% elif n == 1 %}{% if s == 'interview' %}tl-active{% elif s == 'screening' %}tl-idle{% else %}tl-done{% endif %}
+              {% elif n == 2 %}{% if s == 'psych_test' %}tl-active{% elif s == 'screening' or s == 'interview' %}tl-idle{% else %}tl-done{% endif %}
+              {% elif n == 3 %}{% if s == 'practical_test' %}tl-active{% elif s == 'probation_45' or s == 'probation_90' or s == 'hired' %}tl-done{% else %}tl-idle{% endif %}
+              {% elif n == 4 %}{% if s == 'probation_45' %}tl-active{% elif s == 'probation_90' or s == 'hired' %}tl-done{% else %}tl-idle{% endif %}
+              {% elif n == 5 %}{% if s == 'probation_90' %}tl-active{% elif s == 'hired' %}tl-done{% else %}tl-idle{% endif %}
+              {% else %}{% if s == 'hired' %}tl-active{% else %}tl-idle{% endif %}
+              {% endif %}">
+              {% if n == 0 and s != 'screening' %}<i class="bi bi-check2" style="font-size:16px;"></i>
+              {% elif n == 1 and s != 'screening' and s != 'interview' %}<i class="bi bi-check2" style="font-size:16px;"></i>
+              {% elif n == 2 and s == 'practical_test' or n == 2 and s == 'probation_45' or n == 2 and s == 'probation_90' or n == 2 and s == 'hired' %}<i class="bi bi-check2" style="font-size:16px;"></i>
+              {% elif n == 3 and s == 'probation_45' or n == 3 and s == 'probation_90' or n == 3 and s == 'hired' %}<i class="bi bi-check2" style="font-size:16px;"></i>
+              {% elif n == 4 and s == 'probation_90' or n == 4 and s == 'hired' %}<i class="bi bi-check2" style="font-size:16px;"></i>
+              {% elif n == 5 and s == 'hired' %}<i class="bi bi-check2" style="font-size:16px;"></i>
+              {% else %}{{ forloop.counter }}{% endif %}
+            </div>
+            <div class="tl-lbl {% if n == 0 or s != 'screening' %}tl-lbl-on{% endif %}">
+              {% if n == 0 %}Triagem{% elif n == 1 %}Entrevista{% elif n == 2 %}Psicológico{% elif n == 3 %}Prático{% elif n == 4 %}Est. 45d{% elif n == 5 %}Est. 90d{% else %}Efetivação{% endif %}
+            </div>
+          </div>
+          {% if not forloop.last %}
+          <div class="tl-connector
+            {% if n == 0 and s != 'screening' %}tl-con-done
+            {% elif n == 1 and s != 'screening' and s != 'interview' %}tl-con-done
+            {% elif n == 2 and s == 'practical_test' or n == 2 and s == 'probation_45' or n == 2 and s == 'probation_90' or n == 2 and s == 'hired' %}tl-con-done
+            {% elif n == 3 and s == 'probation_45' or n == 3 and s == 'probation_90' or n == 3 and s == 'hired' %}tl-con-done
+            {% elif n == 4 and s == 'probation_90' or n == 4 and s == 'hired' %}tl-con-done
+            {% elif n == 5 and s == 'hired' %}tl-con-done
+            {% else %}tl-con-idle{% endif %}">
+          </div>
+          {% endif %}
+          {% endwith %}{% endfor %}
+
+        </div>
+        {% endwith %}
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="cp-tabs">
+      <button class="cp-tab active" onclick="showTab('entrevistas', this)" id="tab-entrevistas">
+        <i class="bi bi-people-fill"></i> Entrevistas
+        {% if interviews %}<span style="background:#6366f1;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;">{{ interviews|length }}</span>{% endif %}
+      </button>
+      <button class="cp-tab" onclick="showTab('feedbacks', this)" id="tab-feedbacks">
+        <i class="bi bi-patch-check-fill"></i> Avaliações
+      </button>
+      <button class="cp-tab" onclick="showTab('compatibilidade', this)" id="tab-compatibilidade">
+        <i class="bi bi-bar-chart-steps"></i> Vagas Compatíveis
+        {% if job_compatibility %}<span style="background:#e2e8f0;color:#475569;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;">{{ job_compatibility|length }}</span>{% endif %}
+      </button>
+    </div>
+
+    <!-- TAB: Entrevistas -->
+    <div class="cp-tab-panel active" id="panel-entrevistas">
+      <div class="cp-content-card">
+        <div class="cp-content-head">
+          <div class="cp-content-head-title"><i class="bi bi-calendar3" style="color:#6366f1;"></i> Entrevistas Marcadas</div>
+          {% if request.user.is_admin or request.user.is_hr %}
+          <a href="{% url 'interview_schedule' candidate.pk %}" class="btn-dark-sm">
+            <i class="bi bi-calendar-plus"></i> Agendar Entrevista
+          </a>
+          {% endif %}
+        </div>
+        <div class="cp-content-body" style="display:flex;flex-direction:column;gap:12px;">
+          {% for iv in interviews %}
+          <div class="iv-card">
+            <div class="iv-head">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="pill pill-purple">{{ iv.get_stage_display }}</span>
+                <span style="font-size:12.5px;font-weight:600;color:#334155;"><i class="bi bi-clock text-muted me-1"></i>{{ iv.date|date:"d/m/Y" }} às {{ iv.date|date:"H:i" }}</span>
+              </div>
+              <span class="pill {% if iv.status == 'SCHEDULED' %}pill-blue{% elif iv.status == 'COMPLETED' %}pill-green{% else %}pill-gray{% endif %}">
+                {{ iv.get_status_display }}
+              </span>
+            </div>
+            <div class="iv-body">
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:{% if iv.notes %}12px{% else %}0{% endif %};">
+                {% for ent in iv.interviewers.all %}
+                <span class="chip"><i class="bi bi-person me-1" style="color:#94a3b8;"></i>{{ ent.full_name }}</span>
+                {% endfor %}
+              </div>
+              {% if iv.notes %}
+              <div style="padding:10px 13px;background:#fefce8;border-left:3px solid #fbbf24;border-radius:0 9px 9px 0;font-size:12.5px;color:#78350f;line-height:1.6;margin-bottom:12px;">
+                <strong style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Pauta</strong><br>{{ iv.notes|linebreaksbr }}
+              </div>
+              {% endif %}
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid #f1f5f9;">
+                <span style="font-size:11.5px;color:{% if iv.linked_event %}#16a34a{% else %}#cbd5e1{% endif %};font-weight:600;">
+                  <i class="bi bi-calendar-check-fill me-1"></i>{% if iv.linked_event %}Sincronizado na Agenda{% else %}Sem evento na agenda{% endif %}
+                </span>
+                {% if request.user.is_admin or request.user.is_hr or user_emp in iv.interviewers.all %}
+                  {% if iv.status != 'CANCELLED' %}
+                  <a href="{% url 'interview_feedback_create' iv.pk %}" class="btn-outline-sm"><i class="bi bi-journal-check"></i> Registrar Parecer</a>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="cp-empty">
+            <div class="cp-empty-icon"><i class="bi bi-calendar-x"></i></div>
+            <p>Nenhuma entrevista agendada para este candidato</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Feedbacks -->
+    <div class="cp-tab-panel" id="panel-feedbacks">
+      <div class="cp-content-card">
+        <div class="cp-content-head">
+          <div class="cp-content-head-title"><i class="bi bi-patch-check-fill" style="color:#6366f1;"></i> Avaliações & Pareceres Técnicos</div>
+        </div>
+        <div class="cp-content-body" style="display:flex;flex-direction:column;gap:12px;">
+          {% for iv in interviews %}{% for fb in iv.feedbacks.all %}
+          <div style="border:1px solid #e8edf2;border-radius:13px;overflow:hidden;">
+            <div style="padding:12px 14px;background:#f8fafc;border-bottom:1px solid #e8edf2;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#4f46e5);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;">
+                  {{ fb.interviewer.full_name|slice:":1"|upper }}
+                </div>
+                <div>
+                  <div style="font-size:13px;font-weight:700;color:#0f172a;">{{ fb.interviewer.full_name }}</div>
+                  <div style="font-size:10.5px;color:#94a3b8;">{{ iv.get_stage_display }} &middot; {{ fb.created_at|date:"d/m/Y" }}</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:2px;background:#fff;border:1px solid #e8edf2;border-radius:9px;padding:4px 10px;">
+                {% for star in "12345" %}
+                <i class="bi bi-{% if forloop.counter <= fb.score %}star-fill" style="color:#f59e0b{% else %}star" style="color:#e2e8f0{% endif %};font-size:13px;"></i>
+                {% endfor %}
+                <span style="font-size:12px;font-weight:700;color:#0f172a;margin-left:5px;">{{ fb.score }}/5</span>
+              </div>
+            </div>
+            <div style="padding:14px;font-size:13px;color:#475569;line-height:1.75;white-space:pre-line;">{{ fb.feedback_text }}</div>
+          </div>
+          {% endfor %}{% empty %}
+          <div class="cp-empty">
+            <div class="cp-empty-icon"><i class="bi bi-chat-square-text"></i></div>
+            <p>Nenhum feedback registrado até o momento</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Compatibilidade -->
+    <div class="cp-tab-panel" id="panel-compatibilidade">
+      <div class="cp-content-card">
+        <div class="cp-content-head">
+          <div class="cp-content-head-title"><i class="bi bi-bar-chart-steps" style="color:#6366f1;"></i> Compatibilidade com Vagas em Aberto</div>
+          <span style="font-size:12px;color:#94a3b8;">{{ job_compatibility|length }} vaga{{ job_compatibility|length|pluralize:"s" }} analisada{{ job_compatibility|length|pluralize:"s" }}</span>
+        </div>
+        <div class="cp-content-body">
+          {% if job_compatibility %}
+          <div class="cmp-grid">
+            {% for job in job_compatibility %}
+            <div class="cmp-card {% if job.is_current %}current{% endif %}">
+              <!-- Círculo SVG -->
+              <div style="position:relative;width:54px;height:54px;flex-shrink:0;">
+                <svg width="54" height="54" viewBox="0 0 54 54" style="transform:rotate(-90deg);">
+                  <circle cx="27" cy="27" r="22" fill="none" stroke="#e8edf2" stroke-width="4"/>
+                  <circle cx="27" cy="27" r="22" fill="none"
+                    stroke="{% if job.score >= 70 %}#16a34a{% elif job.score >= 40 %}#f59e0b{% else %}#ef4444{% endif %}"
+                    stroke-width="4" stroke-linecap="round"
+                    stroke-dasharray="{{ job.score|floatformat:0 }} 100" pathLength="100"/>
+                </svg>
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:{% if job.score >= 70 %}#16a34a{% elif job.score >= 40 %}#d97706{% else %}#dc2626{% endif %};">
+                  {{ job.score|floatformat:0 }}%
+                </div>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;flex-wrap:wrap;">
+                  <span style="font-size:12.5px;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ job.title }}</span>
+                  {% if job.is_current %}<span style="font-size:9px;font-weight:700;color:#15803d;background:#dcfce7;padding:2px 6px;border-radius:20px;white-space:nowrap;flex-shrink:0;">ATUAL</span>{% endif %}
+                </div>
+                <div style="height:4px;background:#e8edf2;border-radius:10px;overflow:hidden;">
+                  <div style="height:100%;border-radius:10px;width:{{ job.score }}%;background:{% if job.score >= 70 %}linear-gradient(90deg,#16a34a,#4ade80){% elif job.score >= 40 %}linear-gradient(90deg,#d97706,#fbbf24){% else %}linear-gradient(90deg,#dc2626,#f87171){% endif %};"></div>
+                </div>
+              </div>
+              <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;flex-shrink:0;{% if job.score >= 70 %}background:#dcfce7;color:#15803d;{% elif job.score >= 40 %}background:#fef3c7;color:#b45309;{% else %}background:#fee2e2;color:#991b1b;{% endif %}">
+                {% if job.score >= 70 %}Alta{% elif job.score >= 40 %}Média{% else %}Baixa{% endif %}
+              </span>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="cp-empty">
+            <div class="cp-empty-icon"><i class="bi bi-briefcase-x"></i></div>
+            <p>Nenhuma vaga em aberto no momento</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main content -->
+</div><!-- /layout -->
+
+<script>
+function showTab(tabId, btn) {
+  document.querySelectorAll('.cp-tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.cp-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + tabId).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+
+{% endblock %}

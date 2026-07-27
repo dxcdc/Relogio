@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+{% block title %}{{ bug.title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .bug-detail-card {
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--card-border, #e2e8f0);
+        border-radius: 20px;
+        padding: 32px;
+        margin-bottom: 24px;
+    }
+    .bug-header { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--card-border, #e2e8f0); }
+    .bug-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .bug-title { font-size: 22px; font-weight: 700; color: var(--text-primary, #0f172a); margin: 12px 0; }
+
+    .comment-thread { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+    .comment-bubble {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+    }
+    .comment-bubble.is-dev { flex-direction: row-reverse; }
+    .comment-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #1e293b;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+    .comment-avatar.dev-avatar { background: linear-gradient(135deg, #10b981, #059669); }
+    .comment-body {
+        background: var(--hover-bg, #f8fafc);
+        border: 1px solid var(--card-border, #e2e8f0);
+        border-radius: 14px;
+        padding: 14px 18px;
+        max-width: 75%;
+        position: relative;
+    }
+    .comment-bubble.is-dev .comment-body {
+        background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+        border-color: #a7f3d0;
+    }
+    .comment-author { font-size: 12px; font-weight: 600; color: var(--text-primary, #0f172a); margin-bottom: 4px; }
+    .comment-author.dev-tag::after {
+        content: ' · Equipe Técnica';
+        color: #10b981;
+        font-weight: 400;
+    }
+    .comment-text { font-size: 14px; color: var(--text-secondary, #475569); line-height: 1.6; }
+    .comment-time { font-size: 11px; color: var(--text-muted, #94a3b8); margin-top: 6px; }
+    .internal-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px;
+        color: #f59e0b;
+        background: #fffbeb;
+        border: 1px solid #fef3c7;
+        padding: 2px 8px;
+        border-radius: 10px;
+        margin-left: 8px;
+    }
+
+    .reply-box {
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--card-border, #e2e8f0);
+        border-radius: 16px;
+        padding: 24px;
+    }
+    .submit-reply {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 50px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .submit-reply:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+
+    .admin-panel {
+        background: linear-gradient(135deg, #1e293b, #0f172a);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        color: #fff;
+    }
+    .admin-panel-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-bottom: 16px; }
+    .screenshot-preview { max-width: 100%; border-radius: 12px; border: 1px solid var(--card-border, #e2e8f0); }
+    .claim-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        border: none;
+        color: #fff;
+        padding: 12px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+    }
+    .claim-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(245,158,11,0.4); }
+    .claim-btn.release-btn {
+        background: rgba(239,68,68,0.15);
+        border: 1px solid rgba(239,68,68,0.3);
+        color: #ef4444;
+        box-shadow: none;
+    }
+    .claim-btn.release-btn:hover { background: rgba(239,68,68,0.25); transform: none; }
+    .assigned-badge {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(16,185,129,0.12);
+        border: 1px solid rgba(16,185,129,0.25);
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 16px;
+    }
+    .assigned-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'changelog_list' %}" class="text-muted text-decoration-none">Novidades</a>
+<i class="bi bi-chevron-right mx-1 text-muted" style="font-size: 11px;"></i>
+<a href="{% url 'bug_list' %}" class="text-muted text-decoration-none">Reportes</a>
+<i class="bi bi-chevron-right mx-1 text-muted" style="font-size: 11px;"></i>
+<span style="color: var(--accent-color);">#{{ bug.pk }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        
+        <div class="bug-detail-card">
+            <div class="bug-header">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="bug-status-pill" style="background: {{ bug.status_bg }}; color: {{ bug.status_color }};">
+                        {{ bug.get_status_display }}
+                    </span>
+                    <span style="font-size:12px;color:var(--text-muted,#94a3b8);">#{{ bug.pk }}</span>
+                </div>
+                <h4 class="bug-title">{{ bug.title }}</h4>
+                <div style="font-size:13px;color:var(--text-muted,#94a3b8);">
+                    <i class="bi bi-person me-1"></i>
+                    Reportado por <strong>{{ bug.reported_by.get_full_name|default:bug.reported_by.username }}</strong>
+                    em {{ bug.created_at|date:"d/m/Y \à\s H:i" }}
+                    {% if bug.resolved_at %}
+                    · Resolvido em {{ bug.resolved_at|date:"d/m/Y" }}
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="font-size:14px;color:var(--text-secondary,#475569);line-height:1.8;white-space:pre-wrap;">{{ bug.description }}</div>
+
+            {% if screenshots %}
+            <div class="mt-4">
+                <div style="font-size:12px;font-weight:600;color:var(--text-muted,#94a3b8);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">
+                    <i class="bi bi-images me-1"></i>Capturas de Tela ({{ screenshots|length }})
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                    {% for ss in screenshots %}
+                    <a href="{{ ss.image.url }}" target="_blank" style="display:block;width:120px;height:90px;border-radius:10px;overflow:hidden;border:1px solid var(--card-border,#e2e8f0);transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform=''">
+                        <img src="{{ ss.image.url }}" alt="Screenshot {{ forloop.counter }}" style="width:100%;height:100%;object-fit:cover;">
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        
+        <div class="bug-detail-card">
+            <div style="font-size:14px;font-weight:600;color:var(--text-muted,#94a3b8);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:20px;">
+                <i class="bi bi-chat-dots me-1"></i>Conversa
+            </div>
+
+            {% if comments %}
+            <div class="comment-thread">
+                {% for comment in comments %}
+                {% with is_dev=comment.author.is_admin %}
+                <div class="comment-bubble {% if is_dev %}is-dev{% endif %}">
+                    <div class="comment-avatar {% if is_dev %}dev-avatar{% endif %}">
+                        {{ comment.author.first_name.0|upper|default:comment.author.username.0|upper }}
+                    </div>
+                    <div class="comment-body">
+                        <div class="comment-author {% if is_dev %}dev-tag{% endif %}">
+                            {{ comment.author.get_full_name|default:comment.author.username }}
+                            {% if comment.is_internal %}<span class="internal-tag"><i class="bi bi-lock"></i> Interna</span>{% endif %}
+                        </div>
+                        <div class="comment-text">{{ comment.content }}</div>
+                        <div class="comment-time">{{ comment.created_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                </div>
+                {% endwith %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:40px 0;color:var(--text-muted,#94a3b8);font-size:14px;">
+                <i class="bi bi-chat" style="font-size:32px;display:block;margin-bottom:12px;"></i>
+                Nenhuma resposta ainda. Nossa equipe está analisando!
+            </div>
+            {% endif %}
+
+            
+            {% if bug.status != 'RESOLVED' and bug.status != 'WONTFIX' %}
+            <div class="reply-box">
+                <form method="post" action="{% url 'bug_comment_add' bug.pk %}">
+                    {% csrf_token %}
+                    <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text-primary,#0f172a);">
+                        {% if is_admin_or_hr %}Responder ao usuário{% else %}Adicionar informação{% endif %}
+                    </div>
+                    {{ comment_form.content }}
+                    {% if is_admin_or_hr %}
+                    <div class="d-flex align-items-center gap-2 mt-2 mb-3">
+                        {{ comment_form.is_internal }}
+                        <label style="font-size:13px;color:var(--text-secondary,#64748b);cursor:pointer;">
+                            <i class="bi bi-lock me-1"></i>Nota interna (só a equipe técnica vê)
+                        </label>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="submit" class="submit-reply">
+                            <i class="bi bi-send me-1"></i>
+                            {% if is_admin_or_hr %}Responder{% else %}Enviar{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:20px;background:var(--hover-bg,#f8fafc);border-radius:12px;font-size:13px;color:var(--text-muted,#94a3b8);">
+                <i class="bi bi-lock me-1"></i> Esta conversa está encerrada.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    
+    <div class="col-lg-4">
+        {% if is_admin_or_hr %}
+        <div class="admin-panel">
+            <div class="admin-panel-title"><i class="bi bi-gear me-1"></i>Painel Técnico</div>
+
+            
+            {% if bug.assigned_to %}
+            <div class="assigned-badge">
+                <div class="assigned-avatar">{{ bug.assigned_to.first_name.0|upper|default:bug.assigned_to.username.0|upper }}</div>
+                <div>
+                    <div style="font-size:11px;color:#10b981;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;">Responsável</div>
+                    <div style="font-size:13px;color:#e2e8f0;font-weight:600;">{{ bug.assigned_to.get_full_name|default:bug.assigned_to.username }}</div>
+                </div>
+            </div>
+            {% if bug.assigned_to == request.user %}
+            <form method="post" action="{% url 'bug_claim' bug.pk %}" style="margin-bottom:16px;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="release">
+                <button type="submit" class="claim-btn release-btn">
+                    <i class="bi bi-person-dash"></i> Liberar Responsabilidade
+                </button>
+            </form>
+            {% endif %}
+            {% else %}
+            <form method="post" action="{% url 'bug_claim' bug.pk %}" style="margin-bottom:0;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="claim">
+                <button type="submit" class="claim-btn">
+                    <i class="bi bi-person-check"></i> Assumir Reporte
+                </button>
+            </form>
+            {% endif %}
+
+            <div style="height:1px;background:rgba(255,255,255,0.07);margin:16px 0;"></div>
+
+            <form method="post" action="{% url 'bug_status_update' bug.pk %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;margin-bottom:6px;display:block;">Status</label>
+                    {{ status_form.status }}
+                </div>
+                <div class="mb-4">
+                    <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;margin-bottom:6px;display:block;">Prioridade</label>
+                    {{ status_form.priority }}
+                </div>
+                <button type="submit" style="width:100%;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;padding:10px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:0.2s;">
+                    <i class="bi bi-check2 me-1"></i>Salvar Alterações
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
+        
+        <div style="background:var(--card-bg,#fff);border:1px solid var(--card-border,#e2e8f0);border-radius:16px;padding:24px;">
+            <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted,#94a3b8);margin-bottom:16px;">Detalhes</div>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:var(--text-secondary,#475569);">
+                <div><strong>Status:</strong>
+                    <span class="float-end" style="color:{{ bug.status_color }};font-weight:600;">{{ bug.get_status_display }}</span>
+                </div>
+                {% if is_admin_or_hr %}
+                <div><strong>Prioridade:</strong>
+                    <span class="float-end" style="color:{{ bug.priority_color }};font-weight:600;">{{ bug.get_priority_display }}</span>
+                </div>
+                <div><strong>Responsável:</strong>
+                    <span class="float-end" style="font-weight:600;">
+                        {% if bug.assigned_to %}{{ bug.assigned_to.get_full_name|default:bug.assigned_to.username }}{% else %}—{% endif %}
+                    </span>
+                </div>
+                {% endif %}
+                <div><strong>Aberto em:</strong> <span class="float-end">{{ bug.created_at|date:"d/m/Y" }}</span></div>
+                {% if bug.resolved_at %}
+                <div><strong>Resolvido em:</strong> <span class="float-end">{{ bug.resolved_at|date:"d/m/Y" }}</span></div>
+                {% endif %}
+                <div><strong>Respostas:</strong> <span class="float-end">{{ bug.public_comments_count }}</span></div>
+            </div>
+            <div class="mt-4 pt-3" style="border-top:1px solid var(--card-border,#e2e8f0);">
+                <a href="{% url 'bug_list' %}" style="font-size:13px;color:var(--text-muted,#94a3b8);text-decoration:none;">
+                    <i class="bi bi-arrow-left me-1"></i>Voltar para lista
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const pollInterval = 5000; // 5 seconds
+    
+    function pollComments() {
+        // Appends a timestamp to avoid cache, similar to mobile
+        const url = new URL(window.location.href);
+        url.searchParams.set('_t', Date.now());
+        
+        fetch(url.toString(), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+            
+            const newThread = doc.querySelector('.comment-thread');
+            const oldThread = document.querySelector('.comment-thread');
+            
+            if (newThread && oldThread) {
+                // Only replace if content actually changed
+                if (newThread.innerHTML !== oldThread.innerHTML) {
+                    oldThread.innerHTML = newThread.innerHTML;
+                }
+            } else if (newThread && !oldThread) {
+                // Transitioned from empty state to having comments
+                window.location.reload();
+            }
+        })
+        .catch(err => console.error('Polling error:', err));
+    }
+
+    setInterval(pollComments, pollInterval);
+});
+</script>
+{% endblock %}

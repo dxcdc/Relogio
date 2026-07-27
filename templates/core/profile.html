@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+{% block title %}Meu Perfil{% endblock %}
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;">Meu Perfil</span>{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilização focada no minimalismo da referência (Sesame) */
+    .profile-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        padding: 30px;
+        margin-bottom: 24px;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    .profile-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    .profile-card-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+    }
+    .btn-sesame {
+        background-color: transparent;
+        color: #10B981; /* Verde Sesame */
+        border: 1px solid #10B981;
+        border-radius: 20px;
+        padding: 6px 20px;
+        font-weight: 500;
+        font-size: 13px;
+        transition: all 0.2s ease;
+    }
+    .btn-sesame:hover {
+        background-color: #10B981;
+        color: #ffffff;
+    }
+    .btn-gray-pill {
+        background-color: #9CA3AF;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 6px 16px;
+        font-size: 13px;
+        text-decoration: none;
+        transition: background-color 0.2s ease;
+    }
+    .btn-gray-pill:hover {
+        background-color: #6B7280;
+        color: white;
+    }
+    
+    .form-sesame-group {
+        margin-bottom: 16px;
+    }
+    .form-sesame-group label {
+        display: block;
+        font-size: 11px;
+        color: #9CA3AF;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+    .form-sesame-input {
+        width: 100%;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 14px;
+        color: #374151;
+        background-color: #F9FAFB;
+        transition: all 0.2s ease;
+    }
+    .form-sesame-input:focus {
+        outline: none;
+        border-color: #10B981;
+        background-color: #ffffff;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+    .form-sesame-input:disabled,
+    .form-sesame-input[readonly] {
+        background-color: #F3F4F6;
+        color: #6B7280;
+        cursor: not-allowed;
+    }
+    
+    .avatar-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 160px;
+    }
+    .avatar-image-container {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        position: relative;
+        background-color: #1e3a5f;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
+    .avatar-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+    .avatar-upload-btn {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: #ffffff;
+        color: #374151;
+        border: 1px solid #E5E7EB;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .avatar-help-text {
+        font-size: 11px;
+        color: #9CA3AF;
+        text-align: center;
+        line-height: 1.4;
+    }
+</style>
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <h1 class="page-title">
+        <div class="d-flex align-items-center gap-2">
+            {% if user.employee and user.employee.picture %}
+                <img src="{{ user.employee.picture.picture.url }}" alt="" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+            {% else %}
+                <i class="bi bi-person-circle text-orange"></i>
+            {% endif %}
+            {{ user.get_full_name|default:user.username }}
+        </div>
+    </h1>
+
+</div>
+
+{% if user.employee %}
+
+<div class="profile-card">
+    <form method="post" action="{% url 'profile' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="personal_data">
+        
+        <div class="profile-card-header">
+            <h2 class="profile-card-title">Dados do Colaborador</h2>
+            <button type="submit" class="btn-sesame">Salvar Modificações</button>
+        </div>
+        
+        <div class="d-flex flex-column flex-md-row gap-5">
+            
+            <div class="avatar-wrapper flex-shrink-0">
+                <div class="avatar-image-container">
+                    {% if user.employee.picture %}
+                        <img src="{{ user.employee.picture.picture.url }}" alt="Avatar">
+                    {% else %}
+                        {{ user.first_name|first|default:user.username|first|upper }}
+                    {% endif %}
+                    
+                    <label for="profile-photo-upload-main" class="avatar-upload-btn" title="Alterar foto">
+                        <i class="bi bi-camera"></i>
+                    </label>
+                </div>
+                <div class="avatar-help-text">
+                    O arquivo não pode exceder 2MB.<br>Tamanho recomendado: 500px x 500px.
+                </div>
+            </div>
+            
+            
+            <div class="flex-grow-1">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-sesame-group">
+                            <label>Nome</label>
+                            <input type="text" name="first_name" class="form-sesame-input" value="{{ user.employee.first_name|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-sesame-group">
+                            <label>Sobrenome</label>
+                            <input type="text" name="last_name" class="form-sesame-input" value="{{ user.employee.last_name|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-sesame-group">
+                            <label>CPF / DNI</label>
+                            <input type="text" name="ssn_number" class="form-sesame-input" value="{{ user.employee.ssn_number|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-sesame-group">
+                            <label>Data de Nascimento</label>
+                            
+                            <input type="date" name="birthday" class="form-sesame-input" value="{{ user.employee.birthday|date:'Y-m-d' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-sesame-group">
+                            <label>Celular</label>
+                            <input type="text" name="mobile" class="form-sesame-input" value="{{ user.employee.mobile|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-sesame-group">
+                            <label>Tipo de Contrato</label>
+                            <input type="text" class="form-sesame-input" disabled value="{{ user.employee.emp_status|default:'—' }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    
+    
+    <form id="avatar-form" method="post" action="{% url 'employee_photo_upload' user.employee.pk %}?next={% url 'profile' %}" enctype="multipart/form-data" style="display:none;">
+        {% csrf_token %}
+        <input type="file" name="photo" id="profile-photo-upload-main" onchange="document.getElementById('avatar-form').submit();" accept="image/*">
+    </form>
+</div>
+{% endif %}
+
+
+<div class="profile-card">
+    <form method="post" action="{% url 'profile' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="account_data">
+        
+        <div class="profile-card-header">
+            <h2 class="profile-card-title">Acesso Web</h2>
+            <button type="submit" class="btn-sesame">Salvar Modificações</button>
+        </div>
+        
+        <div class="row g-4 align-items-end">
+            
+            <div class="col-md-4">
+                <div class="form-sesame-group mb-0">
+                    <label>E-mail Pessoal de Acesso</label>
+                    <input type="email" name="email" class="form-sesame-input" value="{{ user.email }}">
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-3 w-100">
+                    <div class="form-sesame-group mb-0 flex-grow-1" style="max-width: 250px;">
+                        <label>Senha de Acesso</label>
+                        <input type="password" class="form-sesame-input w-100" readonly value="••••••••">
+                    </div>
+                    <div style="margin-top: 24px;"> 
+                        <button type="button" class="btn-gray-pill" onclick="document.getElementById('modalChangePassword').style.display='flex'">Alterar Senha</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<div id="modalChangePassword" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+    <div style="background:#fff;border-radius:20px;padding:32px;width:400px;max-width:95%;box-shadow:0 25px 50px -12px rgba(0,0,0,.25);">
+        <h4 style="margin:0 0 8px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:10px;">
+            <div style="width:40px;height:40px;border-radius:50%;background:#e0e7ff;color:#4f46e5;display:flex;align-items:center;justify-content:center;font-size:20px;"><i class="bi bi-shield-lock-fill"></i></div>
+            Alterar Senha
+        </h4>
+        <p style="font-size:13px;color:#64748b;margin:0 0 24px;">Configure uma nova senha de acesso seguro para o seu perfil e o sistema.</p>
+        
+        <form method="post" action="{% url 'profile' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="change_password">
+            <div class="form-sesame-group" style="margin-bottom: 20px;">
+                <label>Nova Senha</label>
+                <input type="password" name="new_password" class="form-sesame-input" required minlength="6" placeholder="Sua nova senha secreta">
+            </div>
+            <div class="form-sesame-group" style="margin-bottom: 24px;">
+                <label>Confirmar Nova Senha</label>
+                <input type="password" name="confirm_password" class="form-sesame-input" required minlength="6" placeholder="Confirme para garantir">
+            </div>
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="button" class="btn btn-outline-secondary" style="border-radius:8px;font-size:13px;font-weight:600;padding:8px 20px;" onclick="document.getElementById('modalChangePassword').style.display='none'">Cancelar</button>
+                <button type="submit" class="btn-sesame" style="border-radius:8px;padding:8px 20px;">Salvar Senha</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

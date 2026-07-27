@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+{% block title %}Admissão Digital & API{% endblock %}
+
+{% block breadcrumb %}
+<span style="color: var(--text-secondary); font-size: 13px;">PIM / Admissão Digital</span>
+{% endblock %}
+
+{% block content %}
+<style>
+    /* Premium Glassmorphism and tailored styling */
+    .onb-banner {
+        background: linear-gradient(135deg, #0f172a 0%, #0d9488 100%);
+        border-radius: 20px;
+        padding: 32px;
+        color: #ffffff;
+        margin-bottom: 28px;
+        box-shadow: 0 10px 25px -5px rgba(13, 148, 136, 0.15);
+        position: relative;
+        overflow: hidden;
+    }
+    .onb-banner::after {
+        content: '';
+        position: absolute;
+        width: 300px; height: 300px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 50%;
+        bottom: -100px; right: -50px;
+    }
+    .premium-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        height: 100%;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .premium-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+    }
+    .card-title-icon {
+        width: 42px; height: 42px;
+        background: #f0fdf4;
+        color: #0d9488;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px;
+        font-weight: 700;
+    }
+    .card-title-icon.blue {
+        background: #eff6ff;
+        color: #3b82f6;
+    }
+    .form-label {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+    .form-control-premium {
+        border-radius: 10px;
+        height: 44px;
+        font-size: 14px;
+        border: 1px solid #cbd5e1;
+        padding: 10px 14px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        background-color: #fff;
+    }
+    .form-control-premium:focus {
+        border-color: #0d9488;
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+        outline: none;
+    }
+    .btn-premium {
+        background: linear-gradient(135deg, #0d9488 0%, #0f172a 100%);
+        color: #ffffff;
+        font-weight: 600;
+        border-radius: 12px;
+        height: 46px;
+        font-size: 14px;
+        border: none;
+        transition: opacity 0.2s ease, transform 0.1s ease;
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+    }
+    .btn-premium:hover {
+        opacity: 0.95;
+        color: #fff;
+    }
+    .btn-premium:active {
+        transform: scale(0.98);
+    }
+    /* Code snippets container */
+    .code-container {
+        background: #0f172a;
+        color: #cbd5e1;
+        border-radius: 12px;
+        padding: 18px;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 13px;
+        position: relative;
+        overflow-x: auto;
+        border: 1px solid #1e293b;
+    }
+    .copy-btn {
+        position: absolute;
+        top: 10px; right: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: #fff;
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .copy-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    .method-badge {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 6px;
+        text-transform: uppercase;
+        background-color: #10b981;
+        color: #fff;
+    }
+    .recent-table th {
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        font-weight: 600;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 14px 18px;
+    }
+    .recent-table td {
+        font-size: 13.5px;
+        color: #334155;
+        padding: 14px 18px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .status-active-badge {
+        background: #d1fae5;
+        color: #065f46;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 20px;
+    }
+</style>
+
+<div class="onb-banner">
+    <h1 style="font-weight: 800; font-size: 24px; margin: 0 0 6px 0;"><i class="bi bi-rocket-takeoff-fill me-2"></i> Admissão Digital & API</h1>
+    <p style="opacity: 0.9; font-size: 14px; margin: 0;">Sincronize novos colaboradores automaticamente a partir da Sesame HR ou utilize a admissão manual rápida e envie credenciais na hora.</p>
+</div>
+
+{% if messages %}
+<div class="row mb-4">
+    <div class="col-12">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show border-0 rounded-4 shadow-sm" role="alert" style="padding: 16px 20px;">
+            <div class="d-flex align-items-center">
+                <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill text-success{% else %}bi-exclamation-triangle-fill text-danger{% endif %} fs-4 me-3"></i>
+                <div style="font-size: 14px; font-weight: 500;">{{ message }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="top: 50%; transform: translateY(-50%);"></button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4 mb-4">
+    <!-- Coluna Esquerda: Formulário de Admissão Manual -->
+    <div class="col-lg-6">
+        <div class="premium-card">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="card-title-icon"><i class="bi bi-person-plus-fill"></i></div>
+                <div>
+                    <h2 style="font-weight: 700; font-size: 18px; color: #0f172a; margin: 0;">Admissão Manual Express</h2>
+                    <p style="color: #64748b; font-size: 12.5px; margin: 0;">Cria o perfil, gera usuário/senha e envia e-mail.</p>
+                </div>
+            </div>
+
+            <form method="post" action="{% url 'employee_onboarding_dashboard' %}">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <label class="form-label">Nome *</label>
+                        <input type="text" name="first_name" class="form-control form-control-premium" placeholder="Ex: Juliana" required>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Sobrenome *</label>
+                        <input type="text" name="last_name" class="form-control form-control-premium" placeholder="Ex: Nobre" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">E-mail Corporativo/Pessoal *</label>
+                        <input type="email" name="email" class="form-control form-control-premium" placeholder="Ex: juliana@netlineplay.com.br" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Telefone Celular</label>
+                        <input type="text" name="mobile" class="form-control form-control-premium" placeholder="Ex: 83999998888">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Cargo</label>
+                        <input type="text" name="job_title" class="form-control form-control-premium" placeholder="Ex: Suporte Técnico">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Departamento</label>
+                        <input type="text" name="department" class="form-control form-control-premium" placeholder="Ex: T.I">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Empresa Contratante</label>
+                        <input type="text" name="legal_entity" class="form-control form-control-premium" placeholder="Ex: Netline Telecom">
+                    </div>
+                    <div class="col-12 mt-4">
+                        <button type="submit" class="btn btn-premium w-100 d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-send-fill"></i> Realizar Admissão & Enviar E-mail
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Coluna Direita: Documentação da API -->
+    <div class="col-lg-6">
+        <div class="premium-card">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="card-title-icon blue"><i class="bi bi-code-slash"></i></div>
+                <div>
+                    <h2 style="font-weight: 700; font-size: 18px; color: #0f172a; margin: 0;">Central de Integração API</h2>
+                    <p style="color: #64748b; font-size: 12.5px; margin: 0;">Documentação e parâmetros da API Sesame.</p>
+                </div>
+            </div>
+
+            <div style="font-size: 13.5px; color: #475569; line-height: 1.5;" class="mb-3">
+                <span class="method-badge me-2">POST</span> 
+                <code style="font-weight: 600; color: #0f172a; font-size: 13.5px;">/api/v1/pim/employees/onboarding/</code>
+            </div>
+
+            <!-- Token Box -->
+            <div class="p-3 rounded-4 mb-3 border d-flex align-items-center justify-content-between" style="background-color: #f8fafc;">
+                <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;">
+                    <small class="text-uppercase text-muted fw-bold d-block" style="font-size: 10px; letter-spacing: 0.5px;">Seu Token de Segurança</small>
+                    <code id="tokenText" style="font-size: 13.5px; font-weight: 700; color: #0f172a;">{{ api_token }}</code>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary rounded-3 border-0 py-2 px-3" onclick="copyToken()" title="Copiar Token">
+                    <i class="bi bi-copy"></i>
+                </button>
+            </div>
+
+            <!-- cURL Request snippet -->
+            <label class="form-label">Exemplo de cURL (Requisição)</label>
+            <div class="code-container mb-3" style="max-height: 150px;">
+                <button class="copy-btn" onclick="copyCode('curlText')">Copiar</button>
+                <pre id="curlText" style="margin: 0; white-space: pre-wrap;">curl -X POST https://poeirao.netlineplay.com.br/api/v1/pim/employees/onboarding/ \
+  -H "Authorization: Token {{ api_token }}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "first_name": "Juliana",
+    "last_name": "Nobre",
+    "email": "funcionario@provedor.com.br",
+    "mobile": "83999998888",
+    "job_title": "Suporte Técnico",
+    "department": "T.I",
+    "legal_entity": "Netline Telecom"
+  }'</pre>
+            </div>
+
+            <!-- JSON Payload Response Example -->
+            <label class="form-label">Exemplo de Resposta (Sucesso 201)</label>
+            <div class="code-container" style="max-height: 120px;">
+                <pre style="margin: 0; white-space: pre-wrap;">{
+  "success": true,
+  "employee_id": "EMP-0042",
+  "username": "JULIANA.NOBRE",
+  "email_sent": true
+}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Linha Inferior: Admissões Recentes -->
+<div class="row">
+    <div class="col-12">
+        <div class="premium-card">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="card-title-icon"><i class="bi bi-clock-history"></i></div>
+                <div>
+                    <h2 style="font-weight: 700; font-size: 18px; color: #0f172a; margin: 0;">Admissões Recentes</h2>
+                    <p style="color: #64748b; font-size: 12.5px; margin: 0;">Últimos 10 colaboradores admitidos no sistema.</p>
+                </div>
+            </div>
+
+            <div class="table-responsive" style="border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden;">
+                <table class="table table-hover recent-table w-100 mb-0">
+                    <thead style="background-color: #f8fafc;">
+                        <tr>
+                            <th>Cód. Emp</th>
+                            <th>Colaborador</th>
+                            <th>Cargo / Setor</th>
+                            <th>E-mail</th>
+                            <th>Usuário Criado</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in recent_employees %}
+                        <tr>
+                            <td style="font-family: monospace; font-weight: 700;">{{ emp.employee_id|default:"-" }}</td>
+                            <td>
+                                <strong>{{ emp.full_name }}</strong>
+                            </td>
+                            <td>
+                                <div>{{ emp.job_title|default:"Sem Cargo" }}</div>
+                                <small class="text-muted">{{ emp.sub_division|default:"Sem Setor" }}</small>
+                            </td>
+                            <td>{{ emp.work_email }}</td>
+                            <td>
+                                <code style="font-weight: 700; color: #0f172a; font-size: 13px;">
+                                    {% if emp.user %}
+                                        {{ emp.user.username }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </code>
+                            </td>
+                            <td>
+                                <span class="status-active-badge">Ativo</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-2 mb-2 d-block"></i>
+                                Nenhuma admissão recente encontrada.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copyToken() {
+        const token = document.getElementById('tokenText').innerText;
+        navigator.clipboard.writeText(token);
+        alert('Token de Segurança copiado para a área de transferência!');
+    }
+    
+    function copyCode(elementId) {
+        const code = document.getElementById(elementId).innerText;
+        navigator.clipboard.writeText(code);
+        alert('Código de exemplo copiado para a área de transferência!');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,4575 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Agenda Corporativa{% endblock %}
+{% block breadcrumb %}
+<span style="color: #64748b; font-size: 14px; font-weight: 500;">Agenda Corporativa</span>
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- ===== TOAST SYSTEM ===== -->
+<style>
+.agenda-toast-container {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+.agenda-toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 14px 18px;
+    min-width: 280px;
+    max-width: 380px;
+    box-shadow: 0 10px 30px -5px rgba(15,23,42,0.15), 0 4px 10px -3px rgba(15,23,42,0.08);
+    border: 1px solid #e2e8f0;
+    pointer-events: all;
+    opacity: 0;
+    transform: translateX(20px);
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative;
+    overflow: hidden;
+}
+.agenda-toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+.agenda-toast.hide {
+    opacity: 0;
+    transform: translateX(20px);
+    pointer-events: none;
+}
+.agenda-toast::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    border-radius: 14px 0 0 14px;
+}
+.agenda-toast.toast-success::before { background: #10b981; }
+.agenda-toast.toast-error::before { background: #ef4444; }
+.agenda-toast.toast-info::before { background: #3b82f6; }
+.agenda-toast.toast-warning::before { background: #f59e0b; }
+.toast-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+}
+.toast-success .toast-icon { background: rgba(16,185,129,0.1); color: #10b981; }
+.toast-error .toast-icon { background: rgba(239,68,68,0.1); color: #ef4444; }
+.toast-info .toast-icon { background: rgba(59,130,246,0.1); color: #3b82f6; }
+.toast-warning .toast-icon { background: rgba(245,158,11,0.1); color: #f59e0b; }
+.toast-body { flex: 1; min-width: 0; }
+.toast-title { font-size: 13.5px; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+.toast-msg { font-size: 12.5px; color: #64748b; line-height: 1.4; }
+.toast-close { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 14px; padding: 0; transition: color 0.15s; flex-shrink: 0; }
+.toast-close:hover { color: #475569; }
+.toast-progress { position: absolute; bottom: 0; left: 0; height: 3px; border-radius: 0 0 14px 14px; transition: width linear; }
+.toast-success .toast-progress { background: #10b981; }
+.toast-error .toast-progress { background: #ef4444; }
+.toast-info .toast-progress { background: #3b82f6; }
+.toast-warning .toast-progress { background: #f59e0b; }
+</style>
+<div class="agenda-toast-container" id="agendaToastContainer"></div>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --radius: 16px;
+        --border-color: #e2e8f0;
+        --text-slate: #475569;
+        --text-dark: #0f172a;
+    }
+
+    .widget-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        margin-bottom: 12px;
+        overflow: visible;
+    }
+
+    .widget-header {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .widget-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 0;
+    }
+
+    .widget-title i {
+        color: #10b981;
+        font-size: 15px;
+    }
+
+    .widget-body {
+        padding: 12px;
+    }
+
+    /* Filter Checklist */
+    .filter-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 4px 8px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-slate);
+        cursor: pointer;
+        transition: background 0.15s ease;
+        user-select: none;
+        margin-bottom: 3px;
+    }
+
+    .filter-item:hover {
+        background-color: #f8fafc;
+        color: var(--text-dark);
+    }
+
+    .filter-checkbox {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        border-radius: 4px;
+        border: 1.5px solid #cbd5e1;
+    }
+
+    /* Keep Note Style */
+    .note-card {
+        background: #fffbeb;
+        border-left: 4px solid #f59e0b;
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(245, 158, 11, 0.05);
+        transition: transform 0.15s ease;
+    }
+
+    .note-card:hover {
+        transform: translateY(-1px);
+    }
+
+    .note-card.is-pinned {
+        border: 1.5px solid #f59e0b !important;
+        border-left: 5px solid #d97706 !important;
+        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.15) !important;
+    }
+
+    .note-title {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: #78350f;
+        margin-bottom: 4px;
+        padding-right: 20px;
+    }
+
+    .note-content {
+        font-size: 11.5px;
+        color: #92400e;
+        line-height: 1.4;
+        white-space: pre-wrap;
+    }
+
+    .note-date {
+        font-size: 9.5px;
+        color: #b45309;
+        margin-top: 6px;
+        text-align: right;
+    }
+
+    .note-delete-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        color: #d97706;
+        cursor: pointer;
+        opacity: 0.6;
+        transition: opacity 0.15s;
+        border: none;
+        background: none;
+        padding: 0;
+        font-size: 13px;
+    }
+
+    .note-delete-btn:hover {
+        opacity: 1;
+        color: #b45309;
+    }
+
+    /* Premium Light Mode for Calendar Container */
+    .widget-card {
+        background: #ffffff !important;
+        border: 1px solid var(--border-color) !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02) !important;
+        overflow: visible;
+    }
+    
+    .widget-body {
+        padding: 16px !important;
+        background: #ffffff !important;
+    }
+
+    .fc {
+        --fc-border-color: #f1f5f9 !important;
+        --fc-today-bg-color: rgba(16, 185, 129, 0.01) !important;
+        font-family: inherit;
+        background: #ffffff !important;
+    }
+
+    .fc-theme-standard td, .fc-theme-standard th {
+        border: 1px solid #f1f5f9 !important;
+    }
+    
+    .fc-theme-standard th {
+        border: 1px solid #e2e8f0 !important;
+    }
+
+    .fc .fc-scrollgrid {
+        border-radius: 12px;
+        border: 1px solid #e2e8f0 !important;
+        overflow: hidden;
+        background: #ffffff !important;
+    }
+
+    .fc .fc-col-header-cell {
+        background: #f8fafc !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+        padding: 10px 0 !important;
+    }
+
+    /* Remove default blue underline from header links */
+    .fc .fc-col-header-cell a,
+    .fc .fc-col-header-cell-cushion,
+    .fc-col-header-cell-cushion,
+    a.fc-col-header-cell-cushion,
+    a.fc-col-header-cell-cushion:link,
+    a.fc-col-header-cell-cushion:visited,
+    .fc-col-header-cell-cushion:link,
+    .fc-col-header-cell-cushion:visited,
+    .fc .fc-col-header-cell a:link,
+    .fc .fc-col-header-cell a:visited {
+        color: #64748b !important;
+        text-decoration: none !important;
+        text-transform: uppercase !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        letter-spacing: 0.5px !important;
+        transition: color 0.15s ease !important;
+        border-bottom: none !important;
+        display: inline-block !important;
+    }
+
+    .fc .fc-col-header-cell a:hover,
+    .fc .fc-col-header-cell-cushion:hover,
+    .fc-col-header-cell-cushion:hover,
+    a.fc-col-header-cell-cushion:hover,
+    a.fc-col-header-cell-cushion:active {
+        color: #0f172a !important;
+        text-decoration: none !important;
+        border-bottom: none !important;
+    }
+
+    /* Day name / number layout for modern premium weekly view */
+    .day-header-week-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 4px 0;
+    }
+    
+    .day-header-weekday {
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: #64748b !important; /* Slate */
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        letter-spacing: 0.8px;
+    }
+    
+    .day-header-daynum {
+        font-size: 24px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important; /* Dark charcoal */
+        line-height: 1 !important;
+    }
+
+    /* Today highlight on header day numbers */
+    .fc-day-today .day-header-daynum {
+        background-color: #10b981 !important;
+        color: #ffffff !important;
+        width: 36px;
+        height: 36px;
+        line-height: 36px;
+        text-align: center;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+    }
+
+    .fc .fc-daygrid-day-number {
+        font-weight: 700;
+        color: #64748b;
+        font-size: 11.5px;
+        width: 22px;
+        height: 22px;
+        line-height: 22px;
+        padding: 0 !important;
+        margin: 4px 4px 0 0;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none !important;
+        float: right;
+    }
+
+    /* Accentuated Today Cell & Column Highlight */
+    .fc .fc-day-today {
+        background-color: rgba(16, 185, 129, 0.04) !important; /* Premium soft emerald highlight for today's column/cell */
+    }
+
+    .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+        background-color: #10b981 !important;
+        color: #ffffff !important;
+    }
+
+    .fc-event,
+    .fc-event * {
+        color: inherit !important;
+    }
+
+    .fc-event {
+        border-radius: 6px !important;
+        border-top: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
+        padding: 4px 8px !important;
+        font-size: 11.5px !important;
+        font-weight: 700 !important;
+        cursor: pointer;
+        transition: all 0.15s ease !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important;
+        margin-top: 2px !important;
+        margin-bottom: 2px !important;
+    }
+
+    .fc-event:hover {
+        transform: translateY(-1px) scale(1.01);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.06) !important;
+        filter: brightness(0.98);
+    }
+
+    /* Correção do Popover "+more" do FullCalendar */
+    .fc-popover {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+        z-index: 1040 !important;
+    }
+
+    .fc-popover .fc-popover-header {
+        background: #f8fafc !important;
+        padding: 10px 14px !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        border-top-left-radius: 11px !important;
+        border-top-right-radius: 11px !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        color: #0f172a !important;
+    }
+
+    .fc-popover .fc-popover-body {
+        padding: 12px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+    }
+
+    /* Força os eventos do popover a se comportarem como blocos flexíveis e independentes */
+    .fc-popover .fc-daygrid-event {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        position: relative !important;
+        margin: 0 !important;
+        left: auto !important;
+        right: auto !important;
+        top: auto !important;
+        bottom: auto !important;
+        width: 100% !important;
+        border-radius: 6px !important;
+        padding: 6px 10px !important;
+        font-size: 11.5px !important;
+        font-weight: 700 !important;
+    }
+
+    /* Oculta a bolinha padrão do FullCalendar dentro do popover, já que o bloco tem cor de fundo e borda */
+    .fc-popover .fc-daygrid-event-dot {
+        display: none !important;
+    }
+
+    /* Segmented Control for Views, Today and Navigation Buttons in Light Mode */
+    .fc .fc-button-group {
+        background-color: #f1f5f9 !important;
+        padding: 3px !important;
+        border-radius: 24px !important;
+        border: none !important;
+        display: inline-flex !important;
+        gap: 2px !important;
+    }
+    
+    .fc .fc-button-group .fc-button {
+        background: transparent !important;
+        border: none !important;
+        color: #475569 !important;
+        font-weight: 700 !important;
+        font-size: 12.5px !important;
+        padding: 6px 18px !important;
+        border-radius: 20px !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        transition: all 0.2s ease !important;
+        text-transform: capitalize !important;
+        line-height: 1.2 !important;
+    }
+    
+    .fc .fc-button-group .fc-button:hover {
+        color: #0f172a !important;
+        background-color: rgba(15, 23, 42, 0.04) !important;
+    }
+    
+    .fc .fc-button-group .fc-button-active {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04) !important;
+    }
+
+    .fc .fc-prev-button, .fc .fc-next-button {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #475569 !important;
+        border-radius: 50% !important;
+        width: 32px !important;
+        height: 32px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: none !important;
+        transition: all 0.15s !important;
+    }
+    .fc .fc-prev-button:hover, .fc .fc-next-button:hover {
+        background: #f8fafc !important;
+        border-color: #94a3b8 !important;
+        color: #0f172a !important;
+    }
+
+    .fc .fc-today-button {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #475569 !important;
+        font-weight: 700 !important;
+        font-size: 12.5px !important;
+        padding: 5px 16px !important;
+        border-radius: 20px !important;
+        box-shadow: none !important;
+        transition: all 0.15s !important;
+        margin-left: 8px !important;
+        text-transform: capitalize !important;
+    }
+    .fc .fc-today-button:hover {
+        background: #f8fafc !important;
+        border-color: #94a3b8 !important;
+        color: #0f172a !important;
+    }
+    .fc .fc-today-button:disabled {
+        opacity: 0.6 !important;
+        background: #ffffff !important;
+        color: #94a3b8 !important;
+        border-color: #cbd5e1 !important;
+        cursor: not-allowed !important;
+    }
+
+    .fc .fc-toolbar-title {
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        color: var(--text-dark) !important;
+        text-transform: capitalize !important;
+    }
+
+    .fc .fc-toolbar {
+        padding: 8px 12px !important;
+        margin-bottom: 12px !important;
+    }
+
+    /* Left time labels */
+    .fc .fc-timegrid-slot-label-cushion {
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        padding-right: 12px !important;
+    }
+
+    .fc .fc-timegrid-slot {
+        height: 52px !important;
+    }
+    
+    /* GMT column header corner text */
+    .fc .fc-timegrid-axis-cushion {
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+    }
+
+    /* Modal Form Styling */
+    .form-label-custom {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-slate);
+        margin-bottom: 6px;
+    }
+
+    .form-input-custom {
+        border-radius: 10px !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 10px 14px !important;
+        font-size: 14px !important;
+        color: var(--text-dark) !important;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-input-custom:focus {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+    }
+
+    select.form-select.form-input-custom {
+        padding-right: 40px !important;
+        background-position: right 14px center !important;
+        background-size: 14px 10px !important;
+        cursor: pointer;
+    }
+
+    .btn-outline-success-custom {
+        border: 1px solid #cbd5e1 !important;
+        color: #10b981 !important;
+        background-color: #f8fafc !important;
+        border-left: none !important;
+        border-top-right-radius: 10px !important;
+        border-bottom-right-radius: 10px !important;
+        transition: all 0.2s ease !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 42px !important;
+    }
+
+    .btn-outline-success-custom:hover {
+        background-color: rgba(16, 185, 129, 0.08) !important;
+        border-color: #10b981 !important;
+        color: #059669 !important;
+    }
+
+    .btn-sector-include {
+        border: none !important;
+        background-color: rgba(16, 185, 129, 0.08) !important;
+        color: #047857 !important;
+        border-radius: 10px !important;
+        font-weight: 700 !important;
+        padding: 8px 16px !important;
+        font-size: 12.5px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .btn-sector-include:hover {
+        background-color: rgba(16, 185, 129, 0.15) !important;
+        color: #065f46 !important;
+        transform: translateY(-1px);
+    }
+
+    .btn-sector-remove {
+        border: none !important;
+        background-color: rgba(239, 68, 68, 0.08) !important;
+        color: #b91c1c !important;
+        border-radius: 10px !important;
+        font-weight: 700 !important;
+        padding: 8px 16px !important;
+        font-size: 12.5px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .btn-sector-remove:hover {
+        background-color: rgba(239, 68, 68, 0.15) !important;
+        color: #991b1b !important;
+        transform: translateY(-1px);
+    }
+
+    /* Tom Select Premium Style Compatibility */
+    .ts-wrapper.multi .ts-control {
+        border-radius: 10px !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 8px 14px !important;
+        transition: border-color 0.2s, box-shadow 0.2s !important;
+        background: #ffffff !important;
+        font-size: 14px !important;
+    }
+    .ts-wrapper.multi.focus .ts-control {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+    }
+    .ts-wrapper.multi .ts-control > div {
+        border-radius: 6px !important;
+        background: #f1f5f9 !important;
+        color: #1e293b !important;
+        border: 1px solid #e2e8f0 !important;
+        font-weight: 600 !important;
+        font-size: 12px !important;
+        padding: 3px 8px !important;
+    }
+    .ts-wrapper.multi .ts-control > div .remove {
+        border-left-color: #cbd5e1 !important;
+        color: #64748b !important;
+    }
+    .ts-wrapper.multi .ts-control > div .remove:hover {
+        background: rgba(239, 68, 68, 0.1) !important;
+        color: #ef4444 !important;
+    }
+
+    /* Color picker dot */
+    .color-dot-container {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .color-dot {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        transition: transform 0.15s ease;
+        border: 2px solid transparent;
+    }
+
+    .color-dot:hover {
+        transform: scale(1.1);
+    }
+
+    .color-dot.active {
+        border-color: #0f172a;
+        box-shadow: 0 0 0 2px rgba(0,0,0,0.08);
+    }
+    #customNewTypeColorDot:not(.active) {
+        background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red) !important;
+    }
+    .custom-color-dot * {
+        pointer-events: none !important;
+    }
+
+    /* Pickr Premium Light Theme Overrides */
+    .pcr-app {
+        background: #ffffff !important;
+        border-radius: 14px !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+        border: 1px solid #e2e8f0 !important;
+        padding: 12px !important;
+    }
+    .pcr-app .pcr-interaction input {
+        background: #f8fafc !important;
+        color: #0f172a !important;
+        border-radius: 8px !important;
+        border: 1px solid #cbd5e1 !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        padding: 6px 10px !important;
+    }
+    .pcr-app .pcr-interaction input:focus {
+        border-color: #3b82f6 !important;
+        background: #ffffff !important;
+    }
+    .pcr-app .pcr-interaction .pcr-type {
+        background: #f1f5f9 !important;
+        color: #64748b !important;
+        border-radius: 8px !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        border: 1px solid #e2e8f0 !important;
+        padding: 6px 12px !important;
+        transition: all 0.2s ease !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+    .pcr-app .pcr-interaction .pcr-type:hover {
+        background: #e2e8f0 !important;
+        color: #334155 !important;
+        border-color: #cbd5e1 !important;
+    }
+    .pcr-app .pcr-interaction .pcr-type.active {
+        background: #0f172a !important;
+        color: #ffffff !important;
+        border-color: #0f172a !important;
+    }
+    .pcr-app .pcr-interaction .pcr-save {
+        background: #10b981 !important;
+        color: #ffffff !important;
+        border-radius: 8px !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        padding: 6px 16px !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2) !important;
+        transition: all 0.2s ease !important;
+    }
+    .pcr-app .pcr-interaction .pcr-save:hover {
+        background: #059669 !important;
+        box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3) !important;
+    }
+
+    /* Attendee badging */
+    .attendee-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f8fafc;
+        color: var(--text-slate);
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 5px 12px;
+        border-radius: 50px;
+        margin-right: 6px;
+        margin-bottom: 6px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .attendee-badge i {
+        color: #64748b;
+    }
+
+    /* Details modal styles */
+    .modal-detail-row {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 16px;
+        align-items: flex-start;
+    }
+
+    .modal-detail-icon {
+        width: 36px;
+        height: 36px;
+        background: #f1f5f9;
+        color: #64748b;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+
+    .modal-detail-content {
+        flex-grow: 1;
+    }
+
+    .modal-detail-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
+    }
+
+    .modal-detail-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+
+
+    /* Sidebar search input height */
+    #calendar-search:focus {
+        background-color: #ffffff !important;
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+    }
+
+    /* Sidebar collapsible animations */
+    .cursor-pointer {
+        cursor: pointer;
+    }
+    .text-slate {
+        color: #64748b;
+    }
+
+    /* Sidebar widget wrappers styled as distinct cards */
+    .categories-wrapper, .notes-wrapper, .search-wrapper {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        padding: 12px !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .categories-wrapper:hover, .notes-wrapper:hover, .search-wrapper:hover {
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    /* Tom Select Premium Style Compatibility for Single Selects */
+    .ts-wrapper.single .ts-control {
+        border-radius: 10px !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 8px 14px !important;
+        background-color: #ffffff !important;
+        font-size: 14px !important;
+        color: var(--text-dark) !important;
+        height: 42px !important;
+        display: flex !important;
+        align-items: center !important;
+        transition: border-color 0.2s, box-shadow 0.2s !important;
+    }
+    .ts-wrapper.single.focus .ts-control {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+    }
+    .ts-wrapper.single .ts-control::after {
+        border-color: #64748b transparent transparent transparent !important;
+        border-width: 5px 4px 0 4px !important;
+        margin-top: -2px !important;
+        right: 16px !important;
+    }
+    .ts-wrapper.single.open .ts-control::after {
+        border-color: transparent transparent #64748b transparent !important;
+        border-width: 0 4px 5px 4px !important;
+    }
+    
+    /* Perfect flex layout inside input-groups for TomSelect + button */
+    .input-group .ts-wrapper {
+        flex: 1 1 auto !important;
+        width: 1% !important;
+    }
+    .input-group .ts-wrapper .ts-control {
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+
+    /* Hide scrollbar for TomSelect dropdown content */
+    .ts-dropdown .ts-dropdown-content {
+        scrollbar-width: none !important; /* Firefox */
+        -ms-overflow-style: none !important;  /* IE and Edge */
+    }
+    .ts-dropdown .ts-dropdown-content::-webkit-scrollbar {
+        display: none !important; /* Chrome, Safari and Opera */
+    }
+
+    /* Flatpickr Premium Emerald Design */
+    .flatpickr-calendar {
+        background: #ffffff !important;
+        border-radius: 16px !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03) !important;
+        border: 1px solid #e2e8f0 !important;
+        font-family: inherit !important;
+        padding: 8px !important;
+    }
+    .flatpickr-months .flatpickr-month {
+        color: var(--text-dark) !important;
+    }
+    .flatpickr-current-month .flatpickr-monthDropdown-months {
+        font-weight: 700 !important;
+        color: var(--text-dark) !important;
+    }
+    .flatpickr-current-month input.cur-year {
+        font-weight: 700 !important;
+        color: var(--text-dark) !important;
+    }
+    .flatpickr-calendar .flatpickr-innerContainer {
+        margin-top: 4px !important;
+    }
+    .flatpickr-day {
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+    }
+    .flatpickr-day:hover, .flatpickr-day:focus {
+        background: #f1f5f9 !important;
+        color: var(--text-dark) !important;
+    }
+    .flatpickr-day.today {
+        border-color: #10b981 !important;
+        color: #10b981 !important;
+    }
+    .flatpickr-day.selected, .flatpickr-day.selected:hover, .flatpickr-day.selected:focus {
+        background: #10b981 !important;
+        border-color: #10b981 !important;
+        color: #ffffff !important;
+    }
+    .flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay {
+        color: #cbd5e1 !important;
+    }
+    .flatpickr-time {
+        border-top: 1px solid #f1f5f9 !important;
+        padding-top: 8px !important;
+    }
+    .flatpickr-time input:focus {
+        background: #f1f5f9 !important;
+    }
+    .flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month {
+        color: #64748b !important;
+        fill: #64748b !important;
+        border-radius: 50% !important;
+        width: 28px !important;
+        height: 28px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s !important;
+    }
+    .flatpickr-months .flatpickr-prev-month:hover, .flatpickr-months .flatpickr-next-month:hover {
+        background: #f1f5f9 !important;
+        color: var(--text-dark) !important;
+    }
+
+    /* Premium SaaS Input Groups with Left Icons */
+    .input-group-premium {
+        border-radius: 10px !important;
+        border: 1px solid #cbd5e1 !important;
+        background-color: #ffffff !important;
+        transition: border-color 0.2s, box-shadow 0.2s !important;
+        display: flex !important;
+        align-items: center !important;
+        overflow: hidden !important;
+        height: 42px !important;
+        width: 100% !important;
+    }
+    .input-group-premium:focus-within {
+        border-color: var(--orange-primary) !important;
+        box-shadow: 0 0 0 3px rgba(32, 42, 68, 0.1) !important;
+    }
+    .input-group-text-custom {
+        background: transparent !important;
+        border: none !important;
+        color: #94a3b8 !important;
+        padding-left: 14px !important;
+        padding-right: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .form-input-custom-group {
+        border: none !important;
+        padding: 10px 14px 10px 0 !important;
+        font-size: 14px !important;
+        color: var(--text-dark) !important;
+        background: transparent !important;
+        outline: none !important;
+        box-shadow: none !important;
+        flex: 1 !important;
+        height: 100% !important;
+    }
+    
+    /* Numbered Form Section Badges */
+    .form-section-title {
+        font-family: 'Inter', sans-serif;
+        color: #475569;
+    }
+    .section-badge-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        background-color: rgba(32, 42, 68, 0.08);
+        color: var(--orange-primary);
+        font-size: 11px;
+        font-weight: 700;
+        border-radius: 50%;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* ==========================================================================
+       UPGRADE DE DESIGN ULTRA-PREMIUM (FIGMA/LINEAR/STRIPE STYLE)
+       ========================================================================== */
+
+    /* Fonte Premium Global para os Modais da Agenda */
+    #eventFormModal, #viewEventModal, #newSpaceModal, #newTypeModal {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    }
+
+
+
+    /* Sleek custom scrollbars on modal bodies for premium Stripe/Linear style */
+    .modal-body {
+        scrollbar-width: thin !important; /* Firefox */
+        scrollbar-color: #cbd5e1 #f1f5f9 !important; /* Firefox */
+        padding-bottom: 24px !important;
+    }
+    .modal-body::-webkit-scrollbar {
+        width: 6px !important;
+        height: 6px !important;
+        display: block !important;
+    }
+    .modal-body::-webkit-scrollbar-track {
+        background: #f1f5f9 !important;
+        border-radius: 10px !important;
+    }
+    .modal-body::-webkit-scrollbar-thumb {
+        background: #cbd5e1 !important;
+        border-radius: 10px !important;
+        transition: background 0.2s ease !important;
+    }
+    .modal-body::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8 !important;
+    }
+
+    /* Entrance Zoom Animation */
+    .modal.fade .modal-dialog {
+        transform: scale(0.96) translateY(12px) !important;
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    }
+    .modal.show .modal-dialog {
+        transform: scale(1) translateY(0) !important;
+    }
+
+    /* Modal Content Card */
+    .modal-content {
+        border: 1px solid rgba(255, 255, 255, 0.7) !important;
+        box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.18), 0 0 50px rgba(0, 0, 0, 0.02) !important;
+        border-radius: 20px !important;
+        background: #ffffff !important;
+        overflow: hidden !important;
+    }
+
+    /* Modal Header and Title */
+    .modal-header {
+        background: #ffffff !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        padding: 20px 28px !important;
+    }
+    .modal-header .btn-close {
+        background-color: #f1f5f9 !important;
+        padding: 10px !important;
+        border-radius: 50% !important;
+        transition: all 0.2s ease !important;
+        opacity: 0.8;
+    }
+    .modal-header .btn-close:hover {
+        background-color: #e2e8f0 !important;
+        transform: rotate(90deg) !important;
+        opacity: 1;
+    }
+
+    /* Modern Labels */
+    .form-label-custom {
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.08em !important;
+        margin-bottom: 6px !important;
+        display: inline-block !important;
+    }
+
+    /* Premium Inputs */
+    .input-group-premium {
+        border-radius: 12px !important;
+        border: 1.5px solid #e2e8f0 !important;
+        background-color: #f8fafc !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        display: flex !important;
+        align-items: center !important;
+        overflow: hidden !important;
+        height: 44px !important;
+        width: 100% !important;
+    }
+    .input-group-premium:hover {
+        border-color: #cbd5e1 !important;
+        background-color: #ffffff !important;
+    }
+    .input-group-premium:focus-within {
+        border-color: var(--orange-primary) !important;
+        background-color: #ffffff !important;
+        box-shadow: 0 0 0 4px rgba(32, 42, 68, 0.08) !important;
+    }
+    .input-group-premium:focus-within .input-group-text-custom {
+        color: var(--orange-primary) !important;
+    }
+    .input-group-text-custom {
+        background: transparent !important;
+        border: none !important;
+        color: #94a3b8 !important;
+        padding-left: 14px !important;
+        padding-right: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: color 0.25s ease !important;
+        font-size: 15px !important;
+    }
+    .form-input-custom-group {
+        border: none !important;
+        padding: 10px 14px 10px 0 !important;
+        font-size: 14px !important;
+        color: var(--text-dark) !important;
+        background: transparent !important;
+        outline: none !important;
+        box-shadow: none !important;
+        flex: 1 !important;
+        height: 100% !important;
+        font-weight: 500 !important;
+    }
+
+    /* Standard Select dropdowns */
+    .form-input-custom {
+        border-radius: 12px !important;
+        border: 1.5px solid #e2e8f0 !important;
+        padding: 10px 14px !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        color: var(--text-dark) !important;
+        background-color: #f8fafc !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        height: 44px !important;
+    }
+    .form-input-custom:hover {
+        border-color: #cbd5e1 !important;
+        background-color: #ffffff !important;
+    }
+    .form-input-custom:focus {
+        border-color: var(--orange-primary) !important;
+        background-color: #ffffff !important;
+        box-shadow: 0 0 0 4px rgba(32, 42, 68, 0.08) !important;
+    }
+
+    /* Form Section Title & Badge */
+    .form-section-title {
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        font-size: 12px !important;
+        letter-spacing: 0.06em !important;
+        font-weight: 700 !important;
+        color: var(--orange-primary) !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+    .section-badge-num {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 24px !important;
+        height: 24px !important;
+        background: linear-gradient(135deg, var(--orange-primary), var(--orange-dark)) !important;
+        color: #ffffff !important;
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 6px rgba(32, 42, 68, 0.2) !important;
+    }
+
+    /* TomSelect Integration Styles */
+    .ts-wrapper.single .ts-control, .ts-wrapper.multi .ts-control {
+        border-radius: 12px !important;
+        border: 1.5px solid #e2e8f0 !important;
+        padding: 8px 14px !important;
+        background-color: #f8fafc !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        color: var(--text-dark) !important;
+        height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .ts-wrapper.single .ts-control:hover, .ts-wrapper.multi .ts-control:hover {
+        border-color: #cbd5e1 !important;
+        background-color: #ffffff !important;
+    }
+    .ts-wrapper.single.focus .ts-control, .ts-wrapper.multi.focus .ts-control {
+        border-color: var(--orange-primary) !important;
+        background-color: #ffffff !important;
+        box-shadow: 0 0 0 4px rgba(32, 42, 68, 0.08) !important;
+    }
+    .ts-wrapper.multi .ts-control {
+        height: auto !important;
+        min-height: 44px !important;
+    }
+    .ts-wrapper.multi .ts-control > div {
+        border-radius: 6px !important;
+        background: rgba(32, 42, 68, 0.06) !important;
+        color: var(--orange-primary) !important;
+        border: 1px solid rgba(32, 42, 68, 0.08) !important;
+        font-weight: 600 !important;
+        font-size: 12px !important;
+        padding: 3px 8px !important;
+        margin: 2px 4px 2px 0 !important;
+    }
+    .ts-wrapper.multi .ts-control > div .remove {
+        border-left-color: rgba(32, 42, 68, 0.15) !important;
+        color: var(--orange-primary) !important;
+    }
+
+    /* Modal Footer & Buttons */
+    .modal-footer {
+        background: #f8fafc !important;
+        border-top: 1px solid #f1f5f9 !important;
+        padding: 20px 28px !important;
+    }
+    .modal-footer .btn-secondary {
+        background: rgba(148, 163, 184, 0.12) !important;
+        border: 1px solid rgba(148, 163, 184, 0.1) !important;
+        color: #475569 !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        font-size: 13.5px !important;
+        padding: 10px 24px !important;
+        transition: all 0.2s ease !important;
+    }
+    .modal-footer .btn-secondary:hover {
+        background: rgba(148, 163, 184, 0.2) !important;
+        color: #1e293b !important;
+    }
+    .modal-footer .btn-primary {
+        background: linear-gradient(135deg, var(--orange-primary), var(--orange-dark)) !important;
+        border: none !important;
+        color: #ffffff !important;
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        font-size: 13.5px !important;
+        padding: 10px 24px !important;
+        box-shadow: 0 4px 14px rgba(32, 42, 68, 0.22) !important;
+        transition: all 0.25s ease !important;
+    }
+    .modal-footer .btn-primary:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(32, 42, 68, 0.3) !important;
+    }
+    .modal-footer .btn-primary:active {
+        transform: translateY(0) !important;
+    }
+
+    /* Layout Geral da Agenda */
+    .calendar-layout-container {
+        display: flex;
+        position: relative;
+        width: 100%;
+        min-height: calc(100vh - 120px);
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    /* Área do Calendário (Branco e Fluido) */
+    .calendar-main-area {
+        flex-grow: 1;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        min-width: 0; /* Prevents overflow of calendar */
+    }
+
+    .calendar-main-area .widget-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
+        border-radius: 16px !important;
+        height: 100%;
+    }
+
+    /* Barra Vertical de Ícones (Sleek Sidebar) */
+    .calendar-icon-sidebar {
+        width: 56px;
+        background: #1e293b; /* Navy Slate escuro premium */
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 16px 0;
+        gap: 12px;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
+        flex-shrink: 0;
+        align-self: flex-start;
+    }
+
+    .sidebar-icon-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8; /* Cinza-slate */
+        font-size: 18px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+    }
+
+    .sidebar-icon-btn:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .sidebar-icon-btn.active {
+        background: rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+    }
+
+    /* Cores específicas de acordo com o padrão do sistema */
+    .sidebar-icon-btn.btn-create {
+        background: linear-gradient(135deg, #10b981, #059669) !important; /* Esmeralda */
+        color: #ffffff !important;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3) !important;
+    }
+    .sidebar-icon-btn.btn-create:hover {
+        transform: scale(1.08) !important;
+        box-shadow: 0 6px 14px rgba(16, 185, 129, 0.4) !important;
+    }
+
+    #btnDrawerFilters.active {
+        color: #3b82f6 !important; /* Azul */
+        background: rgba(59, 130, 246, 0.15) !important;
+    }
+    #btnDrawerNotes.active {
+        color: #f59e0b !important; /* Amarelo Lâmpada */
+        background: rgba(245, 158, 11, 0.15) !important;
+    }
+
+    .sidebar-divider {
+        width: 24px;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.1);
+        margin: 4px 0;
+    }
+
+    /* Gaveta Retrátil (Drawer) */
+    .calendar-drawer {
+        width: 0;
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid transparent;
+        padding: 0;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        opacity: 0;
+    }
+
+    .calendar-drawer.open {
+        width: 380px;
+        padding: 24px;
+        border-color: #e2e8f0;
+        opacity: 1;
+        margin-right: 4px;
+    }
+
+    .drawer-body {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+
+    /* Ocultação de scrollbar na gaveta */
+    .drawer-body::-webkit-scrollbar {
+        width: 4px;
+    }
+    .drawer-body::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+
+    /* Responsividade de Overlay para Mobile */
+    @media (max-width: 991.98px) {
+        .calendar-layout-container {
+            flex-direction: column-reverse;
+        }
+        .calendar-icon-sidebar {
+            width: 100%;
+            height: 56px;
+            flex-direction: row;
+            justify-content: space-around;
+            padding: 0 16px;
+        }
+        .sidebar-divider {
+            display: none;
+        }
+        .calendar-drawer {
+            position: fixed;
+            right: -380px;
+            top: 0;
+            bottom: 56px;
+            z-index: 1050;
+            border-radius: 16px 0 0 16px;
+            height: 100%;
+        }
+        .calendar-drawer.open {
+            right: 0;
+            width: 340px;
+        }
+    }
+
+    /* Dynamic CSS category filtering rules */
+    {% for type in event_types %}
+    #calendar.hide-type-{{ type.name|slugify }} .fc-event[data-type="{{ type.name|slugify }}"] {
+        display: none !important;
+    }
+    {% endfor %}
+</style>
+
+
+
+<div class="calendar-layout-container pt-2">
+
+    <!-- 1. Área Principal: Calendário -->
+    <div class="calendar-main-area">
+        <div class="widget-card">
+            <div class="widget-body">
+                <div id="calendar" style="min-height: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Gaveta Retrátil (Drawer) -->
+    <div class="calendar-drawer shadow" id="calendarDrawer">
+        <div class="drawer-header d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold text-dark mb-0" id="drawerTitle" style="font-size: 13.5px; font-weight: 700;">Minhas Agendas</h6>
+            <button class="btn btn-sm btn-light border-0 rounded-circle" onclick="closeDrawer()" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background-color: #f1f5f9;">
+                <i class="bi bi-x-lg text-secondary" style="font-size: 11px;"></i>
+            </button>
+        </div>
+        <div class="drawer-body">
+            <!-- Conteúdo de Filtros -->
+            <div id="drawerContentFilters" class="d-none">
+                <!-- Search Field -->
+                <div class="search-wrapper mb-4">
+                    <div class="position-relative">
+                        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" style="font-size: 13px;"></i>
+                        <input type="text" id="calendar-search" class="form-control" placeholder="Pesquisar compromissos..." style="border-radius: 20px; font-size: 13px; background-color: #f1f5f9; border: 1.5px solid transparent; height: 38px; padding-left: 42px; transition: all 0.2s;" oninput="triggerSearchFilter()">
+                    </div>
+                </div>
+
+                <!-- Legenda / Filtrar Categorias ("Minhas Agendas") -->
+                <div class="categories-list-container">
+                    <div class="mb-2 px-1">
+                        <span style="font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;"><i class="bi bi-person-check-fill me-2" style="color: #3b82f6;"></i>Minhas Agendas</span>
+                    </div>
+                    <div id="categories-list-box" style="padding-left: 2px;">
+                        {% for type in event_types %}
+                        <div class="filter-item d-flex align-items-center gap-2 py-2 px-2 mb-1" onclick="toggleCheckbox('f-{{ type.id }}')" style="border-radius: 8px; font-size: 13px; font-weight: 600; color: #475569; cursor: pointer; transition: all 0.15s;">
+                            <input type="checkbox" id="f-{{ type.id }}" class="filter-checkbox filter-type-toggle" checked data-type="{{ type.name|slugify }}" style="accent-color: {{ type.color }}; width: 18px; height: 18px; cursor: pointer;" onclick="event.stopPropagation(); triggerFilterUpdate();">
+                            <span class="color-dot-indicator" style="display:inline-block; width:10px; height:10px; border-radius:50%; background-color:{{ type.color }};"></span>
+                            <span>{{ type.name }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conteúdo de Anotações -->
+            <div id="drawerContentNotes" class="d-none">
+                <!-- Form de Criação de Nota Rápida (Directly inside drawer body) -->
+                <div class="d-flex flex-column gap-2 mb-4 p-1" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                    <input type="text" id="keep-note-title" class="form-control" placeholder="Título da Anotação" style="border-radius: 8px; font-size: 13.5px; padding: 8px 12px; border: 1px solid #cbd5e1; font-weight: 600;">
+                    <textarea id="keep-note-content" class="form-control" rows="3" placeholder="Escreva uma nota rápida..." style="border-radius: 8px; font-size: 13px; padding: 8px 12px; resize: none; border: 1px solid #cbd5e1;"></textarea>
+                    
+                    <!-- Dropdown para referenciar compromisso aberto -->
+                    <select id="keep-note-event-ref" class="form-select" style="border-radius: 8px; font-size: 12.5px; padding: 6px 12px; cursor: pointer; color: #475569; border-color: #cbd5e1; height: 38px; font-weight: 500;">
+                        <option value="">-- Vincular a um Compromisso --</option>
+                        {% for ev in open_events %}
+                        <option value="{{ ev.id }}">{{ ev.title }} ({{ ev.start_date|date:"d/m" }})</option>
+                        {% endfor %}
+                    </select>
+                    
+                    <button class="btn btn-warning w-100 fw-bold d-flex align-items-center justify-content-center gap-2" style="border-radius: 8px; background-color: #f59e0b; border: none; color: #78350f; font-size: 13px; padding: 9px; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);" onclick="saveQuickNote()">
+                        <i class="bi bi-check-lg" style="font-size: 16px; -webkit-text-stroke: 0.5px;"></i> Salvar Anotação
+                    </button>
+                </div>
+
+                <div id="quick-notes-list" style="max-height: calc(100vh - 380px); overflow-y: auto; padding-right: 2px;">
+                    {% for note in quick_notes %}
+                    <div class="note-card mb-3 cursor-pointer" id="note-card-{{ note.id }}" data-ref-event-id="{{ note.referenced_event.id|default:'' }}" onclick="handleNoteCardClick(event, {{ note.id }}, '{{ note.referenced_event.id|default:'' }}')" style="background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 10px; padding: 12px 14px; position: relative; box-shadow: 0 2px 5px rgba(245, 158, 11, 0.05); transition: all 0.2s;">
+                        <div class="note-actions" style="position: absolute; top: 8px; right: 8px; display: flex; align-items: center; gap: 6px;">
+                            <span class="note-pin-indicator d-none" style="color: #f59e0b; font-size: 13px;" title="Fixado na tela">
+                                <i class="bi bi-pin-angle-fill"></i>
+                            </span>
+                            <button class="note-delete-btn" onclick="deleteQuickNote({{ note.id }})" style="color: #d97706; cursor: pointer; opacity: 0.5; transition: opacity 0.15s; border: none; background: none; padding: 0; font-size: 13px; display: inline-flex; align-items: center;" title="Excluir Permanentemente">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </button>
+                        </div>
+                        <div class="note-title" style="font-size: 13px; font-weight: 700; color: #78350f; margin-bottom: 4px; padding-right: 18px;">{{ note.title }}</div>
+                        <div class="note-content" style="font-size: 12px; color: #92400e; line-height: 1.4; white-space: pre-wrap; margin-bottom: 6px; word-break: break-word;">{{ note.content }}</div>
+                        
+                        {% if note.referenced_event %}
+                        <div class="mt-2 d-flex">
+                            <span class="badge text-white px-2.5 py-1 d-inline-flex align-items-center gap-1.5" onclick="openReferencedMeeting({{ note.referenced_event.id }})" style="background-color: {{ note.referenced_event.color|default:'#3b82f6' }}; font-size: 10px; font-weight: 700; border-radius: 5px; cursor: pointer; transition: transform 0.15s;" title="Clique para ver no calendário" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                                <i class="bi bi-calendar-event"></i> {{ note.referenced_event.title }}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-4" id="no-notes-placeholder" style="font-size: 12px;">
+                        <i class="bi bi-journal-text d-block mb-2 text-muted" style="font-size: 24px;"></i>
+                        Nenhuma anotação rápida.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Conteúdo de Próximos Compromissos -->
+            <div id="drawerContentUpcoming" class="d-none">
+                <div id="upcoming-events-list" class="d-flex flex-column gap-2">
+                    <div class="text-center text-muted py-4" style="font-size: 12.5px;">
+                        <i class="bi bi-calendar3 d-block mb-2" style="font-size: 28px; color: #cbd5e1;"></i>
+                        Carregando...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Barra Vertical de Ícones (Google Calendar style) -->
+    <div class="calendar-icon-sidebar">
+        <!-- Criar compromisso button -->
+        <button class="sidebar-icon-btn btn-create" onclick="openCreateModal()" title="Criar Novo Compromisso">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+        
+        <div class="sidebar-divider"></div>
+        
+        <!-- Filtros button -->
+        <button class="sidebar-icon-btn btn-filter" id="btnDrawerFilters" onclick="toggleDrawer('filters')" title="Minhas Agendas & Filtros">
+            <i class="bi bi-person-check-fill"></i>
+        </button>
+        
+        <!-- Notas button -->
+        <button class="sidebar-icon-btn btn-notes" id="btnDrawerNotes" onclick="toggleDrawer('notes')" title="Anotações Pessoais">
+            <i class="bi bi-lightbulb-fill"></i>
+        </button>
+
+        <!-- Próximos Compromissos button -->
+        <button class="sidebar-icon-btn" id="btnDrawerUpcoming" onclick="toggleDrawer('upcoming')" title="Próximos Compromissos">
+            <i class="bi bi-list-check"></i>
+        </button>
+
+        {% if request.user.is_admin or request.user.is_superuser %}
+        <div class="sidebar-divider"></div>
+        <!-- Botão Google Calendar: muda visual conforme status da integração -->
+        {% if google_integration %}
+        <!-- ATIVO: verde, ícone de check, abre Google Calendar -->
+        <a href="https://calendar.google.com/" target="_blank" rel="noopener"
+           class="sidebar-icon-btn"
+           style="display:flex; align-items:center; justify-content:center; text-decoration:none; position:relative;
+                  color:#10b981; background:rgba(16,185,129,0.08); border-color:rgba(16,185,129,0.25);"
+           title="Google Calendar Corporativo — Sincronização ativa. Clique para abrir o Google Agenda.">
+            <i class="bi bi-calendar-check-fill" style="font-size:16px;"></i>
+            <!-- Bolinha verde de status -->
+            <span style="position:absolute; top:4px; right:4px; width:7px; height:7px; background:#10b981;
+                         border-radius:50%; border:1.5px solid #fff;"></span>
+        </a>
+        {% else %}
+        <!-- INATIVO: cinza, ícone de link, vai para conectar -->
+        <a href="{% url 'google_login_init' %}"
+           class="sidebar-icon-btn"
+           style="display:flex; align-items:center; justify-content:center; text-decoration:none; position:relative;
+                  color:#94a3b8;"
+           title="Google Calendar Corporativo — Não conectado. Clique para conectar.">
+            <i class="bi bi-calendar-x" style="font-size:16px;"></i>
+        </a>
+        {% endif %}
+        {% endif %}
+
+        {% if google_subscribe_url %}
+        <!-- Botão de assinar visível para TODOS os usuários -->
+        <div class="sidebar-divider"></div>
+        <a href="{{ google_subscribe_url }}" target="_blank" rel="noopener"
+           class="sidebar-icon-btn"
+           style="display:flex; align-items:center; justify-content:center; text-decoration:none; position:relative; color:#3b82f6;"
+           title="Adicionar Agenda Corporativa ao seu Google Calendar — todos podem fazer isso!">
+            <i class="bi bi-calendar-plus" style="font-size:16px;"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- PANEL: PRÓXIMOS COMPROMISSOS                  -->
+<!-- ============================================== -->
+<div class="d-none" id="drawerContentUpcoming">
+    <div id="upcoming-events-list" class="d-flex flex-column gap-2">
+        <div class="text-center text-muted py-4" style="font-size: 12.5px;">
+            <i class="bi bi-calendar3 d-block mb-2" style="font-size: 28px; color: #cbd5e1;"></i>
+            Carregando...
+        </div>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- MODAL: VIEW COMPROMISSO                        -->
+<!-- ============================================== -->
+<div class="modal fade" id="viewEventModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header border-bottom-0 pb-0" style="padding: 20px 20px 0 20px;">
+                <div class="d-flex w-100 justify-content-between align-items-center">
+                    <span style="display:inline-block; width:16px; height:16px; border-radius:50%;" id="viewModalColorBar"></span>
+                    <div class="d-flex gap-2">
+                        <div id="viewModalActions" class="d-flex gap-1">
+                            <!-- Dinamicamente renderizado via JS -->
+                        </div>
+                        <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal" style="border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #ffffff;">
+                            <i class="bi bi-x-lg text-secondary"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body" style="padding: 10px 24px 24px 24px;">
+                
+                <h4 class="fw-bold text-dark mb-2" id="viewModalTitle" style="font-size: 18px; margin-top: 10px;"></h4>
+                <div id="viewModalTime" class="mb-4" style="font-size: 13.5px; color: var(--text-slate); font-weight: 500;"></div>
+
+                <!-- Meeting Link Action Button -->
+                <div id="viewModalMeetingLinkRow" class="mb-4 d-none">
+                    <a id="viewModalMeetingLinkBtn" href="#" target="_blank" class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2" style="background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; border-radius: 12px; padding: 10px 16px; border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); transition: all 0.2s;">
+                        <i class="bi bi-camera-video-fill" style="font-size: 16px;"></i>
+                        <span>Entrar na Videochamada</span>
+                    </a>
+                </div>
+
+
+
+                <div class="modal-detail-row">
+                    <div class="modal-detail-icon"><i class="bi bi-person-badge"></i></div>
+                    <div class="modal-detail-content">
+                        <div class="modal-detail-label">Organizador</div>
+                        <div class="modal-detail-value" id="viewModalOrganizer"></div>
+                    </div>
+                </div>
+
+                <div class="modal-detail-row" id="viewModalLocationRow">
+                    <div class="modal-detail-icon"><i class="bi bi-geo-alt"></i></div>
+                    <div class="modal-detail-content">
+                        <div class="modal-detail-label">Localização / Cidade</div>
+                        <div class="modal-detail-value" id="viewModalLocation"></div>
+                    </div>
+                </div>
+
+                <div class="modal-detail-row" id="viewModalNotesRow">
+                    <div class="modal-detail-icon"><i class="bi bi-justify-left"></i></div>
+                    <div class="modal-detail-content">
+                        <div class="modal-detail-label">Observações / Pauta</div>
+                        <div class="modal-detail-value" style="font-weight: 500; font-size: 13.5px; color: var(--text-slate);" id="viewModalNotes"></div>
+                    </div>
+                </div>
+
+                <div class="modal-detail-row" id="viewModalParticipantsRow">
+                    <div class="modal-detail-icon"><i class="bi bi-people"></i></div>
+                    <div class="modal-detail-content">
+                        <div class="modal-detail-label">Participantes</div>
+                        <div id="viewModalParticipants" class="mt-1"></div>
+                    </div>
+                </div>
+
+                <div class="modal-detail-row" id="viewModalExternalParticipantsRow">
+                    <div class="modal-detail-icon"><i class="bi bi-envelope-check"></i></div>
+                    <div class="modal-detail-content">
+                        <div class="modal-detail-label">Convidados Externos</div>
+                        <div id="viewModalExternalParticipants" class="mt-1"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- MODAL: CRIAR / EDITAR COMPROMISSO              -->
+<!-- ============================================== -->
+<div class="modal fade" id="eventFormModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+        <form id="eventForm" class="modal-content border-0 shadow-lg ajax-form" onsubmit="submitEventForm(event)" style="border-radius: 16px; overflow: hidden;">
+            <div class="modal-header border-bottom py-3 px-4" style="background: #ffffff;">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; color: #10b981; font-size: 18px;">
+                        <i class="bi bi-calendar-event-fill"></i>
+                    </div>
+                    <h5 class="modal-title fw-bold" id="formModalTitle" style="font-size: 15.5px; color: #0f172a; margin-left: 6px;">Novo Compromisso</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="font-size: 11px;"></button>
+            </div>
+            <input type="hidden" id="formEventId">
+            <div class="modal-body py-4 px-4 pb-5" style="background: #ffffff;">
+                    
+                    <div class="row">
+                        <!-- LEFT COLUMN: Event details -->
+                        <div class="col-lg-6 col-12">
+                            <!-- SECTION 1: INFORMAÇÕES BÁSICAS -->
+                            <div class="form-section-title mb-3 d-flex align-items-center gap-2">
+                                <span class="section-badge-num">1</span>
+                                <span class="fw-bold text-dark" style="font-size: 13px; letter-spacing: 0.5px;">INFORMAÇÕES BÁSICAS</span>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <!-- Title -->
+                                <div class="col-12">
+                                    <label class="form-label-custom">Título do Compromisso *</label>
+                                    <div class="input-group-premium">
+                                        <span class="input-group-text-custom"><i class="bi bi-blockquote-left"></i></span>
+                                        <input type="text" id="formTitle" class="form-input-custom-group" placeholder="Ex: Reunião de Alinhamento Semanal" required>
+                                    </div>
+                                </div>
+
+                                <!-- Dates & Times -->
+                                <div class="col-md-6 col-12">
+                                    <label class="form-label-custom">Data de Início *</label>
+                                    <div class="input-group-premium">
+                                        <span class="input-group-text-custom"><i class="bi bi-calendar-event"></i></span>
+                                        <input type="text" id="formStartDateOnly" class="form-input-custom-group" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-12">
+                                    <label class="form-label-custom">Hora de Início *</label>
+                                    <div class="input-group-premium">
+                                        <span class="input-group-text-custom"><i class="bi bi-clock"></i></span>
+                                        <input type="time" id="formStartTimeOnly" class="form-input-custom-group" required>
+                                    </div>
+                                </div>
+         
+                                <div class="col-md-6 col-12">
+                                    <label class="form-label-custom">Data de Término *</label>
+                                    <div class="input-group-premium">
+                                        <span class="input-group-text-custom"><i class="bi bi-calendar-check"></i></span>
+                                        <input type="text" id="formEndDateOnly" class="form-input-custom-group" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-12">
+                                    <label class="form-label-custom">Hora de Término *</label>
+                                    <div class="input-group-premium">
+                                        <span class="input-group-text-custom"><i class="bi bi-clock"></i></span>
+                                        <input type="time" id="formEndTimeOnly" class="form-input-custom-group" required>
+                                    </div>
+                                </div>
+
+                                <!-- Type & Color -->
+                                <div class="col-md-6 col-12">
+                                    <label class="form-label-custom">Tipo de Compromisso</label>
+                                    <select id="formEventType" class="form-select form-input-custom" onchange="autoSelectColor()">
+                                        {% for type in event_types %}
+                                        <option value="{{ type.name|lower }}" data-color="{{ type.color }}">{{ type.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="hidden" id="formColor" value="#3b82f6">
+                                </div>
+
+                                <!-- Recorrência -->
+                                <div class="col-md-6 col-12">
+                                    <label class="form-label-custom">Recorrência</label>
+                                    <select id="formRecurrence" class="form-select form-input-custom no-ts">
+                                        <option value="none">Não Repetir</option>
+                                        <option value="daily">Diariamente (30 dias)</option>
+                                        <option value="weekly">Semanalmente (12 semanas)</option>
+                                        <option value="monthly">Mensalmente (6 meses)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Status (oculto na criação, visível na edição) -->
+                                <div class="col-md-6 col-12" id="formStatusRow" style="display: none;">
+                                    <label class="form-label-custom">Status do Compromisso</label>
+                                    <select id="formStatus" class="form-select form-input-custom">
+                                        <option value="agendado">Agendado</option>
+                                        <option value="aberto">Aberto</option>
+                                        <option value="concluido">Concluído</option>
+                                        <option value="cancelado">Cancelado</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- SECTION 2: LOCAL E ESPAÇO -->
+                            <div class="form-section-title mb-3 d-flex align-items-center gap-2" style="border-top: 1px solid #f1f5f9; padding-top: 20px;">
+                                <span class="section-badge-num">2</span>
+                                <span class="fw-bold text-dark" style="font-size: 13px; letter-spacing: 0.5px;">LOCAL E ESPAÇO</span>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <!-- Location & Space -->
+                                <div class="col-md-6 col-12">
+                                    <label class="form-label-custom">Localização Física / Espaço</label>
+                                    <select id="formLocation" class="form-select form-input-custom">
+                                        <option value="">-- Não Definido --</option>
+                                        {% for loc in locations %}
+                                        <option value="{{ loc.id }}">{{ loc.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+         
+                                <!-- City -->
+                                <div class="col-md-6 col-12">
+                                    <label class="form-label-custom">Cidade</label>
+                                    <select id="formCity" class="form-select form-input-custom">
+                                        <option value="">-- Não Definido --</option>
+                                        {% for city in cities %}
+                                        <option value="{{ city.id }}">{{ city.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <!-- Meeting Link -->
+                                <div class="col-12 mt-2">
+                                    <label class="form-label-custom">Link de Transmissão</label>
+                                    <div class="input-group-premium">
+                                        <span class="input-group-text-custom"><i class="bi bi-link-45deg"></i></span>
+                                        <input type="url" id="formMeetingLink" class="form-input-custom-group" placeholder="Ex: https://meet.google.com/abc-defg-hij">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- RIGHT COLUMN: Attendees & Invites -->
+                        <div class="col-lg-6 col-12 border-start ps-lg-4">
+                            <!-- SECTION 3: PARTICIPANTES -->
+                            <div class="form-section-title mb-3 d-flex align-items-center gap-2">
+                                <span class="section-badge-num">3</span>
+                                <span class="fw-bold text-dark" style="font-size: 13px; letter-spacing: 0.5px;">CONVITE & PARTICIPANTES</span>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <!-- Multiple selection for participants -->
+                                <div class="col-12">
+                                    <!-- Sector Batch Selection -->
+                                    <div class="row g-2 align-items-end mb-2">
+                                        <div class="col-12">
+                                            <label class="form-label-custom" style="font-size: 12px; margin-bottom: 4px;"><i class="bi bi-diagram-3-fill me-1" style="color: #10b981;"></i>Selecionar por Setor</label>
+                                            <select id="formSectorBatch" class="form-select form-input-custom form-select-sm no-ts" multiple>
+                                                {% for sub in subunits %}
+                                                <option value="{{ sub.id }}">{{ sub.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <label class="form-label-custom">Participantes (Colaboradores)</label>
+                                    <select id="formEmployees" class="form-select form-input-custom no-ts" multiple style="height: 280px;">
+                                        {% for emp in all_employees %}
+                                        <option value="{{ emp.id }}" data-sector="{% if emp.sub_division %}{{ emp.sub_division.id }}{% endif %}">{{ emp.first_name }} {{ emp.last_name }} ({% if emp.sub_division %}{{ emp.sub_division.name }}{% else %}Sem Setor{% endif %})</option>
+                                        {% endfor %}
+                                    </select>
+                                    <span class="text-muted d-block mt-1" style="font-size: 11.5px;"><i class="bi bi-info-circle"></i> Os colaboradores acima podem ser filtrados em lote pelo setor ou selecionados individualmente.</span>
+                                </div>
+
+                                <!-- External Invitees (Emails) -->
+                                <div class="col-12 mt-3">
+                                    <label class="form-label-custom">Convidados Externos (E-mails separados por vírgula)</label>
+                                    <div class="input-group-premium">
+                                        <span class="input-group-text-custom"><i class="bi bi-envelope-plus"></i></span>
+                                        <input type="text" id="formExternalParticipants" class="form-input-custom-group" placeholder="Ex: cliente@empresa.com, parceiro@gmail.com">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- SECTION 4: DETALHES ADICIONAIS -->
+                            <div class="form-section-title mb-3 d-flex align-items-center gap-2" style="border-top: 1px solid #f1f5f9; padding-top: 20px; margin-top: 20px;">
+                                <span class="section-badge-num">4</span>
+                                <span class="fw-bold text-dark" style="font-size: 13px; letter-spacing: 0.5px;">DETALHES ADICIONAIS</span>
+                            </div>
+
+                            <div class="row g-3">
+                                <!-- Notes/Description -->
+                                <div class="col-12">
+                                    <label class="form-label-custom">Observações / Pauta / Descrição</label>
+                                    <div class="input-group-premium align-items-start" style="height: auto; min-height: 90px; padding: 0 !important;">
+                                        <span class="input-group-text-custom" style="padding-top: 12px !important; align-self: flex-start !important;"><i class="bi bi-chat-left-text"></i></span>
+                                        <textarea id="formNotes" class="form-input-custom-group" rows="3" placeholder="Adicionar pauta ou detalhes adicionais do compromisso" style="resize: none; padding-top: 10px !important; padding-bottom: 10px !important;"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-3 px-4 d-flex justify-content-between" style="background: #f8fafc;">
+                    <button type="button" class="btn btn-secondary px-4 py-2" data-bs-dismiss="modal" style="border-radius: 10px; font-weight: 600; background: #cbd5e1; border: none; color: #1e293b; transition: all 0.2s;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4 py-2 fw-bold" style="border-radius: 10px; background: linear-gradient(135deg, var(--orange-primary), var(--orange-dark)); border: none; color: #ffffff; box-shadow: 0 4px 12px rgba(32, 42, 68, 0.2); transition: all 0.2s;">Salvar Compromisso</button>
+                </div>
+            </form>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- MODAL: CADASTRAR NOVO ESPAÇO                  -->
+<!-- ============================================== -->
+<div class="modal fade" id="newSpaceModal" tabindex="-1" aria-hidden="true" style="z-index: 1200;">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 14px;">
+            <div class="modal-header border-bottom py-2 px-3">
+                <h6 class="modal-title fw-bold text-dark mb-0" style="font-size: 13.5px;"><i class="bi bi-building-add text-success me-2"></i>Novo Espaço / Sala</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="font-size: 11px;"></button>
+            </div>
+            <div class="modal-body py-3 px-3">
+                <div class="mb-2">
+                    <label class="form-label-custom" style="font-size: 11.5px; margin-bottom: 4px;">Nome do Espaço *</label>
+                    <input type="text" id="newSpaceName" class="form-control form-input-custom form-control-sm" placeholder="Ex: Sala de Reunião A" required>
+                </div>
+            </div>
+            <div class="modal-footer border-top py-2 px-3 d-flex justify-content-between">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px;">Cancelar</button>
+                <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="submitNewSpace()" style="border-radius: 8px; background: linear-gradient(135deg, var(--orange-primary), var(--orange-dark)); border: none; color: white; padding: 5px 12px;">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- MODAL: CADASTRAR NOVO TIPO DE COMPROMISSO      -->
+<!-- ============================================== -->
+<div class="modal fade" id="newTypeModal" tabindex="-1" aria-hidden="true" style="z-index: 1200;">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 14px;">
+            <div class="modal-header border-bottom py-2 px-3">
+                <h6 class="modal-title fw-bold text-dark mb-0" style="font-size: 13.5px;"><i class="bi bi-tag-fill text-success me-2"></i>Novo Tipo de Reunião</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="font-size: 11px;"></button>
+            </div>
+            <div class="modal-body py-3 px-3">
+                <div class="mb-3">
+                    <label class="form-label-custom" style="font-size: 11.5px; margin-bottom: 4px;">Nome do Tipo *</label>
+                    <input type="text" id="newTypeName" class="form-control form-input-custom form-control-sm" placeholder="Ex: Planejamento Mensal" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label-custom" style="font-size: 11.5px; margin-bottom: 4px;">Escolha a Cor de Exibição *</label>
+                    <div class="color-dot-container mt-1" id="newTypeColorPicker">
+                        <div class="color-dot active" style="background: #3b82f6;" data-color="#3b82f6" onclick="selectNewTypeColor(this)"><i class="bi bi-check"></i></div>
+                        <div class="color-dot" style="background: #10b981;" data-color="#10b981" onclick="selectNewTypeColor(this)"><i class="bi bi-check d-none"></i></div>
+                        <div class="color-dot" style="background: #f59e0b;" data-color="#f59e0b" onclick="selectNewTypeColor(this)"><i class="bi bi-check d-none"></i></div>
+                        <div class="color-dot" style="background: #8b5cf6;" data-color="#8b5cf6" onclick="selectNewTypeColor(this)"><i class="bi bi-check d-none"></i></div>
+                        <div class="color-dot" style="background: #ef4444;" data-color="#ef4444" onclick="selectNewTypeColor(this)"><i class="bi bi-check d-none"></i></div>
+                        <div class="color-dot" style="background: #64748b;" data-color="#64748b" onclick="selectNewTypeColor(this)"><i class="bi bi-check d-none"></i></div>
+                        <div class="color-dot" style="background: #ec4899;" data-color="#ec4899" onclick="selectNewTypeColor(this)"><i class="bi bi-check d-none"></i></div>
+                        <div class="color-dot" style="background: #06b6d4;" data-color="#06b6d4" onclick="selectNewTypeColor(this)"><i class="bi bi-check d-none"></i></div>
+                        <div class="color-dot" style="background: #84cc16;" data-color="#84cc16" onclick="selectNewTypeColor(this)"><i class="bi bi-check d-none"></i></div>
+                        <div class="color-dot" style="background: #6366f1;" data-color="#6366f1" onclick="selectNewTypeColor(this)"><i class="bi bi-check d-none"></i></div>
+                        
+                        <!-- RGB Custom Color Picker Dot -->
+                        <div class="color-dot custom-color-dot" id="customNewTypeColorDot" style="background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); position: relative; border: 1.5px dashed rgba(255,255,255,0.4);" title="Escolher cor personalizada (RGB)">
+                            <i class="bi bi-palette" id="customNewTypeColorIcon" style="font-size: 13px; text-shadow: 0 1px 2px rgba(0,0,0,0.35);"></i>
+                            <i class="bi bi-check d-none" id="customNewTypeColorCheck" style="font-size: 13px; text-shadow: 0 1px 2px rgba(0,0,0,0.35);"></i>
+                        </div>
+                    </div>
+                    <input type="hidden" id="newTypeColor" value="#3b82f6">
+                </div>
+            </div>
+            <div class="modal-footer border-top py-2 px-3 d-flex justify-content-between">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px;">Cancelar</button>
+                <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="submitNewType()" style="border-radius: 8px; background: linear-gradient(135deg, var(--orange-primary), var(--orange-dark)); border: none; color: white; padding: 5px 12px;">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- MODAL: BLOCO DE NOTAS (NOTEPAD MODAL)          -->
+<!-- ============================================== -->
+<style>
+    .notepad-modern-container {
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        background-color: #fffdf9 !important; /* Elegant warm off-white paper */
+        border-radius: 20px !important;
+        overflow: hidden;
+        border: 1px solid #fef3c7 !important; /* Soft warm amber-gold border */
+    }
+    
+    .notepad-modern-header {
+        background: #ffffff !important;
+        border-bottom: 1px solid #f8fafc !important;
+        padding: 18px 24px !important;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .notepad-modern-body {
+        padding: 24px 28px !important;
+        background-color: #fffdf9 !important;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        min-height: 380px;
+        position: relative;
+    }
+
+    .notepad-title-input {
+        font-size: 20px !important;
+        font-weight: 800 !important;
+        color: #78350f !important; /* Dark amber/brown */
+        border: none !important;
+        outline: none !important;
+        background: transparent !important;
+        width: 100%;
+        padding: 4px 0 !important;
+        margin-bottom: 16px !important;
+        border-bottom: 1.5px solid rgba(245, 158, 11, 0.15) !important;
+        transition: border-color 0.2s ease;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+    }
+    
+    .notepad-title-input:focus {
+        border-bottom-color: #f59e0b !important;
+    }
+
+    .notepad-content-textarea {
+        font-size: 14.5px !important;
+        font-weight: 500 !important;
+        color: #92400e !important;
+        border: none !important;
+        outline: none !important;
+        background: transparent !important;
+        width: 100%;
+        min-height: 220px;
+        line-height: 1.65 !important;
+        resize: none !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+    }
+    
+    .notepad-modern-footer {
+        border-top: 1px solid rgba(245, 158, 11, 0.12) !important;
+        padding-top: 16px !important;
+        margin-top: auto !important;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .notepad-badge-pill {
+        background-color: rgba(245, 158, 11, 0.08) !important;
+        color: #d97706 !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        padding: 4px 10px !important;
+        border-radius: 20px !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-notepad-save {
+        background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        padding: 9px 20px !important;
+        border-radius: 10px !important;
+        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2) !important;
+        transition: all 0.2s ease !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-notepad-save:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(245, 158, 11, 0.3) !important;
+    }
+
+    .select-notepad-ref {
+        border-radius: 10px !important;
+        font-size: 12.5px !important;
+        padding: 8px 14px !important;
+        cursor: pointer;
+        color: #78350f !important;
+        border: 1px solid rgba(245, 158, 11, 0.2) !important;
+        background-color: #ffffff !important;
+        height: 40px !important;
+        max-width: 250px;
+        font-weight: 600;
+        outline: none !important;
+    }
+    
+    .select-notepad-ref:focus {
+        border-color: #f59e0b !important;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1) !important;
+    }
+</style>
+<div class="modal fade" id="notePadModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg notepad-modern-container">
+            <!-- Sleek Header -->
+            <div class="notepad-modern-header">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="notepad-badge-pill">
+                        <i class="bi bi-sticky-fill"></i>
+                        <span>Lembrete Pessoal</span>
+                    </span>
+                </div>
+                <div class="d-flex align-items-center gap-1.5">
+                    <!-- Pin button -->
+                    <button type="button" id="btnPinNotePad" class="btn btn-sm btn-light border-0 rounded-circle" onclick="togglePinNotePad()" title="Fixar na tela (Permite usar o calendário com o bloco aberto)" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background-color: #f1f5f9; color: #64748b; transition: all 0.2s;">
+                        <i class="bi bi-pin-angle" style="font-size: 13px;"></i>
+                    </button>
+                    <!-- Modern Delete Trash button inside header -->
+                    <button type="button" class="btn btn-sm btn-light border-0 rounded-circle" onclick="deleteNoteFromPad()" title="Excluir Lembrete" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background-color: #fef2f2; color: #ef4444; transition: all 0.2s;">
+                        <i class="bi bi-trash3-fill" style="font-size: 12px;"></i>
+                    </button>
+                    <!-- Close button -->
+                    <button type="button" class="btn btn-sm btn-light border-0 rounded-circle" data-bs-dismiss="modal" title="Fechar" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background-color: #f1f5f9; color: #64748b; transition: all 0.2s;">
+                        <i class="bi bi-x-lg" style="font-size: 12px;"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="notepad-modern-body">
+                <input type="hidden" id="padNoteId">
+                
+                <!-- Title input (spellcheck disabled) -->
+                <input type="text" id="padNoteTitle" class="notepad-title-input" placeholder="Título da Anotação..." spellcheck="false">
+                
+                <!-- Content Textarea (spellcheck disabled, modern Plus Jakarta Sans font) -->
+                <textarea id="padNoteContent" class="notepad-content-textarea" placeholder="Digite sua anotação aqui..." spellcheck="false"></textarea>
+                
+                <!-- Sleek Footer -->
+                <div class="notepad-modern-footer">
+                    <!-- Event linkage dropdown -->
+                    <div class="d-flex align-items-center gap-2" style="flex: 1 1 auto; max-width: 250px;">
+                        <select id="padNoteEventRef" class="form-select select-notepad-ref">
+                            <option value="">-- Vincular a um Compromisso --</option>
+                            {% for ev in open_events %}
+                            <option value="{{ ev.id }}">{{ ev.title }} ({{ ev.start_date|date:"d/m" }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Save Button -->
+                    <button class="btn btn-notepad-save" onclick="saveNoteFromPad()">
+                        <i class="bi bi-check-lg" style="font-size: 16px;"></i>
+                        <span>Salvar Lembrete</span>
+                    </button>
+                </div>
+                
+                <div style="position: absolute; bottom: 8px; right: 16px; font-size: 10px; color: rgba(180, 83, 9, 0.25); font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif;">Netline Bloco de Notas</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- FullCalendar Script -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+<script>
+    let calendar;
+    let viewEventModal;
+    let eventFormModal;
+    let newSpaceModal;
+    let newTypeModal;
+    let notePadModal;
+    let employeesSelect;
+    let sectorBatchSelect;
+    let isClearingSectors = false;
+    let startDatePicker;
+    let endDatePicker;
+    let isPinned = false;
+    // Helper to escape HTML characters dynamically to prevent XSS attacks
+    function escapeHTML(str) {
+        if (!str) return '';
+        return str.toString().replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag)
+        );
+    }
+
+    // Helper to slugify category names (matches Django's slugify behavior)
+    function slugify(text) {
+        if (!text) return '';
+        return text.toString().toLowerCase().trim()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/[^\w\-]+/g, '')
+            .replace(/\-\-+/g, '-');
+    }
+
+    // Helper to map solid category hex colors into soft transparent tints and readable text colors
+    function getCategoryStyle(color) {
+        const colors = {
+            '#3b82f6': { bg: 'rgba(59, 130, 246, 0.08)', text: '#1d4ed8', border: '#3b82f6' },
+            '#10b981': { bg: 'rgba(16, 185, 129, 0.08)', text: '#047857', border: '#10b981' },
+            '#f59e0b': { bg: 'rgba(245, 158, 11, 0.08)', text: '#b45309', border: '#f59e0b' },
+            '#8b5cf6': { bg: 'rgba(139, 92, 246, 0.08)', text: '#6d28d9', border: '#8b5cf6' },
+            '#ef4444': { bg: 'rgba(239, 68, 68, 0.08)', text: '#b91c1c', border: '#ef4444' },
+            '#64748b': { bg: 'rgba(100, 116, 139, 0.08)', text: '#334155', border: '#64748b' }
+        };
+        if (colors[color]) return colors[color];
+        
+        // Parse hex to generate dynamic bg and readable dark text color
+        let hex = color.replace('#', '');
+        if (hex.length === 3) {
+            hex = hex.split('').map(char => char + char).join('');
+        }
+        if (hex.length === 6) {
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+            
+            // Darken factor to make text contrast high on pastel bg
+            const tr = Math.round(r * 0.75);
+            const tg = Math.round(g * 0.75);
+            const tb = Math.round(b * 0.75);
+            
+            return {
+                bg: `rgba(${r}, ${g}, ${b}, 0.08)`,
+                text: `rgb(${tr}, ${tg}, ${tb})`,
+                border: color
+            };
+        }
+        return { bg: 'rgba(59, 130, 246, 0.08)', text: '#1d4ed8', border: color };
+    }
+
+    function getDynamicCalendarHeight() {
+        const calendarEl = document.getElementById('calendar');
+        if (!calendarEl) return 520;
+        const rect = calendarEl.getBoundingClientRect();
+        const topOffset = rect.top > 0 ? rect.top : 140;
+        const remaining = window.innerHeight - topOffset - 20;
+        return Math.max(remaining, 450);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Move modal elements to body to avoid Bootstrap stacking context / dark backdrop bugs
+        const viewModalEl = document.getElementById('viewEventModal');
+        const formModalEl = document.getElementById('eventFormModal');
+        const newSpaceModalEl = document.getElementById('newSpaceModal');
+        const newTypeModalEl = document.getElementById('newTypeModal');
+        
+        const padModalEl = document.getElementById('notePadModal');
+        
+        if (viewModalEl) document.body.appendChild(viewModalEl);
+        if (formModalEl) document.body.appendChild(formModalEl);
+        if (newSpaceModalEl) document.body.appendChild(newSpaceModalEl);
+        if (newTypeModalEl) document.body.appendChild(newTypeModalEl);
+        if (padModalEl) document.body.appendChild(padModalEl);
+
+        // Initialize Bootstrap Modals
+        viewEventModal = new bootstrap.Modal(viewModalEl);
+        eventFormModal = new bootstrap.Modal(formModalEl);
+        newSpaceModal = new bootstrap.Modal(newSpaceModalEl);
+        newTypeModal = new bootstrap.Modal(newTypeModalEl);
+        notePadModal = new bootstrap.Modal(padModalEl);
+
+        // Make notepad modal draggable by its header
+        if (padModalEl) {
+            makeModalDraggable('notePadModal');
+            
+            // Listen to Bootstrap events to reset position when opened
+            padModalEl.addEventListener('show.bs.modal', function () {
+                const dialog = padModalEl.querySelector('.modal-dialog');
+                dialog.style.position = '';
+                dialog.style.margin = '';
+                dialog.style.top = '';
+                dialog.style.left = '';
+                
+                isPinned = false;
+                updatePinUI();
+            });
+            
+            padModalEl.addEventListener('hidden.bs.modal', function () {
+                isPinned = false;
+                const modalEl = document.getElementById('notePadModal');
+                modalEl.style.pointerEvents = 'auto';
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.classList.remove('d-none');
+                }
+            });
+        }
+
+        // Initialize Tom Select for Premium Participants Search dropdown
+        employeesSelect = new TomSelect('#formEmployees', {
+            plugins: ['remove_button'],
+            placeholder: 'Selecione os participantes...',
+            maxOptions: null,
+            dropdownParent: 'body'
+        });
+
+        // Initialize Tom Select for Multiple Sector Selection
+        sectorBatchSelect = new TomSelect('#formSectorBatch', {
+            plugins: ['remove_button'],
+            placeholder: 'Selecionar setores...',
+            maxOptions: null,
+            dropdownParent: 'body',
+            onItemAdd: function(value, item) {
+                if (isClearingSectors) return;
+                syncSectorEmployees(value, true);
+            },
+            onItemRemove: function(value) {
+                if (isClearingSectors) return;
+                syncSectorEmployees(value, false);
+            }
+        });
+
+        // Initialize Flatpickr for start and end dates
+        const dateConfig = {
+            enableTime: false,
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            locale: "pt"
+        };
+        startDatePicker = flatpickr(document.getElementById('formStartDateOnly'), dateConfig);
+        endDatePicker = flatpickr(document.getElementById('formEndDateOnly'), dateConfig);
+
+        // Initialize FullCalendar
+        const calendarEl = document.getElementById('calendar');
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            locale: 'pt-br',
+            initialView: 'dayGridMonth',
+            height: getDynamicCalendarHeight(),
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            buttonText: {
+                today: 'Hoje',
+                month: 'Mês',
+                week: 'Semana',
+                day: 'Dia'
+            },
+            slotMinTime: '07:00:00',      // Começa às 07:00
+            slotMaxTime: '20:00:00',      // Termina às 20:00
+            scrollTime: '08:00:00',       // Rola automaticamente para as 08:00 ao carregar
+            allDaySlot: false,            // Oculta a linha de dia inteiro (all-day slot)
+            slotLabelFormat: {
+                hour: 'numeric',
+                hour12: true,
+                meridiem: 'short'
+            },
+            eventTimeFormat: {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            },
+            dayHeaderContent: function(arg) {
+                const date = arg.date;
+                const weekdays = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+                const weekday = weekdays[date.getDay()];
+                const day = date.getDate();
+                
+                if (arg.view.type === 'dayGridMonth') {
+                    return weekday;
+                }
+                
+                return {
+                    html: `<div class="day-header-week-container">
+                             <div class="day-header-weekday">${weekday}</div>
+                             <div class="day-header-daynum">${day}</div>
+                           </div>`
+                };
+            },
+            expandRows: true,
+            editable: true,
+            selectable: true,
+            selectMirror: true,
+            dayMaxEvents: true,
+            events: "{% url 'agenda_list_events' %}",
+
+            // Bright clean events with solid background matching category color
+            eventDidMount: function(info) {
+                const color = info.event.backgroundColor || '#3b82f6';
+                const style = getCategoryStyle(color);
+                
+                info.el.style.setProperty('background-color', style.bg, 'important');
+                info.el.style.setProperty('border-left', `4px solid ${style.border}`, 'important');
+                info.el.style.setProperty('color', style.text, 'important');
+                
+                // Set data-type attribute for high-performance CSS filtering
+                const type = slugify(info.event.extendedProps.eventType || 'outro');
+                info.el.setAttribute('data-type', type);
+
+                // Client-side search filtering
+                const searchInput = document.getElementById('calendar-search');
+                if (searchInput) {
+                    const term = searchInput.value.toLowerCase().trim();
+                    if (term) {
+                        const title = info.event.title.toLowerCase();
+                        const notes = (info.event.description || info.event.extendedProps.notes || '').toLowerCase();
+                        const location = (info.event.extendedProps.locationName || '').toLowerCase();
+                        const city = (info.event.extendedProps.cityName || '').toLowerCase();
+                        const organizer = (info.event.extendedProps.organizerName || '').toLowerCase();
+                        
+                        const matchesTitle = title.includes(term);
+                        const matchesNotes = notes.includes(term);
+                        const matchesLocation = location.includes(term);
+                        const matchesCity = city.includes(term);
+                        const matchesOrganizer = organizer.includes(term);
+                        
+                        let matchesParticipant = false;
+                        if (info.event.extendedProps.participants) {
+                            matchesParticipant = info.event.extendedProps.participants.some(p => 
+                                p.name.toLowerCase().includes(term)
+                            );
+                        }
+                        
+                        if (!matchesTitle && !matchesNotes && !matchesLocation && !matchesCity && !matchesOrganizer && !matchesParticipant) {
+                            info.el.style.setProperty('display', 'none', 'important');
+                        }
+                    }
+                }
+            },
+
+            select: function(info) {
+                openCreateModal(info.startStr, info.endStr);
+            },
+
+            eventClick: function(info) {
+                openDetailModal(info.event);
+            },
+
+            eventDrop: function(info) {
+                updateEventTiming(info.event);
+            },
+            eventResize: function(info) {
+                updateEventTiming(info.event);
+            }
+        });
+
+        calendar.render();
+        triggerFilterUpdate();
+
+        // Deep linking check
+        const urlParams = new URLSearchParams(window.location.search);
+        const highlightEventId = urlParams.get('highlight_event_id');
+        if (highlightEventId) {
+            fetch("{% url 'agenda_list_events' %}")
+            .then(res => res.json())
+            .then(events => {
+                const targetEvent = events.find(e => e.id == highlightEventId);
+                if (targetEvent) {
+                    const eventDate = new Date(targetEvent.start);
+                    calendar.gotoDate(eventDate);
+                    setTimeout(() => {
+                        const fcEvent = calendar.getEventById(highlightEventId);
+                        if (fcEvent) {
+                            openDetailModal(fcEvent);
+                        } else {
+                            // Fallback details if element isn't in current view immediately
+                            const mockEvent = {
+                                id: targetEvent.id,
+                                title: targetEvent.title,
+                                start: targetEvent.start,
+                                end: targetEvent.end,
+                                backgroundColor: targetEvent.color,
+                                extendedProps: targetEvent.extendedProps
+                            };
+                            openDetailModal(mockEvent);
+                        }
+                    }, 800);
+                }
+            })
+            .catch(err => console.error("Error highlighting deep-linked event:", err));
+        }
+
+        // Listen for window resize to adjust calendar height dynamically
+        window.addEventListener('resize', function() {
+            if (calendar) {
+                calendar.setOption('height', getDynamicCalendarHeight());
+            }
+        });
+    });
+
+
+
+    // Toggle sidebar section collapse/expand
+    function toggleSidebarSection(boxId, arrowId) {
+        const box = document.getElementById(boxId);
+        const arrow = document.getElementById(arrowId);
+        if (box && arrow) {
+            if (box.style.display === 'none') {
+                box.style.display = 'block';
+                arrow.style.transform = 'rotate(0deg)';
+            } else {
+                box.style.display = 'none';
+                arrow.style.transform = 'rotate(-90deg)';
+            }
+        }
+    }
+
+    // Dynamic client search filter trigger
+    function triggerSearchFilter() {
+        if (calendar) {
+            calendar.render();
+        }
+    }
+
+    // Toggle checkboxes through checklist wrapper click
+    function toggleCheckbox(id) {
+        const cb = document.getElementById(id);
+        if (cb) {
+            cb.checked = !cb.checked;
+            triggerFilterUpdate();
+        }
+    }
+
+    // Refresh calendar layout on filters change using instantaneous CSS class toggling
+    function triggerFilterUpdate() {
+        const calendarEl = document.getElementById('calendar');
+        if (!calendarEl) return;
+        
+        const checkboxes = document.querySelectorAll('.filter-type-toggle');
+        checkboxes.forEach(cb => {
+            const type = cb.getAttribute('data-type');
+            if (type) {
+                const className = `hide-type-${slugify(type)}`;
+                if (!cb.checked) {
+                    calendarEl.classList.add(className);
+                } else {
+                    calendarEl.classList.remove(className);
+                }
+            }
+        });
+    }
+
+    // Formatting dates and times beautifully
+    function formatEventDate(start, end) {
+        if (!start) return '';
+        const optionsDate = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const optionsTime = { hour: '2-digit', minute: '2-digit' };
+        
+        let startObj = new Date(start);
+        let endObj = end ? new Date(end) : null;
+        
+        let formatted = startObj.toLocaleDateString('pt-BR', optionsDate) + ' • ' + startObj.toLocaleTimeString('pt-BR', optionsTime);
+        if (endObj) {
+            if (startObj.toDateString() === endObj.toDateString()) {
+                formatted += ' às ' + endObj.toLocaleTimeString('pt-BR', optionsTime);
+            } else {
+                formatted += ' até ' + endObj.toLocaleDateString('pt-BR', optionsDate) + ' • ' + endObj.toLocaleTimeString('pt-BR', optionsTime);
+            }
+        }
+        return formatted;
+    }
+
+    // Auto select color dynamically from chosen EventType data-color attribute
+    function autoSelectColor() {
+        const select = document.getElementById('formEventType');
+        const val = select.value;
+        let color = '#3b82f6';
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === val) {
+                color = select.options[i].getAttribute('data-color') || '#3b82f6';
+                break;
+            }
+        }
+        document.getElementById('formColor').value = color;
+    }
+
+    // Details Modal dialog populating
+    function openDetailModal(fcEvent) {
+        const props = fcEvent.extendedProps;
+        const color = fcEvent.backgroundColor || '#3b82f6';
+
+        document.getElementById('viewModalColorBar').style.backgroundColor = color;
+        document.getElementById('viewModalTitle').innerText = fcEvent.title;
+        document.getElementById('viewModalTime').innerText = formatEventDate(fcEvent.start, fcEvent.end);
+        document.getElementById('viewModalOrganizer').innerText = props.organizerName;
+
+        // Meeting Link Button
+        const meetRow = document.getElementById('viewModalMeetingLinkRow');
+        const meetBtn = document.getElementById('viewModalMeetingLinkBtn');
+        if (props.meetingLink) {
+            meetRow.classList.remove('d-none');
+            meetBtn.setAttribute('href', props.meetingLink);
+        } else {
+            meetRow.classList.add('d-none');
+        }
+
+        // Notes description
+        const notesRow = document.getElementById('viewModalNotesRow');
+        if (fcEvent.description || props.notes) {
+            notesRow.classList.remove('d-none');
+            document.getElementById('viewModalNotes').innerText = fcEvent.description || props.notes;
+        } else {
+            notesRow.classList.add('d-none');
+        }
+
+        // Location text
+        const locationRow = document.getElementById('viewModalLocationRow');
+        if (props.locationName || props.cityName) {
+            locationRow.classList.remove('d-none');
+            let locationText = '';
+            if (props.locationName) locationText += props.locationName;
+            if (props.cityName) {
+                if (locationText) locationText += ' - ';
+                locationText += props.cityName;
+            }
+            document.getElementById('viewModalLocation').innerText = locationText;
+        } else {
+            locationRow.classList.add('d-none');
+        }
+
+        // Participants badging
+        const partRow = document.getElementById('viewModalParticipantsRow');
+        const partContainer = document.getElementById('viewModalParticipants');
+        partContainer.innerHTML = '';
+        if (props.participants && props.participants.length > 0) {
+            partRow.classList.remove('d-none');
+            props.participants.forEach(p => {
+                partContainer.innerHTML += `<span class="attendee-badge"><i class="bi bi-person-fill"></i> ${p.name}</span>`;
+            });
+        } else {
+            partRow.classList.add('d-none');
+        }
+
+        // External Participants badging
+        const extRow = document.getElementById('viewModalExternalParticipantsRow');
+        const extContainer = document.getElementById('viewModalExternalParticipants');
+        extContainer.innerHTML = '';
+        if (props.externalParticipants) {
+            extRow.classList.remove('d-none');
+            const emails = props.externalParticipants.split(',').map(email => email.trim()).filter(email => email.length > 0);
+            emails.forEach(email => {
+                extContainer.innerHTML += `<span class="attendee-badge" style="background-color: rgba(32, 42, 68, 0.05); color: var(--orange-primary);"><i class="bi bi-envelope"></i> ${email}</span>`;
+            });
+        } else {
+            extRow.classList.add('d-none');
+        }
+
+        // Edit/Delete buttons conditionally rendered based on permissions
+        const actionsContainer = document.getElementById('viewModalActions');
+        actionsContainer.innerHTML = '';
+        if (props.canEdit) {
+            let cancelBtnHtml = '';
+            if (props.status !== 'cancelado') {
+                cancelBtnHtml = `<button type="button" class="btn btn-sm" onclick="openCancelModal(${fcEvent.id})"
+                    title="Cancelar Reuniao"
+                    style="border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #fef2f2; border: 1px solid #fecaca;">
+                    <i class="bi bi-x-circle-fill" style="font-size: 13px; color: #ef4444;"></i>
+                </button>`;
+            } else {
+                cancelBtnHtml = '<span class="badge" style="background:#fee2e2;color:#991b1b;font-size:10px;padding:4px 8px;border-radius:20px;">Cancelado</span>';
+            }
+            actionsContainer.innerHTML = `
+                <button type="button" class="btn btn-sm btn-light border" onclick="openEditModal(${fcEvent.id})" title="Editar" style="border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #ffffff;">
+                    <i class="bi bi-pencil-fill text-secondary" style="font-size: 13px;"></i>
+                </button>
+                ${cancelBtnHtml}
+                <button type="button" class="btn btn-sm btn-light border" onclick="deleteEvent(${fcEvent.id})" title="Excluir" style="border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #ffffff;">
+                    <i class="bi bi-trash3-fill text-secondary" style="font-size: 13px;"></i>
+                </button>
+            `;
+        }
+
+        viewEventModal.show();
+    }
+
+    // Form Modal open
+    function openCreateModal(startStr, endStr) {
+        document.getElementById('eventForm').reset();
+        document.getElementById('formEventId').value = '';
+        document.getElementById('formModalTitle').innerText = 'Criar Compromisso';
+        
+        let startVal = '';
+        let endVal = '';
+        
+        if (startStr) {
+            let start = startStr;
+            let end = endStr;
+            
+            if (!startStr.includes('T')) {
+                // All-day selection (e.g. from Month View click)
+                start = startStr + 'T09:00';
+                
+                if (endStr) {
+                    let startDateObj = new Date(startStr + 'T00:00:00');
+                    let endDateObj = new Date(endStr + 'T00:00:00');
+                    
+                    if ((endDateObj - startDateObj) <= 86400000) {
+                        // Single-day selection: keep on the same day!
+                        end = startStr + 'T10:00';
+                    } else {
+                        // Multi-day selection: subtract 1 day from the exclusive end date
+                        let prevDay = new Date(endDateObj.getTime() - 86400000);
+                        let prevDayStr = prevDay.toISOString().substring(0, 10);
+                        end = prevDayStr + 'T10:00';
+                    }
+                } else {
+                    end = startStr + 'T10:00';
+                }
+            } else {
+                // selection with time (e.g. from Week or Day View)
+                start = startStr.substring(0, 16);
+                end = endStr ? endStr.substring(0, 16) : start;
+            }
+            
+            startVal = start;
+            endVal = end;
+        } else {
+            let now = new Date();
+            let nowStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().substring(0, 16);
+            let nextHour = new Date(now.getTime() + 60 * 60 * 1000);
+            let nextHourStr = new Date(nextHour.getTime() - nextHour.getTimezoneOffset() * 60000).toISOString().substring(0, 16);
+            
+            startVal = nowStr;
+            endVal = nextHourStr;
+        }
+
+        let startDatePart = '';
+        let startTimePart = '';
+        let endDatePart = '';
+        let endTimePart = '';
+
+        if (startVal.includes('T')) {
+            const parts = startVal.split('T');
+            startDatePart = parts[0];
+            startTimePart = parts[1].substring(0, 5);
+        } else {
+            startDatePart = startVal;
+            startTimePart = '09:00';
+        }
+
+        if (endVal.includes('T')) {
+            const parts = endVal.split('T');
+            endDatePart = parts[0];
+            endTimePart = parts[1].substring(0, 5);
+        } else {
+            endDatePart = endVal;
+            endTimePart = '10:00';
+        }
+
+        if (startDatePicker) startDatePicker.setDate(startDatePart);
+        else document.getElementById('formStartDateOnly').value = startDatePart;
+
+        document.getElementById('formStartTimeOnly').value = startTimePart;
+
+        if (endDatePicker) endDatePicker.setDate(endDatePart);
+        else document.getElementById('formEndDateOnly').value = endDatePart;
+
+        document.getElementById('formEndTimeOnly').value = endTimePart;
+
+        // 1. Automatically force Agendado status and hide the field on create
+        const statusSelect = document.getElementById('formStatus');
+        if (statusSelect.tomselect) {
+            statusSelect.tomselect.setValue('agendado');
+        } else {
+            statusSelect.value = 'agendado';
+        }
+        document.getElementById('formStatusRow').style.setProperty('display', 'none', 'important');
+
+        // 2. Clear Tom Select values cleanly
+        if (employeesSelect) {
+            employeesSelect.clear();
+        }
+        if (sectorBatchSelect) {
+            isClearingSectors = true;
+            sectorBatchSelect.clear();
+            isClearingSectors = false;
+        }
+
+        const typeSelect = document.getElementById('formEventType');
+        if (typeSelect.tomselect) {
+            const firstVal = typeSelect.options.length > 0 ? typeSelect.options[0].value : '';
+            typeSelect.tomselect.setValue(firstVal);
+        } else {
+            typeSelect.value = typeSelect.options.length > 0 ? typeSelect.options[0].value : '';
+        }
+
+        const locSelect = document.getElementById('formLocation');
+        if (locSelect.tomselect) {
+            locSelect.tomselect.setValue('');
+        } else {
+            locSelect.value = '';
+        }
+
+        const citySelect = document.getElementById('formCity');
+        if (citySelect.tomselect) {
+            citySelect.tomselect.setValue('');
+        } else {
+            citySelect.value = '';
+        }
+
+        document.getElementById('formMeetingLink').value = '';
+        document.getElementById('formExternalParticipants').value = '';
+
+        autoSelectColor();
+        eventFormModal.show();
+    }
+
+    function openEditModal(eventId) {
+        viewEventModal.hide();
+
+        const fcEvent = calendar.getEventById(eventId);
+        if (!fcEvent) return;
+
+        const props = fcEvent.extendedProps;
+
+        document.getElementById('formEventId').value = fcEvent.id;
+        document.getElementById('formModalTitle').innerText = 'Editar Compromisso';
+        document.getElementById('formTitle').value = fcEvent.title;
+        
+        // Match the category
+        const typeSelect = document.getElementById('formEventType');
+        if (typeSelect.tomselect) {
+            typeSelect.tomselect.setValue(props.eventType);
+        } else {
+            typeSelect.value = props.eventType;
+        }
+
+        let start = new Date(fcEvent.start);
+        let startStr = new Date(start.getTime() - start.getTimezoneOffset() * 60000).toISOString().substring(0, 16);
+
+        let endStr = '';
+        if (fcEvent.end) {
+            let end = new Date(fcEvent.end);
+            endStr = new Date(end.getTime() - end.getTimezoneOffset() * 60000).toISOString().substring(0, 16);
+        } else {
+            endStr = startStr;
+        }
+
+        let startDatePart = '';
+        let startTimePart = '';
+        let endDatePart = '';
+        let endTimePart = '';
+
+        if (startStr.includes('T')) {
+            const parts = startStr.split('T');
+            startDatePart = parts[0];
+            startTimePart = parts[1].substring(0, 5);
+        } else {
+            startDatePart = startStr;
+            startTimePart = '09:00';
+        }
+
+        if (endStr.includes('T')) {
+            const parts = endStr.split('T');
+            endDatePart = parts[0];
+            endTimePart = parts[1].substring(0, 5);
+        } else {
+            endDatePart = endStr;
+            endTimePart = '10:00';
+        }
+
+        if (startDatePicker) startDatePicker.setDate(startDatePart);
+        else document.getElementById('formStartDateOnly').value = startDatePart;
+
+        document.getElementById('formStartTimeOnly').value = startTimePart;
+
+        if (endDatePicker) endDatePicker.setDate(endDatePart);
+        else document.getElementById('formEndDateOnly').value = endDatePart;
+
+        document.getElementById('formEndTimeOnly').value = endTimePart;
+
+        const locSelect = document.getElementById('formLocation');
+        if (locSelect.tomselect) {
+            locSelect.tomselect.setValue(props.locationId || '');
+        } else {
+            locSelect.value = props.locationId || '';
+        }
+
+        const citySelect = document.getElementById('formCity');
+        if (citySelect.tomselect) {
+            citySelect.tomselect.setValue(props.cityId || '');
+        } else {
+            citySelect.value = props.cityId || '';
+        }
+
+        document.getElementById('formNotes').value = fcEvent.description || '';
+        document.getElementById('formMeetingLink').value = props.meetingLink || '';
+        document.getElementById('formExternalParticipants').value = props.externalParticipants || '';
+        
+        // 1. Show the status field on edit
+        const statusSelect = document.getElementById('formStatus');
+        if (statusSelect.tomselect) {
+            statusSelect.tomselect.setValue(props.status || 'agendado');
+        } else {
+            statusSelect.value = props.status || 'agendado';
+        }
+        document.getElementById('formStatusRow').style.setProperty('display', 'block', 'important');
+
+        // 2. Load participants into Tom Select
+        const participantIds = props.participants.map(p => p.id.toString());
+        if (employeesSelect) {
+            employeesSelect.setValue(participantIds);
+        }
+        if (sectorBatchSelect) {
+            isClearingSectors = true;
+            sectorBatchSelect.clear();
+            isClearingSectors = false;
+        }
+
+        autoSelectColor();
+        eventFormModal.show();
+    }
+
+    // Submit Create/Edit Form
+    function submitEventForm(event) {
+        event.preventDefault();
+        
+        const eventId = document.getElementById('formEventId').value;
+        const title = document.getElementById('formTitle').value;
+        const event_type = document.getElementById('formEventType').value;
+        const color = document.getElementById('formColor').value;
+        const startDateVal = document.getElementById('formStartDateOnly').value;
+        const startTimeVal = document.getElementById('formStartTimeOnly').value;
+        const endDateVal = document.getElementById('formEndDateOnly').value;
+        const endTimeVal = document.getElementById('formEndTimeOnly').value;
+
+        const start_date = startDateVal + 'T' + startTimeVal;
+        const end_date = endDateVal + 'T' + endTimeVal;
+        const location = document.getElementById('formLocation').value;
+        const city = document.getElementById('formCity').value;
+        const notes = document.getElementById('formNotes').value;
+        const status = document.getElementById('formStatus').value;
+        const meeting_link = document.getElementById('formMeetingLink').value;
+        const external_participants = document.getElementById('formExternalParticipants').value;
+
+        const employees = employeesSelect ? employeesSelect.getValue().map(v => parseInt(v)) : [];
+
+        const payload = {
+            title, event_type, color, start_date, end_date,
+            location: location || null,
+            city: city || null,
+            notes, status, employees,
+            meeting_link, external_participants
+        };
+
+        let url = "{% url 'agenda_create_event' %}";
+        if (eventId) {
+            url = `/agenda/api/events/${eventId}/update/`;
+        }
+
+        fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                eventFormModal.hide();
+                calendar.refetchEvents();
+                alert(data.message);
+            } else {
+                alert("Erro: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro ao salvar o compromisso.");
+        });
+    }
+
+    // Drag-resize timing update
+    function updateEventTiming(fcEvent) {
+        const payload = {
+            start_date: fcEvent.start.toISOString(),
+            end_date: fcEvent.end ? fcEvent.end.toISOString() : fcEvent.start.toISOString(),
+            is_drag_drop: true
+        };
+
+        fetch(`/agenda/api/events/${fcEvent.id}/update/`, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status !== 'success') {
+                alert("Erro ao reposicionar: " + data.message);
+                calendar.refetchEvents();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro de conexão.");
+            calendar.refetchEvents();
+        });
+    }
+
+    // Delete Event
+    function deleteEvent(eventId) {
+        if (!confirm("Excluir compromisso permanentemente?")) {
+            return;
+        }
+
+        fetch(`/agenda/api/events/${eventId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                viewEventModal.hide();
+                calendar.refetchEvents();
+                alert(data.message);
+            } else {
+                alert("Erro: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro ao excluir compromisso.");
+        });
+    }
+
+    // Cancel Event
+    let _cancelEventId = null;
+    function openCancelModal(eventId) {
+        _cancelEventId = eventId;
+        const eventTitle = document.getElementById('viewModalTitle').innerText || '';
+        document.getElementById('cancelEventTitle').innerText = eventTitle;
+        document.getElementById('cancelReasonText').value = '';
+        document.getElementById('cancelReasonText').classList.remove('is-invalid');
+        const modal = new bootstrap.Modal(document.getElementById('cancelEventModal'));
+        modal.show();
+    }
+
+    function confirmCancelEvent() {
+        const reason = document.getElementById('cancelReasonText').value.trim();
+        if (!reason) {
+            document.getElementById('cancelReasonText').classList.add('is-invalid');
+            return;
+        }
+        document.getElementById('cancelReasonText').classList.remove('is-invalid');
+
+        fetch(`/agenda/api/events/${_cancelEventId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ reason: reason })
+        })
+        .then(res => res.json())
+        .then(data => {
+            bootstrap.Modal.getInstance(document.getElementById('cancelEventModal')).hide();
+            viewEventModal.hide();
+            calendar.refetchEvents();
+            if (data.success) {
+                showToast('Evento cancelado. Participantes notificados por email.', 'success');
+            } else {
+                showToast(data.error || 'Erro ao cancelar evento.', 'danger');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Erro ao cancelar evento.', 'danger');
+        });
+    }
+
+    // ==============================================
+    // Keep Notes functions
+    // ==============================================
+    function saveQuickNote() {
+        const titleInput = document.getElementById('keep-note-title');
+        const contentInput = document.getElementById('keep-note-content');
+        const eventRefInput = document.getElementById('keep-note-event-ref');
+        
+        const title = titleInput.value.trim() || 'Anotação Sem Título';
+        const content = contentInput.value.trim();
+        const referenced_event_id = eventRefInput.value || null;
+
+        if (!content) {
+            alert("Digite o conteúdo da sua nota!");
+            return;
+        }
+
+        const payload = { title, content, referenced_event_id };
+
+        fetch("{% url 'agenda_create_quick_note' %}", {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                titleInput.value = '';
+                contentInput.value = '';
+                eventRefInput.value = '';
+
+                const placeholder = document.getElementById('no-notes-placeholder');
+                if (placeholder) {
+                    placeholder.remove();
+                }
+
+                const list = document.getElementById('quick-notes-list');
+                const noteCard = document.createElement('div');
+                noteCard.className = 'note-card mb-3 cursor-pointer';
+                noteCard.id = `note-card-${data.note.id}`;
+                const refId = data.note.referenced_event ? data.note.referenced_event.id : '';
+                noteCard.setAttribute('data-ref-event-id', refId);
+                noteCard.setAttribute('onclick', `handleNoteCardClick(event, ${data.note.id}, '${refId}')`);
+                noteCard.style.opacity = '0';
+                noteCard.style.transform = 'translateY(-10px)';
+                noteCard.style.background = '#fffbeb';
+                noteCard.style.borderLeft = '4px solid #f59e0b';
+                noteCard.style.borderRadius = '10px';
+                noteCard.style.padding = '12px 14px';
+                noteCard.style.position = 'relative';
+                noteCard.style.boxShadow = '0 2px 5px rgba(245, 158, 11, 0.05)';
+                noteCard.style.transition = 'all 0.2s';
+                
+                let refBadgeHTML = '';
+                if (data.note.referenced_event) {
+                    refBadgeHTML = `
+                        <div class="mt-2 d-flex">
+                            <span class="badge text-white cursor-pointer px-2.5 py-1 d-inline-flex align-items-center gap-1.5" onclick="openReferencedMeeting(${data.note.referenced_event.id})" style="background-color: ${data.note.referenced_event.color || '#3b82f6'}; font-size: 10px; font-weight: 700; border-radius: 5px; cursor: pointer; transition: transform 0.15s;" title="Clique para ver no calendário" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                                <i class="bi bi-calendar-event"></i> ${data.note.referenced_event.title}
+                            </span>
+                        </div>
+                    `;
+                }
+                noteCard.innerHTML = `
+                    <div class="note-actions" style="position: absolute; top: 8px; right: 8px; display: flex; align-items: center; gap: 6px;">
+                        <span class="note-pin-indicator d-none" style="color: #f59e0b; font-size: 13px;" title="Fixado na tela">
+                            <i class="bi bi-pin-angle-fill"></i>
+                        </span>
+                        <button class="note-delete-btn" onclick="deleteQuickNote(${data.note.id})" style="color: #d97706; cursor: pointer; opacity: 0.5; transition: opacity 0.15s; border: none; background: none; padding: 0; font-size: 13px; display: inline-flex; align-items: center;" title="Excluir Permanentemente">
+                            <i class="bi bi-x-circle-fill"></i>
+                        </button>
+                    </div>
+                    <div class="note-title" style="font-size: 13px; font-weight: 700; color: #78350f; margin-bottom: 4px; padding-right: 18px;">${escapeHTML(data.note.title)}</div>
+                    <div class="note-content" style="font-size: 12px; color: #92400e; line-height: 1.4; white-space: pre-wrap; margin-bottom: 6px; word-break: break-word;">${escapeHTML(data.note.content)}</div>
+                    ${refBadgeHTML}
+                `;
+
+                list.prepend(noteCard);
+
+                setTimeout(() => {
+                    noteCard.style.transition = 'all 0.25s ease';
+                    noteCard.style.opacity = '1';
+                    noteCard.style.transform = 'translateY(0)';
+                }, 50);
+
+            } else {
+                alert("Erro ao salvar anotação.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro de rede.");
+        });
+    }
+
+    function deleteQuickNote(noteId) {
+        if (!confirm("Excluir anotação permanente?")) {
+            return;
+        }
+
+        fetch(`/agenda/api/notes/${noteId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const card = document.getElementById(`note-card-${noteId}`);
+                if (card) {
+                    card.style.transition = 'all 0.2s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.9)';
+                    
+                    setTimeout(() => {
+                        card.remove();
+                        const list = document.getElementById('quick-notes-list');
+                        if (list.children.length === 0) {
+                            list.innerHTML = `
+                                <div class="text-center text-muted py-3" id="no-notes-placeholder" style="font-size: 11.5px;">
+                                    Nenhuma anotação rápida.
+                                </div>
+                            `;
+                        }
+                    }, 200);
+                }
+            } else {
+                alert("Erro ao excluir nota.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro de rede.");
+        });
+    }
+
+    // Automatically sync employees of a sector when selected/unselected
+    function syncSectorEmployees(sectorId, isInclude) {
+        const selectEmployees = document.getElementById('formEmployees');
+        if (!employeesSelect) return;
+
+        let currentValues = employeesSelect.getValue();
+        if (!Array.isArray(currentValues)) {
+            currentValues = currentValues ? [currentValues] : [];
+        }
+
+        let changed = false;
+        for (let i = 0; i < selectEmployees.options.length; i++) {
+            const option = selectEmployees.options[i];
+            const optionSector = option.getAttribute('data-sector');
+            if (optionSector === sectorId) {
+                const val = option.value;
+                if (isInclude) {
+                    if (!currentValues.includes(val)) {
+                        currentValues.push(val);
+                        changed = true;
+                    }
+                } else {
+                    const idx = currentValues.indexOf(val);
+                    if (idx > -1) {
+                        currentValues.splice(idx, 1);
+                        changed = true;
+                    }
+                }
+            }
+        }
+
+        if (changed) {
+            employeesSelect.setValue(currentValues);
+        }
+    }
+
+    // Dynamic Space/Location creation
+    function openNewSpaceModal() {
+        document.getElementById('newSpaceName').value = '';
+        newSpaceModal.show();
+    }
+
+    function submitNewSpace() {
+        const name = document.getElementById('newSpaceName').value.trim();
+        if (!name) {
+            alert("Por favor, digite o nome do espaço.");
+            return;
+        }
+
+        fetch("{% url 'agenda_create_location' %}", {
+            method: 'POST',
+            body: JSON.stringify({ name: name }),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                newSpaceModal.hide();
+                
+                // Add option to the dropdown if it doesn't exist
+                const select = document.getElementById('formLocation');
+                let exists = false;
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].value == data.location.id) {
+                        exists = true;
+                        break;
+                    }
+                }
+                
+                if (!exists) {
+                    const option = document.createElement('option');
+                    option.value = data.location.id;
+                    option.text = data.location.name;
+                    select.appendChild(option);
+                }
+                
+                if (select.tomselect) {
+                    select.tomselect.addOption({
+                        value: data.location.id,
+                        text: data.location.name
+                    });
+                    select.tomselect.setValue(data.location.id);
+                } else {
+                    select.value = data.location.id;
+                }
+                alert(data.message);
+            } else {
+                alert("Erro: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro ao cadastrar espaço.");
+        });
+    }
+
+    let newTypePickr;
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialize Pickr for Quick New Type Modal safely as a popover triggered by the custom dot itself
+        try {
+            if (typeof Pickr !== 'undefined') {
+                newTypePickr = Pickr.create({
+                    el: '#customNewTypeColorDot',
+                    theme: 'classic',
+                    inline: false,
+                    useAsButton: true,
+                    default: '#3b82f6',
+                    
+                    components: {
+                        preview: true,
+                        opacity: false,
+                        hue: true,
+                        
+                        interaction: {
+                            hex: true,
+                            rgba: true,
+                            input: true,
+                            save: true
+                        }
+                    },
+                    i18n: {
+                        'btn:save': 'Confirmar'
+                    }
+                });
+                
+                // When color changes inside the pickr popover
+                newTypePickr.on('change', (color, instance) => {
+                    const hexColor = color.toHEXA().toString();
+                    document.getElementById('newTypeColor').value = hexColor;
+                    
+                    const customDot = document.getElementById('customNewTypeColorDot');
+                    if (customDot) customDot.style.background = hexColor;
+                    
+                    // Show check icon on custom dot
+                    document.getElementById('customNewTypeColorIcon').classList.add('d-none');
+                    document.getElementById('customNewTypeColorCheck').classList.remove('d-none');
+                    customDot.classList.add('active');
+                    
+                    // Deactivate other predefined dots
+                    document.querySelectorAll('#newTypeColorPicker .color-dot').forEach(el => {
+                        if (el !== customDot) {
+                            el.classList.remove('active');
+                            const check = el.querySelector('i');
+                            if (check) check.classList.add('d-none');
+                        }
+                    });
+                });
+
+                // When pickr is opened, automatically highlight the custom dot
+                newTypePickr.on('show', (color, instance) => {
+                    instance.adjustPosition();
+                    const customDot = document.getElementById('customNewTypeColorDot');
+                    if (customDot) {
+                        customDot.classList.add('active');
+                        document.getElementById('customNewTypeColorIcon').classList.add('d-none');
+                        document.getElementById('customNewTypeColorCheck').classList.remove('d-none');
+                    }
+                    
+                    // Deactivate predefined dots
+                    document.querySelectorAll('#newTypeColorPicker .color-dot').forEach(el => {
+                        if (el !== customDot) {
+                            el.classList.remove('active');
+                            const check = el.querySelector('i');
+                            if (check) check.classList.add('d-none');
+                        }
+                    });
+                    
+                    // Update Pickr's color to whatever color is currently set
+                    const currentColor = document.getElementById('newTypeColor').value || '#3b82f6';
+                    instance.setColor(currentColor);
+                });
+
+                newTypePickr.on('save', (color, instance) => {
+                    instance.hide();
+                });
+                
+                window.newTypePickr = newTypePickr;
+            } else {
+                console.warn('Pickr library is not loaded on this page.');
+            }
+        } catch (e) {
+            console.error('Error initializing Pickr in calendar:', e);
+        }
+
+        // Manual click trigger to be 100% sure it opens
+        const customDot = document.getElementById('customNewTypeColorDot');
+        if (customDot) {
+            customDot.addEventListener('click', () => {
+                if (newTypePickr) {
+                    newTypePickr.show();
+                }
+            });
+        }
+        
+        // Restore pinned notes on load
+        restorePinnedNotes();
+    });
+
+    // Dynamic EventType/MeetingType creation
+    function openNewTypeModal() {
+        document.getElementById('newTypeName').value = '';
+        document.getElementById('newTypeColor').value = '#3b82f6';
+        
+        // Reset color dots
+        document.querySelectorAll('#newTypeColorPicker .color-dot').forEach(el => {
+            el.classList.remove('active');
+            const check = el.querySelector('i');
+            if (check) check.classList.add('d-none');
+        });
+        
+        // Reset custom color dot
+        const customDot = document.getElementById('customNewTypeColorDot');
+        if (customDot) {
+            customDot.classList.remove('active');
+            customDot.style.background = 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)';
+            document.getElementById('customNewTypeColorIcon').classList.remove('d-none');
+            document.getElementById('customNewTypeColorCheck').classList.add('d-none');
+        }
+
+        const defaultDot = document.querySelector('#newTypeColorPicker .color-dot[data-color="#3b82f6"]');
+        if (defaultDot) {
+            defaultDot.classList.add('active');
+            defaultDot.querySelector('i').classList.remove('d-none');
+        }
+        
+        newTypeModal.show();
+    }
+
+    function selectNewTypeColor(element) {
+        document.querySelectorAll('#newTypeColorPicker .color-dot').forEach(el => {
+            el.classList.remove('active');
+            const check = el.querySelector('i');
+            if (check) check.classList.add('d-none');
+        });
+
+        element.classList.add('active');
+        const check = element.querySelector('i');
+        if (check) check.classList.remove('d-none');
+        document.getElementById('newTypeColor').value = element.getAttribute('data-color');
+        
+        // Reset custom color dot
+        const customDot = document.getElementById('customNewTypeColorDot');
+        if (customDot) {
+            customDot.classList.remove('active');
+            customDot.style.background = 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)';
+            document.getElementById('customNewTypeColorIcon').classList.remove('d-none');
+            document.getElementById('customNewTypeColorCheck').classList.add('d-none');
+        }
+    }
+
+    function submitNewType() {
+        const name = document.getElementById('newTypeName').value.trim();
+        const color = document.getElementById('newTypeColor').value;
+        if (!name) {
+            alert("Por favor, digite o nome do tipo de compromisso.");
+            return;
+        }
+
+        fetch("{% url 'agenda_create_event_type' %}", {
+            method: 'POST',
+            body: JSON.stringify({ name: name, color: color }),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                newTypeModal.hide();
+                
+                // Add option to the dropdown if it doesn't exist
+                const select = document.getElementById('formEventType');
+                let exists = false;
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].value == data.event_type.name) {
+                        exists = true;
+                        break;
+                    }
+                }
+                
+                if (!exists) {
+                    const option = document.createElement('option');
+                    option.value = data.event_type.name;
+                    option.text = data.event_type.label;
+                    option.setAttribute('data-color', data.event_type.color);
+                    select.appendChild(option);
+                }
+                
+                if (select.tomselect) {
+                    select.tomselect.addOption({
+                        value: data.event_type.name,
+                        text: data.event_type.label
+                    });
+                    select.tomselect.setValue(data.event_type.name);
+                } else {
+                    select.value = data.event_type.name;
+                }
+                autoSelectColor();
+                alert(data.message);
+            } else {
+                alert("Erro: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro ao cadastrar tipo de compromisso.");
+        });
+    }
+
+    // --- Google Calendar Style Drawer Control ---
+    let currentDrawerMode = null; // 'filters', 'notes' ou null (closed)
+
+    function toggleDrawer(mode) {
+        const drawer = document.getElementById('calendarDrawer');
+        const btnFilters = document.getElementById('btnDrawerFilters');
+        const btnNotes = document.getElementById('btnDrawerNotes');
+        const divFilters = document.getElementById('drawerContentFilters');
+        const divNotes = document.getElementById('drawerContentNotes');
+        const title = document.getElementById('drawerTitle');
+        const maxBtn = document.getElementById('btnMaximizeNotes');
+
+        if (!drawer || !btnFilters || !btnNotes || !divFilters || !divNotes || !title) return;
+
+        // Se clicou no ícone que já está aberto, fecha a gaveta
+        if (currentDrawerMode === mode) {
+            closeDrawer();
+            return;
+        }
+
+        currentDrawerMode = mode;
+        
+        // Remove classes ativas de ambos
+        btnFilters.classList.remove('active');
+        btnNotes.classList.remove('active');
+        
+        // Oculta conteúdos
+        divFilters.classList.add('d-none');
+        divNotes.classList.add('d-none');
+        if (maxBtn) {
+            maxBtn.classList.add('d-none');
+            maxBtn.classList.remove('d-flex');
+        }
+
+        if (mode === 'filters') {
+            btnFilters.classList.add('active');
+            title.innerHTML = '<i class="bi bi-person-check-fill me-2 text-primary"></i>Minhas Agendas';
+            divFilters.classList.remove('d-none');
+        } else if (mode === 'notes') {
+            btnNotes.classList.add('active');
+            title.innerHTML = '<i class="bi bi-sticky-fill me-2 text-warning"></i>Anotações Pessoais';
+            divNotes.classList.remove('d-none');
+            if (maxBtn) {
+                maxBtn.classList.remove('d-none');
+                maxBtn.classList.add('d-flex');
+            }
+        }
+
+        // Abre a gaveta
+        drawer.classList.add('open');
+
+        // Atualiza tamanho do FullCalendar de forma dinâmica e elegante
+        setTimeout(() => {
+            if (calendar) {
+                calendar.updateSize();
+            }
+        }, 150);
+    }
+
+    function closeDrawer() {
+        const drawer = document.getElementById('calendarDrawer');
+        const btnFilters = document.getElementById('btnDrawerFilters');
+        const btnNotes = document.getElementById('btnDrawerNotes');
+        const maxBtn = document.getElementById('btnMaximizeNotes');
+
+        if (!drawer || !btnFilters || !btnNotes) return;
+
+        currentDrawerMode = null;
+        drawer.classList.remove('open');
+        btnFilters.classList.remove('active');
+        btnNotes.classList.remove('active');
+        if (maxBtn) {
+            maxBtn.classList.add('d-none');
+            maxBtn.classList.remove('d-flex');
+        }
+
+        // Atualiza tamanho do FullCalendar após transição
+        setTimeout(() => {
+            if (calendar) {
+                calendar.updateSize();
+            }
+        }, 300);
+    }
+
+    function openReferencedMeeting(eventId) {
+        if (!calendar) return;
+        const ev = calendar.getEventById(eventId);
+        if (ev) {
+            openDetailModal(ev);
+        } else {
+            alert("O compromisso referenciado não está carregado na visualização atual do calendário.");
+        }
+    }
+
+    // --- Notepad (Bloco de Notas) Multi-Sticky Cascade Handlers ---
+    let openStickiesCount = 0;
+    const PINNED_NOTES_KEY = "pinned_notes_{{ request.user.id }}";
+
+    function getPinnedNotes() {
+        try {
+            const data = localStorage.getItem(PINNED_NOTES_KEY);
+            return data ? JSON.parse(data) : {};
+        } catch (e) {
+            console.error("Erro ao ler localStorage:", e);
+            return {};
+        }
+    }
+
+    function savePinnedNotes(pinnedDict) {
+        try {
+            localStorage.setItem(PINNED_NOTES_KEY, JSON.stringify(pinnedDict));
+        } catch (e) {
+            console.error("Erro ao salvar no localStorage:", e);
+        }
+    }
+
+    function addPinnedNoteToStorage(noteId, top, left, zIndex) {
+        const pinned = getPinnedNotes();
+        pinned[noteId] = { id: noteId, top: top, left: left, zIndex: zIndex };
+        savePinnedNotes(pinned);
+    }
+
+    function removePinnedNoteFromStorage(noteId) {
+        const pinned = getPinnedNotes();
+        delete pinned[noteId];
+        savePinnedNotes(pinned);
+    }
+
+    function updatePinnedNotePosition(noteId, top, left) {
+        const pinned = getPinnedNotes();
+        if (pinned[noteId]) {
+            pinned[noteId].top = top;
+            pinned[noteId].left = left;
+            savePinnedNotes(pinned);
+        }
+    }
+
+    function updatePinnedNoteZIndex(noteId, zIndex) {
+        const pinned = getPinnedNotes();
+        if (pinned[noteId]) {
+            pinned[noteId].zIndex = zIndex;
+            savePinnedNotes(pinned);
+        }
+    }
+
+    function restorePinnedNotes() {
+        const pinned = getPinnedNotes();
+        for (const noteId in pinned) {
+            const card = document.getElementById(`note-card-${noteId}`);
+            if (card) {
+                const titleEl = card.querySelector('.note-title');
+                const contentEl = card.querySelector('.note-content');
+                const title = titleEl ? titleEl.innerText.trim() : 'Lembrete';
+                const content = contentEl ? contentEl.innerText.trim() : '';
+                
+                const refEventId = card.getAttribute('data-ref-event-id') || '';
+                
+                const item = pinned[noteId] || {};
+                spawnFloatingStickyNote(noteId, title, content, refEventId, item.top, item.left, item.zIndex);
+            } else {
+                removePinnedNoteFromStorage(noteId);
+            }
+        }
+    }
+
+    function handleNoteCardClick(event, noteId, refEventId) {
+        // Prevent opening sticky note if user clicked on delete button or badge link
+        if (event.target.closest('.note-delete-btn') || event.target.closest('.badge')) {
+            return;
+        }
+        
+        const existing = document.getElementById(`sticky-note-${noteId}`);
+        if (existing) {
+            closeStickyNote(noteId);
+        } else {
+            const card = document.getElementById(`note-card-${noteId}`);
+            if (!card) return;
+            
+            const title = card.querySelector('.note-title').innerText.trim();
+            const content = card.querySelector('.note-content').innerText.trim();
+            
+            spawnFloatingStickyNote(noteId, title, content, refEventId);
+        }
+    }
+
+    function spawnFloatingStickyNote(noteId, title, content, refEventId, savedTop, savedLeft, savedZ) {
+        // 1. If this sticky is already open on the screen, focus it and bring it to front!
+        const existing = document.getElementById(`sticky-note-${noteId}`);
+        if (existing) {
+            bringStickyToFront(noteId);
+            return;
+        }
+        
+        openStickiesCount++;
+        
+        // 2. Generate open events select options dynamically from the hidden source select
+        const openEventsSelect = document.getElementById('padNoteEventRef');
+        let optionsHTML = '<option value="">-- Vincular --</option>';
+        if (openEventsSelect) {
+            const options = openEventsSelect.querySelectorAll('option');
+            options.forEach(opt => {
+                if (opt.value) {
+                    const selected = opt.value == refEventId ? 'selected' : '';
+                    optionsHTML += `<option value="${opt.value}" ${selected}>${opt.text}</option>`;
+                }
+            });
+        }
+        
+        // 3. Create the sticky note element
+        const sticky = document.createElement('div');
+        sticky.className = 'floating-sticky-note shadow-lg';
+        sticky.id = `sticky-note-${noteId}`;
+        
+        // Decide top and left
+        let topPos = savedTop;
+        let leftPos = savedLeft;
+        
+        if (topPos === undefined || leftPos === undefined) {
+            topPos = 120 + (openStickiesCount % 8) * 35;
+            leftPos = 200 + (openStickiesCount % 8) * 40;
+        }
+        
+        let z = savedZ;
+        if (z === undefined) {
+            z = 1050 + openStickiesCount;
+        }
+        
+        sticky.style.cssText = `
+            position: fixed; 
+            width: 310px; 
+            z-index: ${z}; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            border: 1px solid #fef3c7; 
+            background-color: #fffdf9;
+            top: ${topPos}px;
+            left: ${leftPos}px;
+            box-shadow: 0 10px 25px -5px rgba(120, 53, 15, 0.15), 0 8px 10px -6px rgba(120, 53, 15, 0.05);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        `;
+        
+        sticky.innerHTML = `
+            <!-- Drag Header -->
+            <div class="sticky-note-header notepad-modern-header" style="cursor: move; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; background: #ffffff; border-bottom: 1px solid #f8fafc; user-select: none;">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="notepad-badge-pill" style="font-size: 10px; padding: 2px 8px;">
+                        <i class="bi bi-sticky-fill"></i> Lembrete
+                    </span>
+                </div>
+                <div class="d-flex align-items-center gap-1.5" style="display: flex; gap: 6px;">
+                    <!-- Delete -->
+                    <button type="button" class="btn btn-sm btn-light border-0 rounded-circle d-flex align-items-center justify-content-center" onclick="deleteStickyNote(${noteId})" style="width: 28px; height: 28px; background-color: #fef2f2; color: #ef4444; transition: all 0.2s;" title="Excluir Permanentemente">
+                        <i class="bi bi-trash3-fill" style="font-size: 11px;"></i>
+                    </button>
+                    <!-- Close / Pin Toggle -->
+                    <button type="button" class="btn btn-sm btn-light border-0 rounded-circle d-flex align-items-center justify-content-center" onclick="closeStickyNote(${noteId})" style="width: 28px; height: 28px; background-color: #fff9db; color: #f59e0b; transition: all 0.2s;" title="Desafixar do Calendário">
+                        <i class="bi bi-pin-angle-fill" style="font-size: 11px;"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Notepad Body -->
+            <div class="notepad-modern-body" style="padding: 16px !important; min-height: 220px; display: flex; flex-direction: column; background-color: #fffdf9;">
+                <input type="text" id="sticky-title-${noteId}" class="notepad-title-input" style="font-size: 16px !important; margin-bottom: 10px !important; padding-bottom: 2px !important; border-bottom: 1.5px solid rgba(245, 158, 11, 0.1) !important;" spellcheck="false" placeholder="Título...">
+                <textarea id="sticky-content-${noteId}" class="notepad-content-textarea" style="font-size: 13.5px !important; min-height: 120px !important; line-height: 1.5 !important;" spellcheck="false" placeholder="Anotação..."></textarea>
+                
+                <!-- Footer -->
+                <div class="notepad-modern-footer" style="padding-top: 10px !important; border-top: 1px solid rgba(245, 158, 11, 0.1) !important; display: flex; justify-content: space-between; align-items: center; margin-top: auto;">
+                    <select id="sticky-ref-${noteId}" class="form-select select-notepad-ref" style="height: 32px !important; font-size: 11px !important; padding: 4px 8px !important; max-width: 140px; color: #78350f;">
+                        ${optionsHTML}
+                    </select>
+                    
+                    <button class="btn btn-notepad-save" style="padding: 6px 14px !important; font-size: 11px !important; border-radius: 8px !important; height: 32px; display: flex; align-items: center; gap: 4px;" onclick="saveStickyNote(${noteId})">
+                        <i class="bi bi-check-lg" style="font-size: 12px;"></i> Salvar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // 4. Append to body
+        document.body.appendChild(sticky);
+
+        // Safe programmatic value assignment to prevent XSS and tag-closing injections
+        sticky.querySelector(`#sticky-title-${noteId}`).value = title;
+        sticky.querySelector(`#sticky-content-${noteId}`).value = content;
+        
+        // 5. Make it draggable by its header
+        makeStickyNoteDraggable(sticky, noteId);
+        
+        // 6. Focus listener: when clicking inside sticky, bring it to front
+        sticky.addEventListener('mousedown', () => {
+            bringStickyToFront(noteId);
+        });
+        
+        // 7. Update storage
+        addPinnedNoteToStorage(noteId, topPos, leftPos, z);
+        
+        // 8. Update sidebar card styling and pin indicator
+        const card = document.getElementById(`note-card-${noteId}`);
+        if (card) {
+            card.classList.add('is-pinned');
+            const pinInd = card.querySelector('.note-pin-indicator');
+            if (pinInd) {
+                pinInd.classList.remove('d-none');
+            }
+        }
+    }
+
+    function bringStickyToFront(noteId) {
+        const sticky = document.getElementById(`sticky-note-${noteId}`);
+        if (!sticky) return;
+        
+        // Find highest z-index among stickies
+        let maxZ = 1050;
+        document.querySelectorAll('.floating-sticky-note').forEach(el => {
+            const z = parseInt(el.style.zIndex) || 1050;
+            if (z > maxZ) maxZ = z;
+        });
+        
+        const newZ = maxZ + 1;
+        sticky.style.zIndex = newZ;
+        
+        // Save new z-index in storage
+        updatePinnedNoteZIndex(noteId, newZ);
+    }
+
+    function makeStickyNoteDraggable(element, noteId) {
+        const header = element.querySelector('.sticky-note-header');
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        
+        header.onmousedown = dragMouseDown;
+        
+        function dragMouseDown(e) {
+            e = e || window.event;
+            // If clicking inside input fields or select inside header, don't drag
+            if (e.target.closest('button') || e.target.closest('select') || e.target.closest('input') || e.target.closest('textarea')) {
+                return;
+            }
+            e.preventDefault();
+            
+            // Bring to front on mousedown
+            bringStickyToFront(noteId);
+            
+            // Get startup coordinates
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            
+            document.onmouseup = closeDragElement;
+            document.onmousemove = elementDrag;
+        }
+        
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            
+            const rect = element.getBoundingClientRect();
+            const newTop = rect.top - pos2;
+            const newLeft = rect.left - pos1;
+            
+            element.style.top = newTop + "px";
+            element.style.left = newLeft + "px";
+            
+            // Persist the new position in localStorage
+            updatePinnedNotePosition(noteId, newTop, newLeft);
+        }
+        
+        function closeDragElement() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+        }
+    }
+
+    function closeStickyNote(noteId) {
+        const sticky = document.getElementById(`sticky-note-${noteId}`);
+        if (sticky) {
+            sticky.style.opacity = '0';
+            sticky.style.transform = 'translateY(10px)';
+            setTimeout(() => {
+                sticky.remove();
+            }, 250);
+        }
+        
+        // Remove from storage
+        removePinnedNoteFromStorage(noteId);
+        
+        // Update sidebar card styling and pin indicator
+        const card = document.getElementById(`note-card-${noteId}`);
+        if (card) {
+            card.classList.remove('is-pinned');
+            const pinInd = card.querySelector('.note-pin-indicator');
+            if (pinInd) {
+                pinInd.classList.add('d-none');
+            }
+        }
+    }
+
+    function saveStickyNote(noteId) {
+        const titleInput = document.getElementById(`sticky-title-${noteId}`);
+        const contentInput = document.getElementById(`sticky-content-${noteId}`);
+        const refSelect = document.getElementById(`sticky-ref-${noteId}`);
+        
+        const title = titleInput.value.trim() || 'Anotação Sem Título';
+        const content = contentInput.value.trim();
+        const referenced_event_id = refSelect ? refSelect.value : null;
+
+        if (!content) {
+            alert("O conteúdo da nota não pode estar vazio!");
+            return;
+        }
+
+        const payload = { title, content, referenced_event_id };
+
+        fetch(`/agenda/api/notes/${noteId}/update/`, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Update the card in the list dynamically!
+                const card = document.getElementById(`note-card-${noteId}`);
+                if (card) {
+                    card.querySelector('.note-title').innerText = data.note.title;
+                    card.querySelector('.note-content').innerText = data.note.content;
+                    
+                    // Update badge and onclick refId
+                    const refId = data.note.referenced_event ? data.note.referenced_event.id : '';
+                    card.setAttribute('onclick', `handleNoteCardClick(event, ${noteId}, '${refId}')`);
+                    
+                    // Re-render badge if referenced event changed
+                    let badgeContainer = card.querySelector('.mt-2.d-flex');
+                    if (badgeContainer) badgeContainer.remove();
+                    
+                    if (data.note.referenced_event) {
+                        const badgeDiv = document.createElement('div');
+                        badgeDiv.className = 'mt-2 d-flex';
+                        badgeDiv.innerHTML = `
+                            <span class="badge text-white px-2.5 py-1 d-inline-flex align-items-center gap-1.5" onclick="openReferencedMeeting(${data.note.referenced_event.id})" style="background-color: ${data.note.referenced_event.color || '#3b82f6'}; font-size: 10px; font-weight: 700; border-radius: 5px; cursor: pointer; transition: transform 0.15s;" title="Clique para ver no calendário" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                                <i class="bi bi-calendar-event"></i> ${data.note.referenced_event.title}
+                            </span>
+                        `;
+                        card.appendChild(badgeDiv);
+                    }
+                }
+                
+                alert("Lembrete atualizado!");
+            } else {
+                alert("Erro ao atualizar: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro de rede ao salvar.");
+        });
+    }
+
+    function deleteStickyNote(noteId) {
+        if (confirm("Excluir anotação permanente?")) {
+            deleteQuickNote(noteId);
+            closeStickyNote(noteId);
+        }
+    }
+
+    function togglePinNotePad() {
+        isPinned = !isPinned;
+        
+        const modalEl = document.getElementById('notePadModal');
+        const backdrop = document.querySelector('.modal-backdrop');
+        
+        if (isPinned) {
+            modalEl.style.pointerEvents = 'none';
+            const dialog = modalEl.querySelector('.modal-content');
+            if (dialog) {
+                dialog.style.pointerEvents = 'auto';
+            }
+            if (backdrop) {
+                backdrop.classList.add('d-none');
+            }
+        } else {
+            modalEl.style.pointerEvents = 'auto';
+            const dialog = modalEl.querySelector('.modal-content');
+            if (dialog) {
+                dialog.style.pointerEvents = '';
+            }
+            if (backdrop) {
+                backdrop.classList.remove('d-none');
+            }
+        }
+        
+        updatePinUI();
+    }
+
+    function updatePinUI() {
+        const pinBtn = document.getElementById('btnPinNotePad');
+        if (!pinBtn) return;
+        
+        const icon = pinBtn.querySelector('i');
+        if (isPinned) {
+            pinBtn.style.backgroundColor = '#fff9db';
+            pinBtn.style.color = '#f59e0b';
+            if (icon) {
+                icon.className = 'bi bi-pin-fill';
+            }
+        } else {
+            pinBtn.style.backgroundColor = '#f1f5f9';
+            pinBtn.style.color = '#64748b';
+            if (icon) {
+                icon.className = 'bi bi-pin-angle';
+            }
+        }
+    }
+
+    function makeModalDraggable(id) {
+        // Safely bypassed obsolete modal dragging
+    }
+
+</script>
+
+<!-- ===== MODAL: CONFIRMAR EXCLUSÃO ===== -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true" style="z-index: 1300;">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0" style="border-radius: 18px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(15,23,42,0.2);">
+            <div class="modal-body p-0">
+                <div style="background: linear-gradient(135deg, #fef2f2, #fff5f5); padding: 28px 28px 20px; text-align: center;">
+                    <div style="width: 56px; height: 56px; background: rgba(239,68,68,0.1); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px; color: #ef4444;">
+                        <i class="bi bi-trash3-fill"></i>
+                    </div>
+                    <h6 style="font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 8px;" id="deleteConfirmTitle">Excluir Compromisso?</h6>
+                    <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.5;" id="deleteConfirmMessage">Esta ação não pode ser desfeita.</p>
+                </div>
+                <div style="padding: 16px 20px; background: #ffffff; display: flex; gap: 10px;">
+                    <button class="btn w-50 fw-bold" onclick="deleteConfirmModal.hide()" style="border-radius: 12px; background: #f1f5f9; color: #475569; border: none; padding: 10px; font-size: 13.5px;">Cancelar</button>
+                    <button class="btn w-50 fw-bold" id="deleteConfirmBtn" style="border-radius: 12px; background: linear-gradient(135deg, #ef4444, #dc2626); color: #ffffff; border: none; padding: 10px; font-size: 13.5px; box-shadow: 0 4px 12px rgba(239,68,68,0.25);">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==========================================
+// 🎯 TOAST SYSTEM PREMIUM
+// ==========================================
+let deleteConfirmModal;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const delModalEl = document.getElementById('deleteConfirmModal');
+    if (delModalEl) {
+        document.body.appendChild(delModalEl);
+        deleteConfirmModal = new bootstrap.Modal(delModalEl);
+    }
+});
+
+const TOAST_ICONS = {
+    success: '<i class="bi bi-check-circle-fill"></i>',
+    error:   '<i class="bi bi-x-circle-fill"></i>',
+    info:    '<i class="bi bi-info-circle-fill"></i>',
+    warning: '<i class="bi bi-exclamation-triangle-fill"></i>',
+};
+const TOAST_TITLES = {
+    success: 'Sucesso',
+    error:   'Erro',
+    info:    'Informação',
+    warning: 'Atenção',
+};
+
+function showToast(message, type = 'success', duration = 4500) {
+    const container = document.getElementById('agendaToastContainer');
+    if (!container) return;
+
+    const id = 'toast-' + Date.now();
+    const toast = document.createElement('div');
+    toast.className = `agenda-toast toast-${type}`;
+    toast.id = id;
+    toast.innerHTML = `
+        <div class="toast-icon">${TOAST_ICONS[type] || TOAST_ICONS.info}</div>
+        <div class="toast-body">
+            <div class="toast-title">${TOAST_TITLES[type] || 'Aviso'}</div>
+            <div class="toast-msg">${message}</div>
+        </div>
+        <button class="toast-close" onclick="dismissToast('${id}')"><i class="bi bi-x-lg"></i></button>
+        <div class="toast-progress" id="${id}-progress" style="width: 100%;"></div>
+    `;
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => { toast.classList.add('show'); });
+    });
+
+    // Animate progress bar
+    const progress = document.getElementById(`${id}-progress`);
+    if (progress) {
+        progress.style.transition = `width ${duration}ms linear`;
+        setTimeout(() => { progress.style.width = '0%'; }, 50);
+    }
+
+    const timer = setTimeout(() => dismissToast(id), duration);
+    toast._timer = timer;
+}
+
+function dismissToast(id) {
+    const toast = document.getElementById(id);
+    if (!toast) return;
+    clearTimeout(toast._timer);
+    toast.classList.remove('show');
+    toast.classList.add('hide');
+    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 350);
+}
+
+// ==========================================
+// 🗑️ CONFIRMAÇÃO DE EXCLUSÃO PREMIUM
+// ==========================================
+function confirmDeleteEvent(eventId, eventTitle) {
+    const titleEl = document.getElementById('deleteConfirmTitle');
+    const msgEl = document.getElementById('deleteConfirmMessage');
+    const btn = document.getElementById('deleteConfirmBtn');
+    if (titleEl) titleEl.textContent = `Excluir "${eventTitle}"?`;
+    if (msgEl) msgEl.textContent = 'Este compromisso será excluído permanentemente. Esta ação não pode ser desfeita.';
+    if (btn) {
+        btn.onclick = function() {
+            deleteConfirmModal.hide();
+            deleteEvent(eventId);
+        };
+    }
+    if (deleteConfirmModal) deleteConfirmModal.show();
+}
+
+function confirmDeleteNote(noteId) {
+    const titleEl = document.getElementById('deleteConfirmTitle');
+    const msgEl = document.getElementById('deleteConfirmMessage');
+    const btn = document.getElementById('deleteConfirmBtn');
+    if (titleEl) titleEl.textContent = 'Excluir Anotação?';
+    if (msgEl) msgEl.textContent = 'Esta anotação será excluída permanentemente.';
+    if (btn) {
+        btn.onclick = function() {
+            deleteConfirmModal.hide();
+            deleteQuickNote(noteId);
+        };
+    }
+    if (deleteConfirmModal) deleteConfirmModal.show();
+}
+
+// ==========================================
+// 📅 PRÓXIMOS COMPROMISSOS PANEL
+// ==========================================
+function loadUpcomingEvents() {
+    const container = document.getElementById('upcoming-events-list');
+    if (!container) return;
+
+    fetch("{% url 'agenda_list_events' %}")
+        .then(r => r.json())
+        .then(events => {
+            const now = new Date();
+            const upcoming = events
+                .filter(e => new Date(e.start) >= now)
+                .sort((a, b) => new Date(a.start) - new Date(b.start))
+                .slice(0, 8);
+
+            if (upcoming.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-4" style="font-size: 12.5px;">
+                        <i class="bi bi-calendar-check d-block mb-2" style="font-size: 28px; color: #cbd5e1;"></i>
+                        Nenhum compromisso agendado.
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            upcoming.forEach(ev => {
+                const start = new Date(ev.start);
+                const today = new Date(); today.setHours(0,0,0,0);
+                const evDay = new Date(start); evDay.setHours(0,0,0,0);
+                const diffDays = Math.round((evDay - today) / 86400000);
+
+                let dayLabel = '';
+                let dayColor = '#64748b';
+                if (diffDays === 0) { dayLabel = 'Hoje'; dayColor = '#10b981'; }
+                else if (diffDays === 1) { dayLabel = 'Amanhã'; dayColor = '#3b82f6'; }
+                else { dayLabel = `Em ${diffDays} dias`; }
+
+                const timeStr = start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const dateStr = start.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+                const color = ev.color || ev.extendedProps?.color || '#3b82f6';
+
+                const card = document.createElement('div');
+                card.style.cssText = `display:flex; align-items:center; gap:10px; padding:10px 12px; background:#f8fafc; border-radius:12px; cursor:pointer; transition:all 0.15s; border: 1px solid #f1f5f9;`;
+                card.onmouseover = () => { card.style.background = '#f1f5f9'; card.style.borderColor = '#e2e8f0'; };
+                card.onmouseout = () => { card.style.background = '#f8fafc'; card.style.borderColor = '#f1f5f9'; };
+                card.onclick = () => {
+                    const fcEvent = calendar.getEventById(String(ev.id));
+                    if (fcEvent) {
+                        calendar.gotoDate(fcEvent.start);
+                        openDetailModal(fcEvent);
+                    }
+                };
+                card.innerHTML = `
+                    <div style="width:4px; min-width:4px; height:40px; border-radius:4px; background:${color};"></div>
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-size:12.5px; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(ev.title)}</div>
+                        <div style="font-size:11px; color:#94a3b8; margin-top:2px;">${dateStr} • ${timeStr}</div>
+                    </div>
+                    <span style="font-size:10.5px; font-weight:700; color:${dayColor}; white-space:nowrap; background:${dayColor}15; padding:2px 8px; border-radius:20px;">${dayLabel}</span>
+                `;
+                container.appendChild(card);
+            });
+        })
+        .catch(() => {
+            if (container) container.innerHTML = '<div class="text-center text-muted py-3" style="font-size:12px;">Erro ao carregar.</div>';
+        });
+}
+
+// ==========================================
+// 🔧 OVERRIDE DAS FUNÇÕES EXISTENTES
+// ==========================================
+
+// Override deleteEvent to use premium confirm modal
+const _originalDeleteEvent = typeof deleteEvent !== 'undefined' ? deleteEvent : null;
+
+// Override openDetailModal to upgrade delete button to use premium confirm modal
+const _origOpenDetailModal = openDetailModal;
+window.openDetailModal = function(fcEvent) {
+    _origOpenDetailModal(fcEvent);
+
+    // Upgrade delete button to use premium confirm modal
+    const actionsContainer = document.getElementById('viewModalActions');
+    if (actionsContainer) {
+        const deleteBtns = actionsContainer.querySelectorAll('button');
+        deleteBtns.forEach(btn => {
+            if (btn.querySelector('.bi-trash3-fill')) {
+                const oldOnclick = btn.getAttribute('onclick') || '';
+                const eventIdMatch = oldOnclick.match(/deleteEvent\((\d+)\)/);
+                if (eventIdMatch) {
+                    const eid = parseInt(eventIdMatch[1]);
+                    btn.removeAttribute('onclick');
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        viewEventModal.hide();
+                        setTimeout(() => confirmDeleteEvent(eid, document.getElementById('viewModalTitle')?.innerText || ''), 350);
+                    };
+                }
+            }
+        });
+    }
+};
+
+// Override submitEventForm to add recurrence and fix Flatpickr date reading + use toasts
+const _origSubmitEventForm = submitEventForm;
+window.submitEventForm = function(event) {
+    event.preventDefault();
+
+    const eventId = document.getElementById('formEventId').value;
+    const title = document.getElementById('formTitle').value;
+    const event_type = document.getElementById('formEventType').value;
+    const color = document.getElementById('formColor').value;
+
+    // Fix: read date from Flatpickr selectedDates (avoids altInput issue)
+    let startDateVal = '';
+    let endDateVal = '';
+    if (window.startDatePicker && startDatePicker.selectedDates.length > 0) {
+        startDateVal = startDatePicker.selectedDates[0].toISOString().substring(0, 10);
+    } else {
+        startDateVal = document.getElementById('formStartDateOnly').value;
+    }
+    if (window.endDatePicker && endDatePicker.selectedDates.length > 0) {
+        endDateVal = endDatePicker.selectedDates[0].toISOString().substring(0, 10);
+    } else {
+        endDateVal = document.getElementById('formEndDateOnly').value;
+    }
+
+    const startTimeVal = document.getElementById('formStartTimeOnly').value;
+    const endTimeVal = document.getElementById('formEndTimeOnly').value;
+    const start_date = startDateVal + 'T' + startTimeVal;
+    const end_date = endDateVal + 'T' + endTimeVal;
+    const location = document.getElementById('formLocation').value;
+    const city = document.getElementById('formCity').value;
+    const notes = document.getElementById('formNotes').value;
+    const status = document.getElementById('formStatus').value;
+    const meeting_link = document.getElementById('formMeetingLink').value;
+    const external_participants = document.getElementById('formExternalParticipants').value;
+    const recurrence = document.getElementById('formRecurrence') ? document.getElementById('formRecurrence').value : 'none';
+
+    const employees = employeesSelect ? employeesSelect.getValue().map(v => parseInt(v)) : [];
+
+    const payload = {
+        title, event_type, color, start_date, end_date,
+        location: location || null,
+        city: city || null,
+        notes, status, employees,
+        meeting_link, external_participants, recurrence
+    };
+
+    let url = "{% url 'agenda_create_event' %}";
+    if (eventId) {
+        url = `/agenda/api/events/${eventId}/update/`;
+    }
+
+    const submitBtn = document.querySelector('#eventFormModal [type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Salvando...';
+    }
+
+    fetch(url, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Salvar Compromisso';
+        }
+        if (data.status === 'success') {
+            eventFormModal.hide();
+            calendar.refetchEvents();
+            const isRecurring = recurrence !== 'none';
+            const msg = isRecurring
+                ? `Compromisso criado com recorrência ${recurrence === 'daily' ? 'diária (30 ocorrências)' : recurrence === 'weekly' ? 'semanal (12 semanas)' : 'mensal (6 meses)'}!`
+                : data.message;
+            showToast(msg, 'success');
+        } else {
+            showToast('Erro: ' + data.message, 'error');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Salvar Compromisso';
+        }
+        showToast('Erro de conexão ao salvar o compromisso.', 'error');
+    });
+};
+
+// Override deleteEvent to use toasts
+window.deleteEvent = function(eventId) {
+    fetch(`/agenda/api/events/${eventId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            calendar.refetchEvents();
+            showToast(data.message || 'Compromisso excluído com sucesso!', 'success');
+        } else {
+            showToast('Erro: ' + data.message, 'error');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showToast('Erro ao excluir compromisso.', 'error');
+    });
+};
+
+// Override toggleDrawer to support 'upcoming'
+const _origToggleDrawer = toggleDrawer;
+window.toggleDrawer = function(mode) {
+    const drawer = document.getElementById('calendarDrawer');
+    const btnUpcoming = document.getElementById('btnDrawerUpcoming');
+    const divUpcoming = document.getElementById('drawerContentUpcoming');
+    const divFilters = document.getElementById('drawerContentFilters');
+    const divNotes = document.getElementById('drawerContentNotes');
+    const title = document.getElementById('drawerTitle');
+
+    if (mode === 'upcoming') {
+        if (!drawer || !divUpcoming) return;
+
+        // Toggle off if already open
+        if (drawer.classList.contains('open') && divUpcoming && !divUpcoming.classList.contains('d-none')) {
+            closeDrawer();
+            return;
+        }
+
+        // Hide other panels
+        if (divFilters) divFilters.classList.add('d-none');
+        if (divNotes) divNotes.classList.add('d-none');
+        if (divUpcoming) divUpcoming.classList.remove('d-none');
+
+        // Update active states
+        document.querySelectorAll('.sidebar-icon-btn').forEach(b => b.classList.remove('active'));
+        if (btnUpcoming) btnUpcoming.classList.add('active');
+
+        if (title) title.innerHTML = '<i class="bi bi-list-check me-2" style="color: #10b981;"></i>Próximos Compromissos';
+
+        drawer.classList.add('open');
+        loadUpcomingEvents();
+        setTimeout(() => { if (calendar) calendar.updateSize(); }, 150);
+    } else {
+        if (divUpcoming) divUpcoming.classList.add('d-none');
+        if (btnUpcoming) btnUpcoming.classList.remove('active');
+        _origToggleDrawer(mode);
+    }
+};
+
+// Override updateEventTiming to use toasts
+const _origUpdateEventTiming = typeof updateEventTiming !== 'undefined' ? updateEventTiming : null;
+window.updateEventTiming = function(fcEvent) {
+    const payload = {
+        start_date: fcEvent.start.toISOString(),
+        end_date: fcEvent.end ? fcEvent.end.toISOString() : fcEvent.start.toISOString(),
+        is_drag_drop: true
+    };
+
+    fetch(`/agenda/api/events/${fcEvent.id}/update/`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showToast('Compromisso reagendado com sucesso!', 'info', 3000);
+        } else {
+            showToast('Erro ao reposicionar: ' + data.message, 'error');
+            calendar.refetchEvents();
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showToast('Erro de conexão ao reagendar.', 'error');
+        calendar.refetchEvents();
+    });
+};
+
+// Add CSS for upcoming button active state
+const style = document.createElement('style');
+style.textContent = `
+    #btnDrawerUpcoming.active {
+        color: #10b981 !important;
+        background: rgba(16, 185, 129, 0.15) !important;
+    }
+`;
+document.head.appendChild(style);
+</script>
+
+<!-- Modal de Cancelamento de Evento -->
+<div class="modal fade" id="cancelEventModal" tabindex="-1" aria-labelledby="cancelEventModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+    <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #fef2f2, #fff); border-bottom: 1px solid #fecaca; padding: 20px 24px;">
+        <div class="d-flex align-items-center gap-3">
+          <div style="width: 40px; height: 40px; border-radius: 12px; background: #fee2e2; display: flex; align-items: center; justify-content: center;">
+            <i class="bi bi-x-circle-fill" style="color: #ef4444; font-size: 18px;"></i>
+          </div>
+          <div>
+            <h5 class="modal-title mb-0" style="font-weight: 700; color: #1e293b; font-size: 16px;">Cancelar Reunião</h5>
+            <small id="cancelEventTitle" style="color: #64748b; font-size: 12px;"></small>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body" style="padding: 24px;">
+        <p style="color: #475569; font-size: 14px; margin-bottom: 16px;">
+          Todos os participantes receberão um <strong>email de cancelamento</strong> com o motivo informado.
+          Esta ação não pode ser desfeita.
+        </p>
+        <label class="form-label" style="font-weight: 600; font-size: 13px; color: #374151;">Motivo do cancelamento <span style="color: #ef4444;">*</span></label>
+        <textarea id="cancelReasonText" class="form-control" rows="3" placeholder="Ex: Reunião remarcada para a próxima semana..."
+          style="border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: 14px; resize: none; transition: border-color 0.2s;"
+          oninput="this.classList.remove('is-invalid')"></textarea>
+        <div class="invalid-feedback">Por favor, informe o motivo do cancelamento.</div>
+      </div>
+      <div class="modal-footer" style="padding: 16px 24px; border-top: 1px solid #f1f5f9; gap: 10px;">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+          style="border-radius: 10px; font-weight: 600; padding: 8px 20px;">
+          Voltar
+        </button>
+        <button type="button" class="btn" onclick="confirmCancelEvent()"
+          style="border-radius: 10px; font-weight: 600; padding: 8px 24px; background: #ef4444; color: #fff; border: none; transition: all 0.2s;"
+          onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+          <i class="bi bi-x-circle me-1"></i> Confirmar Cancelamento
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

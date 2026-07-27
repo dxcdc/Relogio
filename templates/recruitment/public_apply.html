@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidatura — {{ job.title }} | Netline RH</title>
+    <meta name="description" content="Candidate-se para {{ job.title }} na Netline Telecom.">
+    <link rel="icon" type="image/png" href="/static/img/netline_icon.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --black:  #0a0d14;
+            --navy:   #101624;
+            --green:  #0dc02a;
+            --green2: #08a322;
+            --white:  #f5f5f0;
+            --gray:   #e8e8e4;
+            --muted:  #6b7280;
+            --border: rgba(0,0,0,0.09);
+            --radius: 14px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--white);
+            color: var(--black);
+            overflow-x: hidden;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+        }        /* ── NAV ─────────────────────────────────────── */
+        .site-nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 9999;
+            padding: 0 40px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(245,245,240,0.94);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0,0,0,0.07);
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+        .nav-logo-icon {
+            width: 30px; height: 30px;
+            background: #fff;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+            border: 1px solid rgba(0,0,0,0.07);
+        }
+        .nav-logo-icon svg { width: 16px; height: 16px; }
+        .nav-logo-text { font-size: 14.5px; font-weight: 800; letter-spacing: -0.3px; color: var(--black); }
+        .nav-logo-badge {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: #fff;
+            background: var(--green);
+            border-radius: 4px;
+            padding: 1px 5px;
+            margin-left: 2px;
+        }
+
+        /* Center links */
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .nav-divider {
+            width: 1px;
+            height: 14px;
+            background: rgba(0,0,0,0.15);
+            margin: 0 2px;
+        }
+        .nav-center a {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #4b5563;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            transition: color 0.15s, background 0.15s;
+            white-space: nowrap;
+        }
+        .nav-center a i { font-size: 12px; opacity: 0.7; }
+        .nav-center a:hover { color: var(--black); background: rgba(0,0,0,0.04); }
+
+        /* Nav right — phone */
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--black);
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+        .nav-right i { color: var(--green); font-size: 14px; }     }
+        .back-link:hover { color: var(--green); border-color: var(--green); }
+
+        /* ── PAGE ────────────────────────────────────── */
+        .page-wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 88px 40px 80px;
+        }
+
+        /* ── JOB TITLE BLOCK ─────────────────────────── */
+        .job-header {
+            margin-bottom: 40px;
+            padding-bottom: 36px;
+            border-bottom: 1px solid var(--border);
+            animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) both;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .job-eyebrow {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .job-eyebrow::before { content: ''; display: block; width: 18px; height: 1px; background: var(--muted); }
+
+        .job-header-title {
+            font-size: clamp(32px, 5vw, 52px);
+            font-weight: 900;
+            letter-spacing: -1.5px;
+            line-height: 1;
+            text-transform: uppercase;
+            color: var(--black);
+            margin-bottom: 14px;
+        }
+        .job-header-title span { color: var(--green); }
+
+        .job-header-desc {
+            font-size: 14.5px;
+            color: var(--muted);
+            line-height: 1.65;
+            max-width: 520px;
+        }
+
+        .job-dept-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: var(--green2);
+            background: rgba(13,192,42,0.08);
+            border: 1px solid rgba(13,192,42,0.16);
+            border-radius: 5px;
+            padding: 3px 9px;
+            margin-bottom: 14px;
+        }
+
+        /* ── STEPS ───────────────────────────────────── */
+        .steps-row {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 36px;
+            animation: fadeUp 0.6s 0.1s cubic-bezier(0.16,1,0.3,1) both;
+        }
+        .step-item { display: flex; align-items: center; flex: 1; }
+        .step-circle {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700; flex-shrink: 0;
+        }
+        .step-circle.active { background: var(--black); color: #fff; }
+        .step-circle.done   { background: var(--green); color: #fff; }
+        .step-circle.todo   { background: #f3f4f6; color: #9ca3af; border: 1px solid #e5e7eb; }
+        .step-lbl { font-size: 11.5px; font-weight: 600; margin-left: 8px; white-space: nowrap; }
+        .step-lbl.active { color: var(--black); }
+        .step-lbl.done   { color: var(--green2); }
+        .step-lbl.todo   { color: #9ca3af; }
+        .step-line { flex: 1; height: 1.5px; background: #e5e7eb; margin: 0 10px; }
+        .step-line.done { background: var(--green); }
+
+        /* ── FORM CARD ───────────────────────────────── */
+        .form-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+            animation: fadeUp 0.6s 0.15s cubic-bezier(0.16,1,0.3,1) both;
+        }
+
+        /* ── SECTION HEADER ──────────────────────────── */
+        .form-sec-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: -0.2px;
+            text-transform: uppercase;
+            color: var(--black);
+            margin-bottom: 24px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .sec-num {
+            width: 26px; height: 26px;
+            border-radius: 7px;
+            background: var(--black);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 900;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* ── FORM ELEMENTS ───────────────────────────── */
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 7px;
+        }
+        .form-control, .form-select {
+            width: 100%;
+            height: 44px;
+            padding: 0 14px;
+            border: 1.5px solid rgba(0,0,0,0.1);
+            border-radius: 9px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: var(--black);
+            background: #fafafa;
+            outline: none;
+            transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+            display: block;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--green);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(13,192,42,0.1);
+        }
+        .form-control::placeholder { color: #9ca3af; }
+        .form-control[type="file"] { 
+            height: auto; 
+            padding: 6px; 
+            cursor: pointer;
+            background: #fafafa;
+            border: 1.5px dashed var(--border);
+            color: var(--muted);
+            transition: all 0.2s ease;
+        }
+        .form-control[type="file"]:hover {
+            border-color: var(--green);
+            background: #fff;
+        }
+        .form-control[type="file"]::file-selector-button {
+            margin-right: 16px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: var(--navy);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .form-control[type="file"]::file-selector-button:hover {
+            background: var(--green);
+            transform: translateY(-1px);
+        }
+        textarea.form-control { height: auto; padding: 12px 14px; resize: vertical; }
+
+        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        .field-hint {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ── ERROR ───────────────────────────────────── */
+        .form-error {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            padding: 14px 16px;
+            color: #b91c1c;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+
+        /* ── SKILLS ──────────────────────────────────── */
+        .skills-intro {
+            font-size: 13.5px;
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+        .category-block { margin-bottom: 28px; }
+        .cat-title {
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: #9ca3af;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cat-title::after { content: ''; flex: 1; height: 1px; background: #f3f4f6; }
+        .skills-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .skill-checkbox { display: none; }
+        .skill-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12.5px;
+            font-weight: 600;
+            padding: 7px 14px;
+            border-radius: 25px;
+            border: 1.5px solid rgba(0,0,0,0.1);
+            background: #f9fafb;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.18s;
+            user-select: none;
+        }
+        .skill-label:hover {
+            border-color: var(--green);
+            color: var(--green2);
+            background: rgba(13,192,42,0.05);
+        }
+        .skill-checkbox:checked + .skill-label {
+            background: var(--black);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(10,13,20,0.2);
+        }
+
+        #skill-count-badge {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #9ca3af;
+            background: #f3f4f6;
+            border-radius: 20px;
+            padding: 3px 10px;
+            margin-left: 8px;
+            transition: all 0.2s;
+        }
+
+        /* ── SUBMIT ──────────────────────────────────── */
+        .submit-area {
+            margin-top: 40px;
+            padding-top: 28px;
+            border-top: 1px solid #f3f4f6;
+        }
+        .btn-submit {
+            width: 100%;
+            height: 52px;
+            background: var(--black);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
+        }
+        .btn-submit:hover {
+            background: var(--green);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(13,192,42,0.32);
+        }
+        .privacy-note {
+            font-size: 12px;
+            color: #9ca3af;
+            text-align: center;
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        /* ── FOOTER ───────────────────────────────────── */
+        .site-footer {
+            background: #0a0d14;
+            color: rgba(255,255,255,0.85);
+            padding: 64px 40px 0;
+            margin-top: 80px;
+        }
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 60px;
+            padding-bottom: 56px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .footer-brand-logo {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; margin-bottom: 16px;
+        }
+        .footer-brand-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: rgba(13,192,42,0.15);
+            border: 1px solid rgba(13,192,42,0.3);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .footer-brand-icon svg { width: 16px; height: 16px; }
+        .footer-brand-name { font-size: 17px; font-weight: 800; color: #fff; letter-spacing: -0.3px; }
+        .footer-brand-name span { color: var(--green); }
+        .footer-tagline {
+            font-size: 13.5px; color: rgba(255,255,255,0.45);
+            line-height: 1.65; max-width: 300px; margin-bottom: 28px;
+        }
+        .footer-contact a {
+            display: flex; align-items: center; gap: 8px;
+            color: rgba(255,255,255,0.7); text-decoration: none;
+            font-size: 13px; font-weight: 500; margin-bottom: 10px; transition: color 0.15s;
+        }
+        .footer-contact a i { color: var(--green); font-size: 14px; }
+        .footer-contact a:hover { color: #fff; }
+        .footer-contact a.footer-cta-btn {
+            display: inline-flex;
+            background: rgba(13,192,42,0.12);
+            border: 1px solid rgba(13,192,42,0.25);
+            border-radius: 8px; padding: 8px 14px;
+            color: var(--green); font-weight: 600; font-size: 12.5px;
+            margin-top: 4px; transition: background 0.15s;
+        }
+        .footer-contact a.footer-cta-btn:hover { background: rgba(13,192,42,0.2); }
+        .footer-right { display: flex; flex-direction: column; align-items: flex-end; }
+        .footer-social-label {
+            font-size: 9px; font-weight: 700; letter-spacing: 2px;
+            text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 14px;
+        }
+        .footer-socials { display: flex; gap: 8px; margin-bottom: 24px; }
+        .footer-social-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            color: rgba(255,255,255,0.55); font-size: 15px;
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .footer-social-btn:hover {
+            background: rgba(13,192,42,0.15);
+            border-color: rgba(13,192,42,0.3);
+            color: var(--green);
+        }
+        .footer-scroll-top {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 12px; color: rgba(255,255,255,0.4);
+            text-decoration: none; transition: color 0.15s; margin-top: auto;
+        }
+        .footer-scroll-top:hover { color: var(--green); }
+        .footer-bottom {
+            max-width: 1200px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 0; gap: 12px; flex-wrap: wrap;
+        }
+        .footer-bottom-left { font-size: 12px; color: rgba(255,255,255,0.25); }
+        .footer-bottom-right { display: flex; align-items: center; gap: 16px; }
+        .footer-bottom-right a { font-size: 12px; color: rgba(255,255,255,0.3); text-decoration: none; transition: color 0.15s; }
+        .footer-bottom-right a:hover { color: rgba(255,255,255,0.7); }
+        .footer-bottom-sep { color: rgba(255,255,255,0.15); }
+
+        /* ── RESPONSIVE ──────────────────────────────── */
+        @media (max-width: 640px) {
+            .site-nav { padding: 0 20px; }
+            .form-card { padding: 24px 20px; }
+            .row-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+{% include 'components/public_nav.html' %}
+
+<!-- PAGE -->
+<div class="page-wrap">
+
+    <!-- JOB HEADER -->
+    <div class="job-header">
+        <div class="job-eyebrow">Candidatura</div>
+        {% if job.department %}
+        <div class="job-dept-badge"><i class="bi bi-building"></i> {{ job.department }}</div>
+        {% endif %}
+        <h1 class="job-header-title">
+            {{ job.title }}
+        </h1>
+        <p class="job-header-desc">{{ job.description|truncatechars:200 }}</p>
+    </div>
+
+    <!-- STEPS -->
+    <div class="steps-row">
+        <div class="step-item">
+            <div class="step-circle active"><i class="bi bi-person"></i></div>
+            <span class="step-lbl active">Dados Pessoais</span>
+        </div>
+        <div class="step-line done"></div>
+        <div class="step-item">
+            <div class="step-circle active"><i class="bi bi-stars"></i></div>
+            <span class="step-lbl active">Skills</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item">
+            <div class="step-circle todo"><i class="bi bi-send"></i></div>
+            <span class="step-lbl todo">Enviar</span>
+        </div>
+    </div>
+
+    <!-- FORM CARD -->
+    <div class="form-card">
+
+        {% if form.errors %}
+        <div class="form-error">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size:16px;flex-shrink:0;"></i>
+            <div>
+                {% for field, errors in form.errors.items %}{% for e in errors %}{{ e }} {% endfor %}{% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" autocomplete="off">
+            {% csrf_token %}
+
+            <!-- Sec 1 -->
+            <div class="form-sec-title">
+                <div class="sec-num">1</div> Seus Dados
+            </div>
+
+            <div class="form-group">
+                <label>Nome Completo *</label>
+                {{ form.name }}
+            </div>
+
+            <div class="row-2">
+                <div class="form-group">
+                    <label>E-mail *</label>
+                    {{ form.email }}
+                </div>
+                <div class="form-group">
+                    <label>Telefone / WhatsApp</label>
+                    {{ form.phone }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>LinkedIn <span style="text-transform:none;font-weight:400;letter-spacing:0;">(opcional)</span></label>
+                {{ form.linkedin_url }}
+            </div>
+
+            <div class="form-group">
+                <label>Currículo PDF/DOC <span style="text-transform:none;font-weight:400;letter-spacing:0;">(opcional)</span></label>
+                {{ form.resume }}
+                <div class="field-hint"><i class="bi bi-info-circle"></i> Tamanho máximo: 10MB</div>
+            </div>
+
+            <!-- Sec 2 -->
+            <div class="form-sec-title" style="margin-top:36px;">
+                <div class="sec-num">2</div>
+                Suas Skills
+                <span id="skill-count-badge">0 selecionadas</span>
+            </div>
+
+            <p class="skills-intro">
+                Selecione todas as skills que você possui. Quanto mais completo, melhor será o match com a vaga!
+            </p>
+
+            {% for category, skills in skills_by_category.items %}
+            <div class="category-block">
+                <div class="cat-title">
+                    {% if category == 'Tecnologia' %}<i class="bi bi-cpu"></i>
+                    {% elif category == 'Comportamental' %}<i class="bi bi-person-heart"></i>
+                    {% elif category == 'Idioma' %}<i class="bi bi-translate"></i>
+                    {% elif category == 'Ferramenta / Software' %}<i class="bi bi-tools"></i>
+                    {% else %}<i class="bi bi-grid"></i>{% endif %}
+                    {{ category }}
+                </div>
+                <div class="skills-grid">
+                    {% for skill in skills %}
+                    <div>
+                        <input type="checkbox" class="skill-checkbox skill-cb" name="skills" value="{{ skill.pk }}" id="skill_{{ skill.pk }}">
+                        <label class="skill-label" for="skill_{{ skill.pk }}">
+                            <i class="bi bi-{{ skill.icon }}" style="font-size:11px;"></i> {{ skill.name }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Submit -->
+            <div class="submit-area">
+                <button type="submit" class="btn-submit">
+                    <i class="bi bi-send-fill"></i> Enviar Candidatura
+                </button>
+                <p class="privacy-note">
+                    <i class="bi bi-shield-check" style="color:var(--green);"></i>
+                    Seus dados são tratados com segurança e privacidade.
+                </p>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% include 'components/public_footer.html' %}
+
+<script>
+    const checkboxes = document.querySelectorAll('.skill-cb');
+    const badge = document.getElementById('skill-count-badge');
+    function updateCount() {
+        const n = document.querySelectorAll('.skill-cb:checked').length;
+        badge.textContent = n + ' selecionada' + (n !== 1 ? 's' : '');
+        badge.style.background = n > 0 ? 'rgba(13,192,42,0.12)' : '#f3f4f6';
+        badge.style.color = n > 0 ? '#08a322' : '#9ca3af';
+    }
+    checkboxes.forEach(cb => cb.addEventListener('change', updateCount));
+    updateCount();
+</script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}{{ anc.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <a href="{% url 'dashboard' %}" class="btn btn-sm btn-light mb-3 text-muted fw-bold rounded-pill" style="font-size: 13px;">
+            <i class="bi bi-arrow-left"></i> Voltar ao Dashboard
+        </a>
+        
+        <div class="widget-card p-0 overflow-hidden">
+            {% if anc.image %}
+            <div style="width: 100%; height: 300px; background: #f8fafc url('{{ anc.image.url }}') center/contain no-repeat;"></div>
+            {% else %}
+            <div class="d-flex align-items-center justify-content-center" style="width: 100%; height: 180px; background: linear-gradient(45deg, #1e293b, #334155); color: rgba(255,255,255,0.1);">
+                <i class="bi bi-megaphone" style="font-size: 64px;"></i>
+            </div>
+            {% endif %}
+            
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold" style="font-size: 12px;">Comunicado Institucional</span>
+                    <span class="text-muted" style="font-size: 13px;">{{ anc.created_at|date:"d M Y, H:i" }}</span>
+                </div>
+                
+                <h1 class="mb-4 fw-bold" style="color: var(--text-main); font-size: 28px;">{{ anc.title }}</h1>
+                
+                <div class="d-flex align-items-center mb-4 pb-4" style="border-bottom: 1px solid var(--card-border);">
+                    {% if anc.author.employee and anc.author.employee.picture %}
+                        <img src="{{ anc.author.employee.picture.picture.url }}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover;" alt="Avatar">
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; border-radius: 50%; background: #f1f5f9; color: #64748b; font-weight: bold; font-size: 16px;">
+                            {{ anc.author.first_name|first }}{{ anc.author.last_name|first }}
+                        </div>
+                    {% endif %}
+                    <div class="ms-3">
+                        <div class="fw-bold" style="color: var(--text-main); font-size: 14px;">{{ anc.author.full_name }}</div>
+                        <div class="text-muted" style="font-size: 12px;">{{ anc.author.employee.job_title.title|default:anc.author.get_role_display }}</div>
+                    </div>
+                </div>
+                
+                <div class="anc-text" style="font-size: 16px; line-height: 1.8; color: #334155; white-space: pre-wrap;">{{ anc.content|linebreaksbr }}</div>
+            </div>
+            
+            <div class="card-footer bg-white p-4 border-top">
+                <form method="post" action="{% url 'announcement_like_toggle' anc.id %}" class="d-inline">
+                    {% csrf_token %}
+                    {% if user_liked %}
+                    <button type="submit" class="btn rounded-pill px-4 py-2" style="background-color: #fee2e2; color: #ef4444; font-weight: 600; border: none;">
+                        <i class="bi bi-heart-fill me-1"></i> Você Curtiu ({{ anc.likes.count }})
+                    </button>
+                    {% else %}
+                    <button type="submit" class="btn btn-light rounded-pill px-4 py-2" style="font-weight: 600; color: #64748b;">
+                        <i class="bi bi-heart me-1"></i> Curtir Comunicado ({{ anc.likes.count }})
+                    </button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+{% block title %}Novidades & Suporte{% endblock %}
+
+{% block extra_head %}
+<style>
+    .changelog-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        border-radius: 20px;
+        padding: 48px 40px;
+        margin-bottom: 32px;
+        position: relative;
+        overflow: hidden;
+    }
+    .changelog-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .changelog-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: 5%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .hero-title {
+        font-size: 32px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 8px;
+        position: relative;
+        z-index: 1;
+    }
+    .hero-sub {
+        color: #94a3b8;
+        font-size: 15px;
+        position: relative;
+        z-index: 1;
+    }
+    .stats-bar {
+        display: flex;
+        gap: 24px;
+        margin-top: 24px;
+        position: relative;
+        z-index: 1;
+    }
+    .stat-item {
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 14px 20px;
+        backdrop-filter: blur(10px);
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .stat-item:hover {
+        background: rgba(255,255,255,0.12);
+        border-color: rgba(16,185,129,0.4);
+        transform: translateY(-2px);
+    }
+    .stat-num {
+        font-size: 22px;
+        font-weight: 700;
+        color: #10b981;
+        display: block;
+    }
+    .stat-label {
+        font-size: 11px;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .tab-switcher { display: flex; gap: 8px; margin-bottom: 24px; }
+    .tab-btn {
+        padding: 10px 24px;
+        border-radius: 50px;
+        border: 1px solid var(--card-border, #e2e8f0);
+        background: var(--card-bg, #fff);
+        color: var(--text-secondary, #64748b);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .tab-btn.active {
+        background: #0f172a;
+        color: #fff;
+        border-color: #0f172a;
+    }
+    .tab-btn:hover:not(.active) {
+        border-color: #10b981;
+        color: #10b981;
+    }
+
+    .changelog-card {
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--card-border, #e2e8f0);
+        border-radius: 16px;
+        padding: 28px;
+        margin-bottom: 16px;
+        transition: all 0.2s;
+        position: relative;
+    }
+    .changelog-card:hover {
+        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        transform: translateY(-1px);
+    }
+    .changelog-card.pinned {
+        border-left: 4px solid #10b981;
+        background: linear-gradient(to right, rgba(16,185,129,0.03), var(--card-bg, #fff));
+    }
+    .changelog-card.pinned::before {
+        content: '📌 Fixado';
+        position: absolute;
+        top: 14px;
+        right: 16px;
+        font-size: 11px;
+        color: #10b981;
+        font-weight: 600;
+    }
+    .cat-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+    .changelog-meta {
+        font-size: 12px;
+        color: var(--text-muted, #94a3b8);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--card-border, #e2e8f0);
+    }
+    .version-tag {
+        background: #1e293b;
+        color: #94a3b8;
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-weight: 600;
+    }
+    .changelog-content {
+        color: var(--text-secondary, #475569);
+        font-size: 14px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+    }
+    .publish-btn {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 50px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+    }
+    .publish-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(16,185,129,0.4);
+        color: #fff;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        color: var(--text-muted, #94a3b8);
+    }
+    .empty-state .emoji { font-size: 56px; margin-bottom: 16px; display: block; }
+    .delete-btn {
+        background: none;
+        border: none;
+        color: #ef4444;
+        font-size: 12px;
+        cursor: pointer;
+        padding: 2px 6px;
+        border-radius: 4px;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+    }
+    .delete-btn:hover { opacity: 1; }
+
+    /* ── Responsividade Mobile ── */
+    @media (max-width: 768px) {
+        .changelog-hero { padding: 30px 20px; }
+        .hero-title { font-size: 24px; }
+        .stats-bar { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
+            gap: 12px; 
+            margin-top: 20px; 
+        }
+        .tab-switcher { flex-direction: column; gap: 10px; }
+        .tab-btn { width: 100%; justify-content: center; padding: 14px; font-size: 15px; }
+        .changelog-meta { flex-wrap: wrap; gap: 10px; }
+        .d-flex.align-items-start.justify-content-between.flex-wrap.gap-3 { flex-direction: column; align-items: stretch !important; }
+        .publish-btn { justify-content: center; width: 100%; }
+        .changelog-card { padding: 20px 16px; }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted">Central de Novidades</span>
+<i class="bi bi-chevron-right mx-1 text-muted" style="font-size: 11px;"></i>
+<span style="color: var(--accent-color);">Atualizações</span>
+{% endblock %}
+
+{% block content %}
+
+<div class="changelog-hero">
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
+        <div>
+            <div class="hero-title">
+                <i class="bi bi-rocket-takeoff me-2" style="color:#10b981;"></i>Central de Novidades
+            </div>
+            <div class="hero-sub">Fique por dentro das últimas atualizações do sistema e reporte problemas para nossa equipe.</div>
+        </div>
+        {% if user.is_admin or user.is_hr %}
+        <a href="{% url 'changelog_create' %}" class="publish-btn">
+            <i class="bi bi-plus-lg"></i> Publicar Atualização
+        </a>
+        {% endif %}
+    </div>
+    <div class="stats-bar">
+        <a href="{% url 'changelog_list' %}" class="stat-item" style="text-decoration:none;">
+            <span class="stat-num">{{ posts|length }}</span>
+            <span class="stat-label">Atualizações</span>
+        </a>
+        <a href="{% url 'bug_list' %}" class="stat-item" style="text-decoration:none;">
+            <span class="stat-num">{{ my_open_bugs }}</span>
+            <span class="stat-label">Meus Reports Abertos</span>
+        </a>
+        {% if user.is_admin or user.is_hr %}
+        <a href="{% url 'bug_list' %}" class="stat-item" style="text-decoration:none;">
+            <span class="stat-num" style="color:#ef4444;">{{ all_open_bugs }}</span>
+            <span class="stat-label">Bugs Pendentes (Total)</span>
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+
+<div class="tab-switcher">
+    <a href="{% url 'changelog_list' %}" class="tab-btn active">
+        <i class="bi bi-newspaper"></i> Atualizações
+    </a>
+    <a href="{% url 'bug_list' %}" class="tab-btn">
+        <i class="bi bi-bug"></i> Reportar
+    </a>
+</div>
+
+
+{% if posts %}
+<div>
+    {% for post in posts %}
+    <div class="changelog-card {% if post.pinned %}pinned{% endif %}">
+        <div class="d-flex align-items-start justify-content-between gap-3">
+            <div class="flex-grow-1">
+                <div class="cat-badge" style="background: {{ post.category_bg }}; color: {{ post.category_color }};">
+                    <i class="bi {{ post.category_icon }}"></i>
+                    {{ post.get_category_display }}
+                </div>
+                <h5 class="fw-bold mb-2" style="font-size: 18px; color: var(--text-primary, #0f172a);">{{ post.title }}</h5>
+                {% if post.version %}
+                <span class="version-tag">{{ post.version }}</span>
+                {% endif %}
+                <div class="changelog-content mt-3">{{ post.content }}</div>
+            </div>
+        </div>
+        <div class="changelog-meta">
+            <span><i class="bi bi-person me-1"></i> {{ post.author.get_full_name|default:post.author.username }}</span>
+            <span><i class="bi bi-calendar3 me-1"></i> {{ post.published_at|date:"d/m/Y H:i" }}</span>
+            {% if user.is_admin %}
+            <span class="ms-auto">
+                <form method="post" action="{% url 'changelog_delete' post.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="delete-btn" onclick="return confirm('Remover esta nota?')">
+                        <i class="bi bi-trash3"></i> Remover
+                    </button>
+                </form>
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="changelog-card">
+    <div class="empty-state">
+        <div style="width: 72px; height: 72px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #94a3b8; font-size: 32px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+            <i class="bi bi-megaphone"></i>
+        </div>
+        <h5 class="fw-bold mb-1">Nenhuma atualização publicada ainda</h5>
+        <p class="mb-0">Em breve as novidades do sistema aparecerão aqui!</p>
+        {% if user.is_admin or user.is_hr %}
+        <a href="{% url 'changelog_create' %}" class="publish-btn mt-3 d-inline-flex">
+            <i class="bi bi-plus-lg"></i> Publicar primeira atualização
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

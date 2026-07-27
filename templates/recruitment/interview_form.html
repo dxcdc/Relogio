@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;">Recrutamento / Entrevistas / Agendar</span>{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <a href="{% url 'candidate_profile' candidate.pk %}" class="btn btn-light" style="border-radius: 10px; padding: 8px 12px;"><i class="bi bi-arrow-left"></i> Voltar</a>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 22px;">{{ title }}</h1>
+            <p class="text-muted mb-0" style="font-size: 13px;">Preencha os detalhes para o agendamento da entrevista.</p>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4" style="background: white; max-width: 700px;">
+    <div class="card-body p-4">
+        <div class="alert alert-info border-0 d-flex align-items-center gap-3 mb-4" style="background: rgba(99, 102, 241, 0.08); color: #4f46e5; border-radius: 12px;">
+            <i class="bi bi-calendar2-week-fill" style="font-size: 20px;"></i>
+            <div style="font-size: 13px;">
+                <strong>Sincronização Ativa:</strong> Ao salvar este agendamento, um evento correspondente de tipo <strong>'Entrevista'</strong> será criado automaticamente na Agenda Corporativa para todos os entrevistadores selecionados.
+            </div>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold text-slate-700" style="font-size: 13.5px;">Candidato</label>
+                    <select name="candidate" class="form-select" style="background-color: #f8fafc;" readonly disabled>
+                        <option value="{{ candidate.id }}" selected>{{ candidate.name }}</option>
+                    </select>
+                    <!-- Hidden field to supply candidate ID to form POST if required by form validation, although views.py handles binding candidate programmatically. Just in case, views.py does commit=False, then binds candidate. -->
+                    <input type="hidden" name="candidate" value="{{ candidate.id }}">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold text-slate-700" style="font-size: 13.5px;">Etapa / Tipo de Entrevista</label>
+                    {{ form.stage }}
+                    {% if form.stage.errors %}<div class="text-danger small mt-1">{{ form.stage.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold text-slate-700" style="font-size: 13.5px;">Data e Hora da Entrevista</label>
+                    {{ form.date }}
+                    {% if form.date.errors %}<div class="text-danger small mt-1">{{ form.date.errors.0 }}</div>{% endif %}
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold text-slate-700" style="font-size: 13.5px;">Status da Entrevista</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}<div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold text-slate-700" style="font-size: 13.5px;">Entrevistadores Designados</label>
+                {{ form.interviewers }}
+                <div class="form-text" style="font-size: 11.5px; color: #64748b;">Segure Ctrl (ou Cmd) para selecionar múltiplos funcionários participantes.</div>
+                {% if form.interviewers.errors %}<div class="text-danger small mt-1">{{ form.interviewers.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold text-slate-700" style="font-size: 13.5px;">Instruções, Pauta ou Links (Google Meet, etc.)</label>
+                {{ form.notes }}
+                {% if form.notes.errors %}<div class="text-danger small mt-1">{{ form.notes.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end">
+                {% if request.GET.popup %}
+                <button type="button" class="btn btn-light px-4" style="border-radius: 12px; font-weight: 600; padding: 10px 20px;"
+                        onclick="window.parent.postMessage('iframeModalClose', '*')">Cancelar</button>
+                {% else %}
+                <a href="{% url 'candidate_profile' candidate.pk %}" class="btn btn-light px-4" style="border-radius: 12px; font-weight: 600; padding: 10px 20px;">Cancelar</a>
+                {% endif %}
+                <button type="submit" class="btn btn-dark px-4" style="border-radius: 12px; font-weight: 600; background: #0f172a; border: none; padding: 10px 20px;">Confirmar Agendamento</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

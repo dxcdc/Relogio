@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% block title %}Salas / Espaços{% endblock %}
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;">Agenda / Espaços</span>{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+            <i class="bi bi-building"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 22px;">Salas & Espaços</h1>
+            <p class="text-muted mb-0" style="font-size: 13px;">{{ spaces.count }} espaço(s) cadastrado(s)</p>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <div class="position-relative">
+            <i class="bi bi-search position-absolute text-muted" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 14px;"></i>
+            <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="Pesquisar espaços..." style="padding-left: 38px; border-radius: 12px; border: 1px solid #e2e8f0; width: 280px; font-size: 14px; padding-top: 10px; padding-bottom: 10px; outline: none; transition: border-color 0.2s;">
+            <style>#searchInput:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.15) !important; background-color: #fff; }</style>
+        </div>
+        <button type="button" onclick="openCreateModal()" class="btn btn-dark d-flex align-items-center gap-2 px-4 shadow-sm" style="border-radius: 12px; font-weight: 600; background: #0f172a; border: none; padding: 10px 20px;">
+            <i class="bi bi-plus-lg"></i> Novo Espaço
+        </button>
+    </div>
+</div>
+
+<div class="row g-4" id="cardsContainer">
+    {% for space in spaces %}
+    <div class="col-md-6 col-lg-4 space-card" data-title="{{ space.name|lower }}">
+        <div class="card h-100" style="border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); transition: transform 0.2s ease, box-shadow 0.2s ease; overflow: visible !important;">
+            <style>
+                .space-card .card:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+                }
+            </style>
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 44px; height: 44px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 18px;">
+                            <i class="bi bi-door-closed-fill"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1" style="font-weight: 700; color: #0f172a; font-size: 16px;">{{ space.name }}</h5>
+                            <span class="badge bg-light text-secondary border d-inline-flex align-items-center gap-1 py-1 px-2" style="font-size: 11.5px; border-radius: 6px; font-weight: 600;">
+                                <i class="bi bi-people-fill text-success"></i> {{ space.capacity|default:10 }} pessoas
+                            </span>
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light border-0" type="button" data-bs-toggle="dropdown" style="background: transparent; padding: 4px;">
+                            <i class="bi bi-three-dots-vertical text-muted"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 12px; border: 1px solid #e2e8f0; padding: 8px; z-index: 1000;">
+                            <li><a class="dropdown-item d-flex align-items-center gap-2" href="javascript:void(0)" onclick="openEditModal({{ space.id }}, '{{ space.name|escapejs }}', {{ space.capacity|default:10 }}, '{{ space.note|default:''|escapejs }}')" style="font-size: 13px; font-weight: 500; border-radius: 6px; padding: 8px 16px;">
+                                <i class="bi bi-pencil-square" style="color: #3b82f6;"></i> Editar
+                            </a></li>
+                            <li><a class="dropdown-item text-danger d-flex align-items-center gap-2 mt-1" href="javascript:void(0)" onclick="deleteSpace({{ space.id }}, '{{ space.name|escapejs }}')" style="font-size: 13px; font-weight: 500; border-radius: 6px; padding: 8px 16px;">
+                                <i class="bi bi-trash3-fill"></i> Excluir
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="flex-grow-1" style="margin-left: 2px;">
+                    <p class="text-muted mb-0" style="font-size: 13.5px; line-height: 1.6;">
+                        {{ space.note|default:"Nenhuma observação informada para este espaço."|truncatechars:120 }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5" style="color:#94a3b8; width: 100%;">
+        <div style="width: 64px; height: 64px; background: #f8fafc; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #cbd5e1; font-size: 28px;">
+            <i class="bi bi-building"></i>
+        </div>
+        <h5 style="color: #64748b; font-weight: 600;">Nenhum espaço cadastrado</h5>
+        <p style="font-size: 14px;">Utilize o botão acima para começar a preencher sua base.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .form-input-custom {
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input-custom:focus {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+        background-color: #ffffff !important;
+    }
+  
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+    .modal-footer .btn {
+        transition: all 0.2s ease;
+    }
+    .modal-footer .btn:hover {
+        transform: translateY(-1px);
+    }
+    .modal-footer .btn-light:hover {
+        background: #cbd5e1 !important;
+        color: #1e293b !important;
+    }
+    .modal-footer .btn-primary:hover {
+        background: #059669 !important;
+        box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3) !important;
+    }
+</style>
+<div class="modal fade" id="spaceModal" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+            <div class="modal-header border-bottom py-3 px-4" style="background: #ffffff;">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; color: #10b981; font-size: 16px;">
+                        <i class="bi bi-door-closed-fill"></i>
+                    </div>
+                    <h5 class="modal-title fw-bold" id="spaceModalTitle" style="font-size: 15.5px; color: #0f172a; margin-left: 6px;">Novo Espaço / Sala</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="font-size: 11px;"></button>
+            </div>
+            <form id="spaceForm" class="ajax-form" onsubmit="submitSpaceForm(event)">
+                <input type="hidden" id="spaceId">
+                <input type="hidden" id="spaceAction">
+                <div class="modal-body py-4 px-4" style="background: #ffffff;">
+                    <div class="row g-3.5">
+                        <div class="col-12">
+                            <label style="font-size: 12.5px; font-weight: 600; color: #475569; margin-bottom: 6px; display: block;">Nome do Espaço *</label>
+                            <input type="text" id="spaceName" class="form-control form-input-custom" placeholder="Ex: Sala de Reunião Direção" style="border-radius: 10px; border: 1px solid #cbd5e1; padding: 10px 14px; font-size: 14px;" required>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <label style="font-size: 12.5px; font-weight: 600; color: #475569; margin-bottom: 6px; display: block;">Capacidade de Pessoas *</label>
+                            <input type="number" id="spaceCapacity" class="form-control form-input-custom" placeholder="Ex: 12" min="1" style="border-radius: 10px; border: 1px solid #cbd5e1; padding: 10px 14px; font-size: 14px;" required>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <label style="font-size: 12.5px; font-weight: 600; color: #475569; margin-bottom: 6px; display: block;">Observações / Descrição</label>
+                            <textarea id="spaceNote" class="form-control form-input-custom" rows="3" placeholder="Adicionar detalhes como recursos (TV, Projetor, Quadro) ou localização" style="border-radius: 10px; border: 1px solid #cbd5e1; padding: 10px 14px; font-size: 14px; resize: none;"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-3 px-4 d-flex justify-content-between" style="background: #f8fafc;">
+                    <button type="button" class="btn btn-light px-3.5" data-bs-dismiss="modal" style="border-radius: 10px; font-weight: 600; background: #e2e8f0; border: none; color: #475569; padding-top: 8px; padding-bottom: 8px; font-size: 13.5px;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold" style="border-radius: 10px; background-color: #10b981; border: none; color: #ffffff; padding-top: 8px; padding-bottom: 8px; font-size: 13.5px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);">Salvar Espaço</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let spaceModalInstance;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalEl = document.getElementById('spaceModal');
+        if (modalEl) {
+            document.body.appendChild(modalEl); // Fix stacking context
+            spaceModalInstance = new bootstrap.Modal(modalEl);
+        }
+
+        // Real-time Search
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                const term = e.target.value.toLowerCase().trim();
+                const cards = document.querySelectorAll('.space-card');
+                
+                cards.forEach(card => {
+                    const title = card.getAttribute('data-title') || '';
+                    if (title.includes(term)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+
+    function openCreateModal() {
+        document.getElementById('spaceForm').reset();
+        document.getElementById('spaceId').value = '';
+        document.getElementById('spaceAction').value = 'create';
+        document.getElementById('spaceModalTitle').innerText = 'Novo Espaço / Sala';
+        spaceModalInstance.show();
+    }
+
+    function openEditModal(id, name, capacity, note) {
+        document.getElementById('spaceForm').reset();
+        document.getElementById('spaceId').value = id;
+        document.getElementById('spaceAction').value = 'update';
+        document.getElementById('spaceModalTitle').innerText = 'Editar Espaço / Sala';
+        document.getElementById('spaceName').value = name;
+        document.getElementById('spaceCapacity').value = capacity;
+        document.getElementById('spaceNote').value = note;
+        spaceModalInstance.show();
+    }
+
+    function submitSpaceForm(event) {
+        event.preventDefault();
+        
+        const id = document.getElementById('spaceId').value;
+        const action = document.getElementById('spaceAction').value;
+        const name = document.getElementById('spaceName').value;
+        const capacity = document.getElementById('spaceCapacity').value;
+        const note = document.getElementById('spaceNote').value;
+
+        const formData = new FormData();
+        formData.append('action', action);
+        if (id) formData.append('id', id);
+        formData.append('name', name);
+        formData.append('capacity', capacity);
+        formData.append('note', note);
+
+        fetch("{% url 'agenda_manage_locations' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                spaceModalInstance.hide();
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert("Erro: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro de rede.");
+        });
+    }
+
+    function deleteSpace(id, name) {
+        if (!confirm(`Tem certeza de que deseja excluir permanentemente o espaço "${name}"?`)) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('action', 'delete');
+        formData.append('id', id);
+
+        fetch("{% url 'agenda_manage_locations' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert("Erro: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro ao excluir espaço.");
+        });
+    }
+</script>
+{% endblock %}

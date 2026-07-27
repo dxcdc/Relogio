@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% load l10n %}
+{% block title %}Rankings de Liderança{% endblock %}
+
+{% block breadcrumb %}
+<span style="color: #64748b; font-size: 14px; font-weight: 500;">Performance / Rankings de Liderança</span>
+{% endblock %}
+
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+* { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+
+/* ── Filtros ────────────────────────────────── */
+.rank-filter-bar {
+    background: #fff;
+    border-radius: 18px;
+    padding: 20px 24px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 200;
+}
+.filter-lbl {
+    font-size: 10px; font-weight: 800; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;
+}
+/* Select customizado com seta */
+.rank-filter-bar select {
+    width: 380px; max-width: 100%;
+    height: 44px;
+    background: #f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 13.5px; font-weight: 600;
+    color: #0f172a;
+    padding: 9px 40px 9px 14px;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.rank-filter-bar select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99,102,241,0.12);
+    background-color: #fff;
+}
+.rank-filter-bar select:hover { border-color: #c7d2fe; }
+
+/* Input de busca */
+.search-wrap { position: relative; }
+.search-wrap i {
+    position: absolute; left: 13px; top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8; font-size: 13px; pointer-events: none;
+}
+.search-wrap input {
+    width: 260px; max-width: 100%; height: 44px;
+    padding: 9px 14px 9px 38px;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 13.5px; font-weight: 600; color: #0f172a;
+    outline: none; transition: all 0.2s;
+}
+.search-wrap input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99,102,241,0.12);
+    background: #fff;
+}
+.search-wrap input::placeholder { color: #94a3b8; font-weight: 500; }
+
+/* ── Card Principal ─────────────────────────── */
+.rank-card {
+    background: #fff;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    overflow: hidden;
+}
+.rank-card-header {
+    padding: 20px 28px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex; align-items: center; gap: 12px;
+}
+.rank-card-header h2 { font-size: 15px; font-weight: 800; color: #0f172a; margin: 0; }
+
+/* ── Linha do ranking ───────────────────────── */
+.rank-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 28px;
+    border-bottom: 1px solid #f8fafc;
+    transition: background 0.15s;
+    text-decoration: none;
+    color: inherit;
+}
+.rank-row:last-child { border-bottom: none; }
+.rank-row:hover { background: #fafafa; }
+
+/* Posição */
+.rank-pos-col { width: 44px; flex-shrink: 0; text-align: center; }
+.pos-trophy { font-size: 20px; line-height: 1; }
+.pos-num { font-size: 14px; font-weight: 800; color: #94a3b8; }
+
+/* Barra lateral colorida para top 3 */
+.rank-row.top-1 { border-left: 4px solid #fbbf24; }
+.rank-row.top-2 { border-left: 4px solid #94a3b8; }
+.rank-row.top-3 { border-left: 4px solid #fb923c; }
+.rank-row:not(.top-1):not(.top-2):not(.top-3) { border-left: 4px solid transparent; }
+
+/* Avatar */
+.rank-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 900; color: #fff;
+    flex-shrink: 0;
+}
+.av-1 { background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 4px 10px rgba(99,102,241,0.3); }
+.av-2 { background: linear-gradient(135deg, #0ea5e9, #0284c7); box-shadow: 0 4px 10px rgba(14,165,233,0.25); }
+.av-3 { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 10px rgba(16,185,129,0.25); }
+.av-4 { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 4px 10px rgba(245,158,11,0.25); }
+.av-5 { background: linear-gradient(135deg, #ec4899, #db2777); box-shadow: 0 4px 10px rgba(236,72,153,0.25); }
+.av-6 { background: linear-gradient(135deg, #8b5cf6, #7c3aed); box-shadow: 0 4px 10px rgba(139,92,246,0.25); }
+
+/* Info do líder */
+.rank-info { flex: 1; min-width: 0; }
+.rank-name { font-size: 14px; font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rank-dept { display: inline-block; margin-top: 3px; font-size: 11px; font-weight: 700; color: #64748b; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1px 8px; }
+
+/* Avaliações */
+.rank-reviews { text-align: center; min-width: 80px; flex-shrink: 0; }
+.rank-reviews .rv-num { font-size: 16px; font-weight: 900; color: #0f172a; }
+.rank-reviews .rv-sub { font-size: 10px; color: #94a3b8; font-weight: 600; margin-top: 1px; }
+
+/* Barra progresso */
+.rank-progress { width: 200px; flex-shrink: 0; }
+.prog-bar-bg { height: 8px; background: #f1f5f9; border-radius: 99px; overflow: hidden; margin-bottom: 4px; }
+.prog-bar-fill { height: 100%; border-radius: 99px; transition: width 0.8s ease; }
+.fill-green  { background: linear-gradient(90deg, #10b981, #34d399); }
+.fill-yellow { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.fill-red    { background: linear-gradient(90deg, #ef4444, #f87171); }
+.prog-pct { font-size: 11px; font-weight: 700; color: #94a3b8; }
+
+/* Score */
+.rank-score { min-width: 80px; flex-shrink: 0; text-align: center; }
+.score-badge {
+    display: inline-flex; align-items: center;
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 14px; font-weight: 900;
+}
+.sb-green  { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+.sb-yellow { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+.sb-red    { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+/* Ações */
+.rank-action { flex-shrink: 0; }
+.btn-det {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 7px 14px; border-radius: 10px;
+    font-size: 12px; font-weight: 700;
+    background: #f1f5f9; color: #334155;
+    border: 1px solid #e2e8f0;
+    text-decoration: none; transition: all 0.2s;
+}
+.btn-det:hover { background: #10b981; color: #fff; border-color: #10b981; box-shadow: 0 4px 12px rgba(16,185,129,0.3); transform: translateY(-1px); }
+
+/* Empty */
+.rank-empty { text-align: center; padding: 60px 20px; }
+.rank-empty i { font-size: 50px; color: #e2e8f0; display: block; margin-bottom: 16px; }
+.rank-empty h4 { font-size: 17px; font-weight: 800; color: #334155; margin-bottom: 8px; }
+.rank-empty p  { font-size: 13.5px; color: #94a3b8; max-width: 360px; margin: 0 auto; }
+</style>
+
+<!-- ── CABEÇALHO ─────────────────────────────────── -->
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-3">
+        <div style="width:56px;height:56px;background:linear-gradient(135deg,#10b981,#059669);border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;box-shadow:0 8px 20px rgba(16,185,129,0.3);">
+            <i class="bi bi-trophy-fill"></i>
+        </div>
+        <div>
+            <h1 style="font-size:24px;font-weight:900;color:#0f172a;margin:0;letter-spacing:-0.5px;">Rankings de Liderança</h1>
+            <p style="font-size:13.5px;color:#64748b;margin:3px 0 0;font-weight:500;">
+                Média geral acumulada de <strong>{{ total_surveys }}</strong> pesquisa{{ total_surveys|pluralize:",s" }} de liderança.
+            </p>
+        </div>
+    </div>
+    <div class="d-flex gap-3">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:10px 20px;text-align:center;">
+            <div style="font-size:24px;font-weight:900;color:#0f172a;line-height:1;">{{ ranked_leaders|length }}</div>
+            <div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-top:2px;">Líderes</div>
+        </div>
+        <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:10px 20px;text-align:center;">
+            <div style="font-size:24px;font-weight:900;color:#059669;line-height:1;">{{ total_surveys }}</div>
+            <div style="font-size:10px;color:#10b981;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-top:2px;">Pesquisas</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── BARRA DE BUSCA ────────────────────────────── -->
+<div style="margin-bottom:20px;">
+    <div class="search-wrap">
+        <i class="bi bi-search"></i>
+        <input type="text" id="rankingSearchInput" placeholder="Buscar líder ou setor..."
+               style="width:100%;max-width:380px;height:44px;padding:9px 14px 9px 38px;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;font-size:13.5px;font-weight:600;color:#0f172a;outline:none;transition:all 0.2s;">
+    </div>
+</div>
+
+
+<!-- ── LISTA RANKING ─────────────────────────────── -->
+<div class="rank-card" id="rankList">
+    <div class="rank-card-header">
+        <div style="width:34px;height:34px;background:linear-gradient(135deg,#10b981,#059669);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;">
+            <i class="bi bi-list-ol"></i>
+        </div>
+        <h2>Classificação Completa</h2>
+        <span style="font-size:12px;color:#94a3b8;font-weight:600;margin-left:auto;">{{ ranked_leaders|length }} líderes avaliados</span>
+    </div>
+
+    {% for stats in ranked_leaders %}
+    <div class="rank-row {% if forloop.counter == 1 %}top-1{% elif forloop.counter == 2 %}top-2{% elif forloop.counter == 3 %}top-3{% endif %}" data-search="{{ stats.leader_name|lower }} {{ stats.dept_name|lower }}">
+
+        <!-- Posição -->
+        <div class="rank-pos-col">
+            <span class="pos-num" style="font-size: 15px;">{{ forloop.counter }}º</span>
+        </div>
+
+        <!-- Avatar -->
+        <div class="rank-avatar {% cycle 'av-1' 'av-2' 'av-3' 'av-4' 'av-5' 'av-6' %}">
+            {{ stats.leader_name.0|upper }}
+        </div>
+
+        <!-- Nome + Setor -->
+        <div class="rank-info">
+            <div class="rank-name">{{ stats.leader_name }}</div>
+            <span class="rank-dept">{{ stats.dept_name }}</span>
+        </div>
+
+        <!-- Avaliações -->
+        <div class="rank-reviews">
+            <div class="rv-num">{{ stats.response_count }}</div>
+            <div class="rv-sub">de {{ stats.team_size }} ({{ stats.adhesion_pct }}%)</div>
+        </div>
+
+        <!-- Progresso -->
+        <div class="rank-progress">
+            {% if stats.overall_score is not None %}
+            <div class="prog-bar-bg">
+                <div class="prog-bar-fill {% if stats.overall_score >= 8.0 %}fill-green{% elif stats.overall_score >= 5.0 %}fill-yellow{% else %}fill-red{% endif %}"
+                     style="width:{% widthratio stats.overall_score 10 100 %}%;"></div>
+            </div>
+            <div class="prog-pct">{% widthratio stats.overall_score 1 10 %}% de desempenho</div>
+            {% else %}
+            <span style="color:#94a3b8;font-size:13px;">—</span>
+            {% endif %}
+        </div>
+
+        <!-- Score -->
+        <div class="rank-score">
+            {% if stats.overall_score is not None %}
+            <span class="score-badge {% if stats.overall_score >= 8.0 %}sb-green{% elif stats.overall_score >= 5.0 %}sb-yellow{% else %}sb-red{% endif %}">
+                {{ stats.overall_score }}<span style="font-size:11px;opacity:0.5;margin-left:2px;">/10</span>
+            </span>
+            {% else %}
+            <span class="score-badge" style="background:#f8fafc;color:#94a3b8;border:1px solid #e2e8f0;">—</span>
+            {% endif %}
+        </div>
+
+
+    </div>
+    {% empty %}
+    <div class="rank-empty">
+        <i class="bi bi-trophy"></i>
+        <h4>Nenhum Líder Classificado</h4>
+        <p>Não há respostas de pesquisas de liderança registradas para calcular o ranking.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const surveyFilter = document.getElementById('surveyFilter');
+    if (surveyFilter) {
+        surveyFilter.addEventListener('change', function() {
+            const url = new URL(window.location.href);
+            if (this.value) { url.searchParams.set('survey', this.value); }
+            else { url.searchParams.delete('survey'); }
+            window.location.href = url.toString();
+        });
+    }
+
+    const searchInput = document.getElementById('rankingSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            document.querySelectorAll('.rank-row').forEach(row => {
+                const text = (row.dataset.search || row.textContent).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,1054 @@
+{% extends "base.html" %}
+{% block title %}Meu Calendário{% endblock %}
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;">Ponto / Meu Calendário</span>{% endblock %}
+
+{% block content %}
+<style>
+    .cal-header-bar {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 24px;
+        padding: 0 0 16px 0;
+        margin-bottom: 8px;
+    }
+    .cal-nav-btn-circle {
+        background: #f8fafc;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        color: #475569;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .cal-nav-btn-circle:hover {
+        background: #f1f5f9;
+        color: #1e293b;
+    }
+    
+    .stats-row {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    .stat-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px 24px;
+        flex: 1;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
+    }
+    .stat-card-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 14px;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 12px;
+    }
+    .stat-card-subtitle {
+        font-size: 13px;
+        color: #64748b;
+        margin-bottom: 8px;
+    }
+    .stat-card-val {
+        font-size: 13px;
+        font-weight: 600;
+        color: #0f172a;
+        margin-bottom: 12px;
+    }
+    .stat-card-val span {
+        color: #94a3b8;
+        font-weight: 400;
+    }
+    .progress-bar-container {
+        width: 100%;
+        height: 4px;
+        background: #f1f5f9;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .progress-bar-fill {
+        height: 100%;
+        background: #10b981;
+        border-radius: 2px;
+    }
+    
+    .cal-grid-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
+        background: #fff;
+    }
+    .cal-grid {
+        min-width: 800px;
+        display: flex;
+        flex-direction: column;
+    }
+    .cal-grid-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .cal-weekday {
+        padding: 16px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 600;
+        color: #64748b;
+    }
+    .cal-grid-row {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+    }
+    .cal-grid-row:not(:last-child) {
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .cal-day-cell {
+        min-height: 140px;
+        padding: 12px;
+        border-right: 1px solid #f1f5f9;
+        display: flex;
+        flex-direction: column;
+    }
+    .cal-day-cell:last-child {
+        border-right: none;
+    }
+    .cal-day-num {
+        font-size: 13px;
+        font-weight: 600;
+        color: #334155;
+        text-align: right;
+        margin-bottom: 8px;
+    }
+    .cal-day-num.dimmed {
+        color: #cbd5e1;
+    }
+    .cal-day-num.today {
+        color: #fff;
+        background: #3b82f6;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        float: right;
+    }
+    
+    /* Event Blocks */
+    .cal-event {
+        border-radius: 4px;
+        padding: 6px 8px;
+        font-size: 11px;
+        line-height: 1.4;
+        margin-bottom: 4px;
+    }
+    .cal-event-title {
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    
+    .event-trabalho {
+        border-left: 3px solid #e2e8f0;
+        background: transparent;
+        color: #334155;
+        padding-left: 8px;
+    }
+    .event-trabalho .cal-event-title {
+        font-weight: 600;
+    }
+    
+    .event-feriado {
+        background: #ffe4e6;
+        color: #e11d48;
+        border-left: 3px solid #f43f5e;
+    }
+    
+    .event-ausencia {
+        background: #f3e8ff;
+        color: #7e22ce;
+        border-left: 3px solid #a855f7;
+    }
+    .event-ausencia-half {
+        background: #e0e7ff;
+        color: #4338ca;
+        border-left: 3px solid #6366f1;
+    }
+
+    /* Estilos Premium para os Botões de Integração da Agenda */
+    .status-pill-synced {
+        display: inline-flex;
+        align-items: center;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.06);
+        padding: 5px 12px;
+        border-radius: 20px;
+        border: 1px solid rgba(16, 185, 129, 0.15);
+        transition: all 0.25s ease;
+    }
+    .status-pill-synced:hover {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: rgba(16, 185, 129, 0.25);
+    }
+    .status-led-indicator {
+        width: 6px;
+        height: 6px;
+        background: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 7px;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        animation: premiumPulse 2s infinite ease-in-out;
+    }
+    @keyframes premiumPulse {
+        0% {
+            transform: scale(0.9);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+        50% {
+            transform: scale(1.15);
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+        }
+        100% {
+            transform: scale(0.9);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+    }
+    .btn-google-view {
+        height: 35px;
+        border-radius: 10px;
+        font-size: 11.5px;
+        font-weight: 700;
+        background: #0f172a;
+        border: 1px solid #1e293b;
+        color: #ffffff !important;
+        padding: 0 16px;
+        display: inline-flex;
+        align-items: center;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .btn-google-view:hover {
+        background: #1e293b;
+        transform: translateY(-1.5px);
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+        color: #ffffff !important;
+    }
+    .btn-google-view:active {
+        transform: translateY(0.5px);
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+    }
+    .btn-google-view i {
+        margin-right: 8px;
+        font-size: 13.5px;
+        display: inline-block;
+    }
+
+    .btn-google-connect {
+        height: 35px;
+        border-radius: 10px;
+        font-size: 11.5px;
+        font-weight: 700;
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        color: #1e293b !important;
+        padding: 0 16px;
+        display: inline-flex;
+        align-items: center;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .btn-google-connect:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #0f172a !important;
+        transform: translateY(-1.5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    .btn-google-connect i {
+        margin-right: 8px;
+        font-size: 13px;
+        display: inline-block;
+    }
+
+    .btn-ical-action {
+        height: 35px;
+        width: 35px;
+        border-radius: 10px;
+        border: 1.5px solid #e2e8f0;
+        color: #64748b !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+    }
+    .btn-ical-action:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #334155 !important;
+        transform: translateY(-1.5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-copy-link-header {
+        height: 35px;
+        border-radius: 10px;
+        font-size: 11.5px;
+        font-weight: 700;
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        color: #475569 !important;
+        padding: 0 16px;
+        display: inline-flex;
+        align-items: center;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .btn-copy-link-header:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #1e293b !important;
+        transform: translateY(-1.5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    .btn-copy-link-header:active {
+        transform: translateY(0.5px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+    .btn-copy-link-header i {
+        margin-right: 8px;
+        font-size: 13px;
+        display: inline-block;
+    }
+
+    .btn-google-connect-header {
+        height: 35px;
+        border-radius: 10px;
+        font-size: 11.5px;
+        font-weight: 700;
+        background: #0f172a;
+        border: 1px solid #1e293b;
+        color: #ffffff !important;
+        padding: 0 16px;
+        display: inline-flex;
+        align-items: center;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .btn-google-connect-header:hover {
+        background: #1e293b;
+        transform: translateY(-1.5px);
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+        color: #ffffff !important;
+    }
+    .btn-google-connect-header:active {
+        transform: translateY(0.5px);
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+    }
+    .btn-google-connect-header i {
+        margin-right: 8px;
+        font-size: 13px;
+        display: inline-block;
+    }
+
+    /* Estilos Premium para os Cards de Sincronização do Rodapé */
+    .sync-card-container {
+        border-radius: 24px !important;
+        border: 1px solid rgba(0, 0, 0, 0.05) !important;
+        background: var(--card-bg) !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.015), 0 1px 3px rgba(0, 0, 0, 0.005) !important;
+        margin-bottom: 24px;
+        transition: all 0.3s ease;
+    }
+    .sync-card-title-main {
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: -0.2px;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .sync-method-card {
+        border-radius: 18px !important;
+        padding: 24px !important;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .sync-method-card.google-oauth-connected {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.015), rgba(16, 185, 129, 0.003)) !important;
+        border: 1px solid rgba(16, 185, 129, 0.12) !important;
+    }
+    .sync-method-card.google-oauth-disconnected {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.015), rgba(37, 99, 235, 0.003)) !important;
+        border: 1px solid rgba(37, 99, 235, 0.08) !important;
+    }
+    .sync-method-card.ical-method {
+        background: linear-gradient(135deg, rgba(100, 116, 139, 0.015), rgba(100, 116, 139, 0.003)) !important;
+        border: 1px solid rgba(100, 116, 139, 0.08) !important;
+    }
+    .sync-method-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.025);
+    }
+    
+    .sync-status-badge-active {
+        background: rgba(16, 185, 129, 0.08) !important;
+        color: #10b981 !important;
+        font-weight: 700;
+        font-size: 10px;
+        padding: 5px 12px;
+        border-radius: 50px;
+        border: 1px solid rgba(16, 185, 129, 0.15);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .sync-status-badge-active span {
+        width: 5px;
+        height: 5px;
+        background: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        animation: premiumPulse 2s infinite ease-in-out;
+    }
+    .sync-status-badge-inactive {
+        background: rgba(100, 116, 139, 0.06) !important;
+        color: #64748b !important;
+        font-weight: 700;
+        font-size: 10px;
+        padding: 5px 12px;
+        border-radius: 50px;
+        border: 1px solid rgba(100, 116, 139, 0.1);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+    }
+
+    .info-banner-premium {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.02), rgba(37, 99, 235, 0.005)) !important;
+        border: 1px solid rgba(37, 99, 235, 0.08) !important;
+        border-radius: 14px;
+        padding: 14px 18px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-top: 24px;
+        transition: all 0.25s ease;
+    }
+    .info-banner-premium:hover {
+        border-color: rgba(37, 99, 235, 0.15) !important;
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.03), rgba(37, 99, 235, 0.01)) !important;
+    }
+    .info-banner-premium i {
+        color: #3b82f6 !important;
+        font-size: 18px;
+        margin-top: 1px;
+    }
+    
+    .btn-google-action-open {
+        height: 38px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        background: #0f172a;
+        border: 1px solid #1e293b;
+        color: #ffffff !important;
+        padding: 0 18px;
+        display: inline-flex;
+        align-items: center;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .btn-google-action-open:hover {
+        background: #1e293b;
+        transform: translateY(-1.5px);
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+        color: #ffffff !important;
+    }
+    .btn-google-action-disconnect {
+        height: 38px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        background: transparent;
+        border: 1.5px solid #fecaca;
+        color: #ef4444 !important;
+        padding: 0 18px;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .btn-google-action-disconnect:hover {
+        background: #fef2f2;
+        border-color: #f87171;
+        color: #dc2626 !important;
+        transform: translateY(-1.5px);
+    }
+    
+    .btn-google-action-connect-full {
+        font-size: 13px;
+        height: 42px;
+        border-radius: 12px;
+        background: #0f172a;
+        border: 1px solid #1e293b;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .btn-google-action-connect-full:hover {
+        background: #1e293b;
+        transform: translateY(-1.5px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+    
+    .input-group-ical {
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1.5px solid #e2e8f0;
+        background: #f8fafc;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+    .input-group-ical:focus-within {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        background: #ffffff;
+    }
+    .input-group-ical input {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    .btn-ical-add-action {
+        font-size: 11px;
+        height: 30px;
+        border-radius: 8px;
+        border: 1.5px solid #e2e8f0;
+        color: #475569 !important;
+        font-weight: 700;
+        background: #ffffff;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 12px;
+        text-decoration: none;
+    }
+    .btn-ical-add-action:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #1e293b !important;
+        transform: translateY(-1px);
+    }
+
+    /* Estilo do Popover de Informação Dark Premium */
+    .sync-info-trigger-wrapper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 8px;
+    }
+    .sync-info-icon {
+        color: #94a3b8 !important;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        vertical-align: middle;
+        animation: infoIconPulse 3s infinite ease-in-out;
+    }
+    .sync-info-icon:hover {
+        color: #38bdf8 !important;
+        transform: scale(1.2);
+        animation: none;
+    }
+    @keyframes infoIconPulse {
+        0% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.1); opacity: 1; color: #38bdf8 !important; }
+        100% { transform: scale(1); opacity: 0.8; }
+    }
+    .sync-info-popover {
+        visibility: hidden;
+        opacity: 0;
+        position: absolute;
+        top: 140%;
+        bottom: auto;
+        left: 50%;
+        transform: translateX(-50%) translateY(-10px);
+        width: 320px;
+        background: #0f172a;
+        border: 1px solid #1e293b;
+        border-radius: 14px;
+        padding: 16px 20px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 8px 10px rgba(0, 0, 0, 0.2);
+        z-index: 9999;
+        color: #ffffff !important;
+        text-align: left;
+        pointer-events: none;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    /* Seta apontando para cima */
+    .sync-info-popover::after {
+        content: "";
+        position: absolute;
+        bottom: 100%;
+        top: auto;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 6px;
+        border-style: solid;
+        border-color: transparent transparent #0f172a transparent;
+        transition: all 0.25s ease;
+    }
+    .sync-info-trigger-wrapper:hover .sync-info-popover {
+        visibility: visible;
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+        pointer-events: auto;
+    }
+    .sync-info-popover-title {
+        color: #38bdf8 !important;
+        font-weight: 700;
+        font-size: 13.5px;
+        margin-top: 0;
+        margin-bottom: 8px;
+        letter-spacing: -0.1px;
+    }
+    .sync-info-popover-text {
+        font-size: 11.5px;
+        color: #cbd5e1 !important;
+        line-height: 1.45;
+        margin-bottom: 12px;
+    }
+    .sync-info-popover-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .sync-info-popover-item {
+        font-size: 11px;
+        color: #f1f5f9 !important;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        line-height: 1.4;
+    }
+    .sync-info-popover-check {
+        color: #10b981 !important;
+        font-weight: bold;
+        font-size: 13px;
+        flex-shrink: 0;
+        line-height: 1;
+    }
+    @media (max-width: 576px) {
+        .sync-info-popover {
+            width: 280px;
+            left: auto;
+            right: -80px;
+            transform: translateY(-10px);
+        }
+        .sync-info-popover::after {
+            left: auto;
+            right: 84px;
+            transform: none;
+        }
+        .sync-info-trigger-wrapper:hover .sync-info-popover {
+            transform: translateY(0);
+        }
+    }
+</style>
+
+
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3" style="padding-bottom: 8px;">
+    <!-- Espaço vazio na esquerda para equilibrar o flexbox e manter a navegação centralizada -->
+    <div class="d-none d-lg-block" style="width: 230px;"></div>
+
+    <!-- Navegação Central (Mês) -->
+    <div class="d-flex align-items-center gap-3">
+        <a href="?year={{ prev_year }}&month={{ prev_month }}" class="cal-nav-btn-circle">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+        <h4 class="mb-0 fw-bold text-dark text-capitalize" style="font-size: 20px; min-width: 100px; text-align: center; letter-spacing: -0.5px;">{{ month_name }}</h4>
+        
+        {% if allow_next_month %}
+        <a href="?year={{ next_year }}&month={{ next_month }}" class="cal-nav-btn-circle">
+            <i class="bi bi-chevron-right"></i>
+        </a>
+        {% else %}
+        <div class="cal-nav-btn-circle" style="opacity: 0.2; cursor: not-allowed;" title="Você só pode visualizar o calendário até o mês atual">
+            <i class="bi bi-chevron-right"></i>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Botões da Agenda no Canto Direito -->
+    <div class="d-flex align-items-center gap-2 justify-content-end" style="min-width: 230px;">
+        {% if google_integration %}
+            <!-- Status conectado e link direto -->
+            <div class="d-flex align-items-center gap-2">
+                <span class="d-none d-md-inline-flex status-pill-synced">
+                    <span class="status-led-indicator"></span>
+                    Sincronizado
+                </span>
+                <button class="btn-copy-link-header" onclick="copyToClipboard('{{ feed_url }}', this)" title="Copiar link iCal da escala">
+                    <i class="bi bi-clipboard"></i>
+                    Copiar Link
+                </button>
+                <a href="https://calendar.google.com/" target="_blank" class="btn-google-view">
+                    <i class="bi bi-calendar2-check"></i>
+                    Ver no Google Agenda
+                </a>
+            </div>
+        {% else %}
+            <!-- Não conectado: Dois botões de ação na barra -->
+            <button class="btn-copy-link-header" onclick="copyToClipboard('{{ feed_url }}', this)" title="Copiar link iCal para adicionar ao Outlook, Apple Calendar, etc.">
+                <i class="bi bi-clipboard"></i>
+                Copiar Link
+            </button>
+            <a href="{% url 'google_login_init' %}" class="btn-google-connect-header" title="Conectar automaticamente com sua conta Google">
+                <i class="bi bi-google"></i>
+                Conectar Agenda
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+
+
+
+<div class="cal-grid-wrapper d-none d-lg-block">
+    <div class="cal-grid">
+        <div class="cal-grid-header">
+            <div class="cal-weekday">Segunda-feira</div>
+            <div class="cal-weekday">Terça-feira</div>
+            <div class="cal-weekday">Quarta-feira</div>
+            <div class="cal-weekday">Quinta-feira</div>
+            <div class="cal-weekday">Sexta-feira</div>
+            <div class="cal-weekday">Sábado</div>
+            <div class="cal-weekday">Domingo</div>
+        </div>
+        
+        {% for week in weeks %}
+        <div class="cal-grid-row">
+            {% for day in week %}
+            <div class="cal-day-cell">
+                <div class="w-100 clearfix mb-2">
+                    {% if day.is_today %}
+                        <span class="cal-day-num today">{{ day.day }}</span>
+                    {% else %}
+                        <span class="cal-day-num {% if not day.is_current_month %}dimmed{% endif %} float-end">{{ day.day }}</span>
+                    {% endif %}
+                </div>
+                
+                {% if day.status == 'trabalho' %}
+                    <div class="cal-event event-trabalho">
+                        <div class="cal-event-title">{{ day.title }}</div>
+                        <div>{{ day.text|safe }}</div>
+                    </div>
+                {% elif day.status == 'feriado' %}
+                    <div class="cal-event event-feriado">
+                        <div class="cal-event-title"><i class="bi bi-balloon"></i> {{ day.title }}</div>
+                    </div>
+                {% elif day.status == 'ausencia' or day.status == 'ausencia-half' %}
+                    <div class="cal-event event-{{ day.status }}">
+                        <div class="cal-event-title"><i class="bi bi-briefcase-fill"></i> {{ day.title }}</div>
+                        {% if day.text %}<div>{{ day.text|safe }}</div>{% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+<div class="d-block d-lg-none">
+    <div class="d-flex flex-column gap-2 pb-4">
+        {% for week in weeks %}
+            {% for day in week %}
+                {% if day.is_current_month %}
+                <div class="card border-0 shadow-sm {% if day.is_today %}border-start border-primary border-4{% else %}border-start border-white border-4{% endif %}" style="border-radius: 12px; transition: all 0.2s;">
+                    <div class="card-body p-3 d-flex gap-3 align-items-center">
+                        
+                        
+                        <div class="d-flex flex-column align-items-center justify-content-center rounded" style="width: 54px; height: 54px; background: {% if day.is_today %}#eff6ff{% else %}#f8fafc{% endif %}; flex-shrink: 0;">
+                            <span style="font-size: 11px; font-weight: 600; color: {% if day.is_today %}#3b82f6{% else %}#64748b{% endif %}; text-transform: uppercase;">
+                                {% if forloop.counter0 == 0 %}Seg{% elif forloop.counter0 == 1 %}Ter{% elif forloop.counter0 == 2 %}Qua{% elif forloop.counter0 == 3 %}Qui{% elif forloop.counter0 == 4 %}Sex{% elif forloop.counter0 == 5 %}Sáb{% elif forloop.counter0 == 6 %}Dom{% endif %}
+                            </span>
+                            <span style="font-size: 20px; font-weight: 800; color: {% if day.is_today %}#2563eb{% else %}#1e293b{% endif %}; line-height: 1.1;">
+                                {{ day.day }}
+                            </span>
+                        </div>
+
+                        
+                        <div class="flex-grow-1">
+                            {% if day.status == 'trabalho' %}
+                                <div style="font-weight: 700; font-size: 14px; color: #334155; margin-bottom: 2px;">{{ day.title }}</div>
+                                <div style="font-size: 13px; color: #475569; line-height: 1.4;">{{ day.text|safe }}</div>
+                            {% elif day.status == 'feriado' %}
+                                <div style="font-weight: 700; font-size: 14px; color: #e11d48; background: #ffe4e6; padding: 4px 10px; border-radius: 6px; display: inline-block;">
+                                    <i class="bi bi-balloon-fill"></i> {{ day.title }}
+                                </div>
+                            {% elif day.status == 'ausencia' or day.status == 'ausencia-half' %}
+                                <div style="font-weight: 700; font-size: 14px; color: #7e22ce; background: #f3e8ff; padding: 4px 10px; border-radius: 6px; display: inline-block;">
+                                    <i class="bi bi-briefcase-fill"></i> {{ day.title }}
+                                </div>
+                                {% if day.text %}<div class="mt-1" style="font-size: 13px; color: #64748b;">{{ day.text|safe }}</div>{% endif %}
+                            {% else %}
+                                <div style="font-size: 13px; color: #94a3b8; font-weight: 500;"><i class="bi bi-cup-hot"></i> Descanso / Sem Registro</div>
+                            {% endif %}
+                        </div>
+                        
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Sincronização com Agenda -->
+<div class="card mt-4 border-0 sync-card-container">
+    <div class="card-body p-4">
+        <h5 class="fw-bold mb-4 sync-card-title-main">
+            <i class="bi bi-calendar2-range text-orange" style="font-size: 20px; color: var(--orange-primary) !important;"></i>
+            Sincronizar com sua Agenda Pessoal
+            <span class="sync-info-trigger-wrapper">
+                <i class="bi bi-info-circle-fill sync-info-icon"></i>
+                <div class="sync-info-popover">
+                    <h6 class="sync-info-popover-title">
+                        <i class="bi bi-info-circle-fill" style="color: #38bdf8 !important; margin-right: 6px;"></i>
+                        Dica de Sincronização
+                    </h6>
+                    <p class="sync-info-popover-text">
+                        Escolha a melhor opção para manter seus horários de escala sempre atualizados em sua agenda pessoal:
+                    </p>
+                    <div class="sync-info-popover-list">
+                        <div class="sync-info-popover-item">
+                            <span class="sync-info-popover-check">✓</span>
+                            <span><strong>Opção 1 (Google OAuth):</strong> Em tempo real (atualiza instantaneamente). Sincronização automática e segura.</span>
+                        </div>
+                        <div class="sync-info-popover-item">
+                            <span class="sync-info-popover-check">✓</span>
+                            <span><strong>Opção 2 (Inscrição iCal):</strong> Atualizada pelo próprio Google ou Outlook periodicamente (pode levar algumas horas para sincronizar novas alterações).</span>
+                        </div>
+                    </div>
+                </div>
+            </span>
+        </h5>
+
+        <div class="row g-4">
+            <!-- Método 1: Sincronização Automática via Google OAuth -->
+            <div class="col-lg-6">
+                <div class="sync-method-card {% if google_integration %}google-oauth-connected{% else %}google-oauth-disconnected{% endif %}">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <span style="font-size: 10.5px; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.8px;">
+                                Opção 1: Sincronização Direta (Recomendado)
+                            </span>
+                            {% if google_integration %}
+                            <span class="sync-status-badge-active">
+                                <span></span>
+                                Ativo
+                            </span>
+                            {% else %}
+                            <span class="sync-status-badge-inactive">
+                                Inativo
+                            </span>
+                            {% endif %}
+                        </div>
+                        <h4 style="font-size: 14.5px; font-weight: 800; color: var(--text-primary); margin-bottom: 8px;">Conexão Google OAuth 2.0</h4>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px;">
+                            Sincroniza escalas, plantões, folgas e licenças em tempo real de forma automática.
+                        </p>
+                    </div>
+
+                    {% if google_integration %}
+                    <div style="background: rgba(16, 185, 129, 0.03); border: 1px solid rgba(16, 185, 129, 0.1); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;">
+                        <i class="bi bi-check2-circle text-success" style="font-size: 18px; margin-top: 1px;"></i>
+                        <div>
+                            <div style="font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: 2px;">Integração Ativa</div>
+                            <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.3;">Sua escala está sincronizada em tempo real com a agenda <strong>Netline RH - Escala de Trabalho</strong> no seu Google.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="https://calendar.google.com/" target="_blank" class="btn-google-action-open">
+                            <i class="bi bi-box-arrow-up-right" style="margin-right: 8px;"></i>
+                            Abrir Google Agenda
+                        </a>
+                        <a href="{% url 'google_integration_disconnect' %}" class="btn-google-action-disconnect">
+                            <i class="bi bi-trash" style="margin-right: 8px;"></i>
+                            Desconectar
+                        </a>
+                    </div>
+                    {% else %}
+                    <div>
+                        <a href="{% url 'google_login_init' %}" class="btn-google-action-connect-full">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z" fill="#FBBC05"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 12-4.53z" fill="#EA4335"/>
+                            </svg>
+                            Conectar com Google Agenda
+                        </a>
+                        <div class="text-center mt-2">
+                            <span style="font-size: 10.5px; color: var(--text-secondary);"><i class="bi bi-shield-check text-success"></i> Integração oficial segura via Google</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Método 2: Inscrição manual via link iCal -->
+            <div class="col-lg-6">
+                <div class="sync-method-card ical-method">
+                    <div>
+                        <span style="font-size: 10.5px; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.8px; display: block; margin-bottom: 12px;">
+                            Opção 2: Inscrição por Link (iCal)
+                        </span>
+                        <h4 style="font-size: 14.5px; font-weight: 800; color: var(--text-primary); margin-bottom: 8px;">Link de Inscrição Direta</h4>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
+                            Para Outlook, Apple Calendar ou para assinar a agenda no seu aplicativo preferido.
+                        </p>
+                    </div>
+
+                    <div>
+                        <div class="input-group mb-2 shadow-sm input-group-ical">
+                            <input type="text" id="calendarFeedUrl" class="form-control border-0" style="font-size: 11px; height: 38px; color: var(--text-primary); padding-left: 12px;" value="{{ feed_url }}" readonly>
+                            <button class="btn btn-light" type="button" id="btnCopyFeedUrl" onclick="copyFeedUrl()" style="border: none; transition: all 0.2s; min-width: 44px; background: var(--table-header-bg); color: var(--text-secondary);">
+                                <i class="bi bi-copy"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Botãozinho pequeno para adicionar à agenda -->
+                        <div class="d-flex align-items-center justify-content-between mt-2 flex-wrap gap-2">
+                            <span style="font-size: 10px; color: var(--text-secondary);"><i class="bi bi-arrow-repeat"></i> Atualizado pelo app de calendário</span>
+                            <a href="https://calendar.google.com/calendar/r?cid={{ feed_url|urlencode }}" target="_blank" class="btn-ical-add-action">
+                                <i class="bi bi-google" style="font-size: 10px; color: #4285F4; margin-right: 6px;"></i>
+                                + Adicionar via Link
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    @keyframes softPulse {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+</style>
+
+<script>
+    function copyToClipboard(text, element) {
+        navigator.clipboard.writeText(text).then(() => {
+            const originalHtml = element.innerHTML;
+            element.innerHTML = '<i class="bi bi-check-lg text-success" style="margin-right: 6px;"></i> Copiado!';
+            element.style.borderColor = "#10b981";
+            element.style.backgroundColor = "rgba(16, 185, 129, 0.05)";
+            setTimeout(() => {
+                element.innerHTML = originalHtml;
+                element.style.borderColor = "";
+                element.style.backgroundColor = "";
+            }, 2000);
+        }).catch(err => {
+            // Fallback para HTTP inseguro ou falta de suporte à API Clipboard
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            
+            const originalHtml = element.innerHTML;
+            element.innerHTML = '<i class="bi bi-check-lg text-success" style="margin-right: 6px;"></i> Copiado!';
+            element.style.borderColor = "#10b981";
+            element.style.backgroundColor = "rgba(16, 185, 129, 0.05)";
+            setTimeout(() => {
+                element.innerHTML = originalHtml;
+                element.style.borderColor = "";
+                element.style.backgroundColor = "";
+            }, 2000);
+        });
+    }
+
+    function copyFeedUrl() {
+        const copyText = document.getElementById("calendarFeedUrl");
+        navigator.clipboard.writeText(copyText.value).then(() => {
+            const btn = document.getElementById("btnCopyFeedUrl");
+            const icon = btn.querySelector("i");
+            
+            // Alterar o visual do botão para indicar sucesso
+            icon.className = "bi bi-check-lg text-success";
+            btn.style.borderColor = "#10b981";
+            btn.style.backgroundColor = "rgba(16, 185, 129, 0.05)";
+            
+            setTimeout(() => {
+                icon.className = "bi bi-copy";
+                btn.style.borderColor = "";
+                btn.style.backgroundColor = "";
+            }, 2000);
+        }).catch(err => {
+            console.error('Falha ao copiar: ', err);
+            // Fallback caso a API da Clipboard falhe ou não tenha suporte (ex: HTTP inseguro em testes locais)
+            copyText.select();
+            document.execCommand("copy");
+            const btn = document.getElementById("btnCopyFeedUrl");
+            const icon = btn.querySelector("i");
+            icon.className = "bi bi-check-lg text-success";
+            setTimeout(() => {
+                icon.className = "bi bi-copy";
+            }, 2000);
+        });
+    }
+</script>
+{% endblock %}

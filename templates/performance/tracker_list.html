@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Rastreadores de Desempenho{% endblock %}
+{% block breadcrumb %}
+<span style="color: var(--text-secondary); font-size: 13px;">Desempenho / Rastreadores</span>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><i class="bi bi-journal-text text-orange"></i> Rastreadores de Desempenho (Trackers)</h1>
+        <p class="page-subtitle">{{ trackers|length }} rastreador(es) encontrado(s)</p>
+    </div>
+    <div>
+        <a href="{% url 'review_list' %}" class="btn btn-outline-secondary me-2"><i class="bi bi-arrow-left"></i> Voltar</a>
+        <a href="{% url 'tracker_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Novo Rastreador</a>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nome do Rastreador</th>
+                <th>Funcionário Avaliado</th>
+                <th>Data de Criação</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tracker in trackers %}
+            <tr>
+                <td style="font-weight: 500;">{{ tracker.tracker_name }}</td>
+                <td>{{ tracker.employee }}</td>
+                <td>{{ tracker.added_date|date:"d/m/Y - H:i" }}</td>
+                <td>
+                    <a href="{% url 'tracker_detail' tracker.pk %}" class="btn btn-icon btn-icon-secondary me-1" title="Adicionar Log / Visualizar"><i class="bi bi-eye"></i></a>
+                    <a href="{% url 'tracker_delete' tracker.pk %}" class="btn btn-icon btn-icon-danger" onclick="return confirm('Deseja excluir este rastreador?')" title="Excluir"><i class="bi bi-trash"></i></a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">
+                    <div class="empty-state py-5">
+                        <div class="empty-state-icon"><i class="bi bi-journal-x"></i></div>
+                        <div class="empty-state-title">Nenhum Rastreador cadastrado</div>
+                        <p class="text-muted mt-2">O rastreador serve para documentar feedbacks contínuos da sua equipe fora do período de avaliação.</p>
+                        <a href="{% url 'tracker_create' %}" class="btn btn-primary mt-2"><i class="bi bi-plus-lg me-1"></i> Criar Rastreador</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

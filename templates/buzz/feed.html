@@ -1,0 +1,488 @@
+{% extends "base.html" %}
+{% block title %}Netgram{% endblock %}
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;">Netgram</span>{% endblock %}
+{% block content %}
+<style>
+    .feed-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff;
+    }
+    .feed-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 32px -12px rgba(0,0,0,0.08) !important;
+        border-color: #cbd5e1 !important;
+    }
+    .netgram-composer {
+        background: #ffffff;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02) !important;
+    }
+    .netgram-gradient-text {
+        background: linear-gradient(135deg, #0AA423, #059669);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        font-family: 'Outfit', sans-serif;
+    }
+    #id_text {
+        border-radius: 12px !important;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 14.5px;
+        padding: 12px 16px;
+    }
+    #id_text:focus {
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(10, 164, 35, 0.12) !important;
+        border-color: #0AA423 !important;
+    }
+    .feed-filter-item {
+        border-radius: 20px; text-decoration: none; padding: 8px 18px; font-weight: 600; font-size: 13.5px;
+        transition: all 0.2s ease; color: #475569; display: inline-flex; align-items: center; gap: 6px;
+        background: #ffffff; border: 1px solid #e2e8f0;
+    }
+    .feed-filter-item:hover {
+        background-color: #f8fafc;
+        color: #1e293b;
+        transform: translateY(-1px);
+    }
+    .feed-filter-active {
+        background-color: #eaf6ec !important;
+        color: #0AA423 !important;
+        border-color: #b4e4be !important;
+        box-shadow: 0 2px 4px rgba(10, 164, 35, 0.05);
+    }
+    .sidebar-profile-card {
+        border-radius: 16px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .sidebar-profile-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+    }
+    .sidebar-info-card {
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        padding: 18px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .sidebar-info-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+    }
+    .comment-bubble {
+        background: #f8fafc;
+        border: 1px solid #f1f5f9;
+        border-radius: 14px;
+        padding: 10px 14px;
+        transition: all 0.2s ease;
+    }
+    .comment-bubble:hover {
+        background: #f1f5f9;
+    }
+    .media-upload-btn:hover {
+        background: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+    }
+    .comment-trigger-btn {
+        transition: all 0.2s ease !important;
+    }
+    .comment-trigger-btn:hover {
+        background: #f8fafc !important;
+        color: #1e293b !important;
+    }
+    .like-btn:hover {
+        background: #eaf6ec !important;
+        color: #0AA423 !important;
+    }
+</style>
+
+{% if request.user.is_netgram_suspended %}
+    <!-- Premium Suspended View -->
+    <div class="d-flex align-items-center justify-content-center py-5" style="min-height: 65vh;">
+        <div class="card border-0 position-relative overflow-hidden" style="border-radius: 28px; background: linear-gradient(145deg, #ffffff, #fdfdfd); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.02) !important; max-width: 580px; width: 100%;">
+            <!-- Decorative colored bar on top -->
+            <div style="position: absolute; top: 0; left: 0; right: 0; height: 6px; background: linear-gradient(90deg, #ef4444, #f87171);"></div>
+            
+            <div class="card-body p-5 text-center">
+                <!-- Glowing red icon container -->
+                <div class="mb-4 d-inline-flex align-items-center justify-content-center position-relative" style="width: 100px; height: 100px;">
+                    <!-- Outer pulse ring -->
+                    <div class="position-absolute w-100 h-100 rounded-circle" style="background: rgba(239, 68, 68, 0.1); animation: pulse-gavel 2.5s infinite ease-in-out;"></div>
+                    <!-- Inner solid circle -->
+                    <div class="position-relative d-flex align-items-center justify-content-center rounded-circle text-danger" style="width: 76px; height: 76px; background: linear-gradient(135deg, #fee2e2, #fecaca); box-shadow: inset 0 2px 4px rgba(255,255,255,0.4);">
+                        <i class="bi bi-shield-lock-fill" style="font-size: 34px; filter: drop-shadow(0 2px 4px rgba(220, 38, 38, 0.15));"></i>
+                    </div>
+                </div>
+
+                <h3 class="fw-bold text-slate-800 mb-3" style="font-family: 'Outfit', sans-serif; font-size: 26px; color: #1e293b; letter-spacing: -0.5px;">Acesso Suspenso</h3>
+                
+                <p class="mb-4 text-secondary" style="font-size: 15px; line-height: 1.6; color: #475569;">
+                    Seu acesso à rede social corporativa <strong>Netgram</strong> foi temporariamente suspenso devido a uma violação das nossas diretrizes de conduta comunitária.
+                </p>
+
+                <!-- Information alert box -->
+                <div class="d-flex align-items-start gap-3 text-start p-4 mb-4" style="background: rgba(248, 250, 252, 0.95); border: 1px solid #e2e8f0; border-radius: 16px;">
+                    <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style="width: 32px; height: 32px; background: #e0f2fe; color: #0284c7;">
+                        <i class="bi bi-info-circle-fill" style="font-size: 16px;"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-1 fw-bold" style="font-size: 13.5px; color: #0f172a; font-family: 'Outfit', sans-serif;">O que isso significa?</h6>
+                        <p class="text-muted mb-0" style="font-size: 12.5px; line-height: 1.6; color: #64748b !important;">
+                            Suas interações e publicações no Netgram estão suspensas temporariamente. No entanto, <strong>todas as demais ferramentas de trabalho (como registro de ponto, férias e serviços de RH) continuam ativas e funcionando normalmente</strong>.
+                        </p>
+                        <p class="text-muted mb-0 mt-2" style="font-size: 12px; color: #94a3b8 !important; line-height: 1.5;">
+                            Caso precise de qualquer esclarecimento ou suporte, por favor entre em contato com a <strong>equipe de Recursos Humanos (RH)</strong>.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Action button -->
+                <div class="pt-2">
+                    <a href="{% url 'dashboard' %}" class="btn rounded-pill px-5 py-2.5 text-white" style="background: linear-gradient(135deg, #4f46e5, #4338ca); font-weight: 600; font-size: 14px; border: none; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); transition: all 0.2s ease;">
+                        <i class="bi bi-arrow-left me-2"></i> Voltar ao Início
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes pulse-gavel {
+            0% { transform: scale(0.92); opacity: 0.8; }
+            50% { transform: scale(1.08); opacity: 0.4; }
+            100% { transform: scale(0.92); opacity: 0.8; }
+        }
+    </style>
+{% else %}
+<div class="page-header mt-1 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-2">
+        <h1 class="page-title mb-0"><span class="netgram-gradient-text"><i class="bi bi-stars"></i> Netgram</span></h1>
+        <span class="badge" style="background:#eaf6ec; color:#0AA423; border-radius: 12px; font-size: 12px; padding: 5px 10px; font-weight: 600;">Social Feed</span>
+    </div>
+    <div class="d-flex d-lg-none align-items-center gap-2 flex-wrap">
+        <a href="?filter=all" class="feed-filter-item {% if not request.GET.filter or request.GET.filter == 'all' %}feed-filter-active{% endif %}">
+            <i class="bi bi-globe" style="color: #0AA423;"></i> Feed Geral
+        </a>
+        <a href="?filter=rh" class="feed-filter-item {% if request.GET.filter == 'rh' %}feed-filter-active{% endif %}">
+            <i class="bi bi-megaphone-fill" style="color: #0AA423;"></i> Comunicados do RH
+        </a>
+        <a href="?filter=birthdays" class="feed-filter-item {% if request.GET.filter == 'birthdays' %}feed-filter-active{% endif %}">
+            <i class="bi bi-balloon-fill" style="color: #0AA423;"></i> Aniversariantes
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Main Content: Post Composer & Social Feed -->
+    <div class="col-12 col-lg-9">
+        
+        {% if can_post_netgram %}
+        <div class="card mb-4 netgram-composer border-0 shadow-sm" style="border-radius: 16px;">
+            <div class="card-body p-4">
+                <div class="d-flex gap-3">
+                    <div class="employee-avatar d-flex align-items-center justify-content-center overflow-hidden shadow-sm animate-avatar" style="width: 46px; height: 46px; font-size: 16px; flex-shrink: 0; background: var(--bg-main); color: var(--text-main); font-weight: 600; border-radius: 50%; border: 2px solid #ffffff; box-shadow: 0 0 0 2px #e2e8f0;">
+                        {% if my_employee.picture and my_employee.picture.picture %}
+                            <img src="{{ my_employee.picture.picture.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% elif my_employee %}
+                            {{ my_employee.first_name|first }}{{ my_employee.last_name|first }}
+                        {% else %}
+                            ?
+                        {% endif %}
+                    </div>
+                    <div style="flex: 1;">
+                        <form method="post" action="{% url 'create_post' %}" enctype="multipart/form-data" id="postForm">
+                            {% csrf_token %}
+                            <textarea name="text" id="id_text" class="form-control mb-3" rows="2" placeholder="O que você quer compartilhar com a equipe, {{ my_employee.first_name|default:'criador(a)' }}?" style="resize: none; border-radius: 12px; background: #f8fafc; font-size: 14.5px; border: 1px solid #f1f5f9; padding: 12px 16px; min-height: 80px;"></textarea>
+                            
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top" style="border-color: #f1f5f9 !important;">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <label class="btn btn-sm mb-0 d-inline-flex align-items-center gap-2 px-3 py-2 media-upload-btn" style="cursor: pointer; color: #475569; border: 1px solid #e2e8f0; background: #ffffff; border-radius: 30px; font-weight: 600; font-size: 12.5px; transition: all 0.2s;">
+                                        <i class="bi bi-image" style="color: #10b981; font-size: 14px;"></i> <span>Foto</span>
+                                        <input type="file" name="photos" id="photoInput" accept="image/*" multiple style="display:none;" onchange="previewPhoto(this)">
+                                    </label>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span id="photoFileName" style="font-size: 12px; color: #10b981; font-weight: 600; display: none; align-items: center; gap: 4px; background: #eaf6ec; padding: 4px 12px; border-radius: 20px; border: 1px solid #b4e4be;"></span>
+                                    <button type="submit" class="btn text-white btn-sm rounded-pill px-4 py-2" style="font-weight: 700; font-size: 13.5px; background: linear-gradient(135deg, #0AA423, #059669); border: none; box-shadow: 0 4px 12px rgba(10, 164, 35, 0.15); transition: all 0.2s;"><i class="bi bi-send-fill me-1"></i> Publicar</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="d-flex flex-column gap-4">
+            {% for share in shares %}
+            <div class="card feed-card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+                <div class="card-body p-4">
+                    <!-- Post Header -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="employee-avatar d-flex align-items-center justify-content-center overflow-hidden shadow-sm" style="width: 48px; height: 48px; font-size: 16px; background: var(--bg-main); color: var(--text-main); font-weight: 600; border-radius: 50%; border: 2px solid #ffffff; box-shadow: 0 0 0 2px #e2e8f0; flex-shrink: 0;">
+                                {% if share.employee.picture and share.employee.picture.picture %}
+                                    <img src="{{ share.employee.picture.picture.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    {{ share.employee.first_name|first }}{{ share.employee.last_name|first }}
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div style="font-weight: 700; font-size: 15px; color: #1e293b; line-height: 1.2;">{{ share.employee.full_name }}</div>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; font-weight: 500;">
+                                    {{ share.employee.job_title|default:"Colaborador" }} <span class="mx-1">•</span> há {{ share.created_at|timesince }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            {% if my_employee == share.employee or user.is_admin %}
+                            <a href="{% url 'delete_post' share.pk %}" class="btn btn-sm text-secondary px-2 border-0 bg-transparent hover-danger" onclick="return confirm('Excluir este post?')" title="Excluir" style="transition: color 0.2s;"><i class="bi bi-trash"></i></a>
+                            {% endif %}
+                            <button class="btn btn-sm text-secondary px-2 border-0 bg-transparent"><i class="bi bi-three-dots-vertical"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Official Announcement badge if applicable -->
+                    {% if "COMUNICADO OFICIAL" in share.post.text %}
+                    <div class="mb-3">
+                        <span class="badge" style="color: #c11574; background: #fdf2f8; font-weight: 700; font-size: 11px; padding: 6px 10px; border-radius: 6px; border: 1px solid #fbcfe8;">
+                            <i class="bi bi-megaphone-fill me-1"></i> COMUNICADO OFICIAL
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Post content text -->
+                    <div class="buzz-post-text-container mb-3" style="font-size: 15px; color: #334155; line-height: 1.6; font-family: 'Inter', sans-serif;" data-raw-text="{{ share.post.text|escape }}">
+                        {{ share.post.text|linebreaksbr }}
+                    </div>
+
+                    <!-- Post photos -->
+                    {% if share.post.photos.all %}
+                    <div class="image-preview-container border rounded-4 overflow-hidden mt-3 mb-2" style="border-color: #e2e8f0 !important; background: #ffffff;">
+                        {% if "COMUNICADO OFICIAL" in share.post.text %}
+                        <div class="row g-0">
+                            <div class="col-4 bg-light d-flex align-items-center justify-content-center border-end" style="min-height: 140px;">
+                                <img src="{{ share.post.photos.all.0.photo.url }}" class="img-fluid p-2" style="max-height: 130px; object-fit: contain;">
+                            </div>
+                            <div class="col-8 p-4 d-flex flex-column justify-content-center">
+                                <h6 class="fw-bold mb-1" style="color: #1e293b; font-size: 14.5px; font-family: 'Outfit', sans-serif;">Comunicado Institucional</h6>
+                                <p class="text-muted mb-0" style="font-size: 12.5px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5;">Leia os detalhes da publicação para manter-se alinhado com a Netline.</p>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div id="carouselPost{{ share.pk }}" class="carousel slide carousel-dark" data-bs-ride="false">
+                            <div class="carousel-inner bg-white w-100" style="min-height: 200px;">
+                                {% for photo in share.post.photos.all %}
+                                <div class="carousel-item {% if forloop.first %}active{% endif %} p-3 text-center">
+                                    <img src="{{ photo.photo.url }}" class="img-fluid rounded-3 shadow-sm" style="max-height: 400px; object-fit: contain;">
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if share.post.photos.count > 1 %}
+                            <button class="carousel-control-prev" type="button" data-bs-target="#carouselPost{{ share.pk }}" data-bs-slide="prev" style="width: 10%;">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#carouselPost{{ share.pk }}" data-bs-slide="next" style="width: 10%;">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                            <div class="carousel-indicators" style="margin-bottom: 5px;">
+                                {% for photo in share.post.photos.all %}
+                                <button type="button" data-bs-target="#carouselPost{{ share.pk }}" data-bs-slide-to="{{ forloop.counter0 }}" class="{% if forloop.first %}active{% endif %}" aria-current="{% if forloop.first %}true{% else %}false{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Stats Row -->
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 text-muted" style="font-size: 12.5px; border-top: 1px solid #f1f5f9;">
+                        <div class="d-flex align-items-center gap-1">
+                            {% if share.num_of_likes > 0 %}
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-circle text-emerald-800" style="width: 22px; height: 22px; background: #eaf6ec; color: #0AA423;">
+                                <i class="bi bi-heart-fill" style="font-size: 11px;"></i>
+                            </span>
+                            <span class="ms-1.5 fw-medium" style="color: #475569;">{{ share.num_of_likes }} curtiu(ram)</span>
+                            {% else %}
+                            <span class="text-muted" style="font-size: 12px; opacity: 0.85;"><i class="bi bi-heart"></i> Seja o primeiro a curtir</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if share.num_of_comments > 0 %}
+                            <span class="fw-medium text-muted" style="font-size: 12px;"><i class="bi bi-chat-text"></i> {{ share.num_of_comments }} comentário(s)</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Action Buttons Row -->
+                <div class="card-footer bg-transparent py-2 px-3" style="border-top: 1px solid #f1f5f9;">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <a href="javascript:void(0)" onclick="toggleLike(event, this, '{% url 'like_share' share.pk %}')" class="btn w-100 d-inline-flex align-items-center justify-content-center gap-2 py-2 text-decoration-none like-btn" style="color: {% if share.pk in user_liked %}#0AA423{% else %}#475569{% endif %}; font-weight: 700; font-size: 13.5px; border-radius: 10px; background: {% if share.pk in user_liked %}#eaf6ec{% else %}transparent{% endif %}; transition: all 0.2s ease; border: 1px solid {% if share.pk in user_liked %}#b4e4be{% else %}transparent{% endif %};" data-liked="{% if share.pk in user_liked %}true{% else %}false{% endif %}">
+                                <i class="bi {% if share.pk in user_liked %}bi-heart-fill{% else %}bi-heart{% endif %}" style="font-size: 16px;"></i> Amei
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <button onclick="toggleComments({{ share.pk }})" class="btn w-100 d-inline-flex align-items-center justify-content-center gap-2 py-2 text-decoration-none comment-trigger-btn" style="font-weight: 700; font-size: 13.5px; border-radius: 10px; background: transparent; border: 1px solid transparent;">
+                                <i class="bi bi-chat" style="font-size: 16px; color: #0AA423;"></i> Comentários
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div class="buzz-comments-section mt-3 pt-3 border-top" id="comments-{{ share.pk }}" style="display: none; border-color: #f1f5f9 !important;">
+                        {% for comment in share.comments.all %}
+                        <div class="d-flex gap-2 mb-3 align-items-start">
+                            <div class="employee-avatar d-flex align-items-center justify-content-center overflow-hidden" style="width: 34px; height: 34px; font-size: 12.5px; background: var(--bg-main); color: var(--text-main); font-weight: 600; border-radius: 50%; flex-shrink: 0; border: 1.5px solid #e2e8f0;">
+                                {% if comment.employee.picture and comment.employee.picture.picture %}
+                                    <img src="{{ comment.employee.picture.picture.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    {{ comment.employee.first_name|first }}{{ comment.employee.last_name|first }}
+                                {% endif %}
+                            </div>
+                            <div class="comment-bubble" style="flex: 1;">
+                                <div class="d-flex justify-content-between align-items-baseline">
+                                    <div style="font-weight: 700; font-size: 13px; color: #1e293b;">{{ comment.employee.full_name }}</div>
+                                    <div style="font-size: 11px; color: #94a3b8; font-weight: 500;">{{ comment.employee.job_title|default:"Colaborador" }}</div>
+                                </div>
+                                <div style="font-size: 13px; color: #334155; margin-top: 4px; line-height: 1.45;">{{ comment.text|linebreaksbr }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <!-- Add Comment form -->
+                        <div class="d-flex gap-2 mt-3 align-items-center">
+                            <div class="employee-avatar d-flex align-items-center justify-content-center overflow-hidden shadow-sm" style="width: 32px; height: 32px; font-size: 12px; background: var(--bg-main); color: var(--text-main); font-weight: 600; border-radius: 50%; flex-shrink: 0; border: 1.5px solid #e2e8f0;">
+                                {% if my_employee.picture and my_employee.picture.picture %}
+                                    <img src="{{ my_employee.picture.picture.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% elif my_employee %}
+                                    {{ my_employee.first_name|first }}{{ my_employee.last_name|first }}
+                                {% else %}
+                                    ?
+                                {% endif %}
+                            </div>
+                            <form method="post" action="{% url 'add_comment' share.pk %}" class="flex-grow-1 position-relative m-0">
+                                {% csrf_token %}
+                                <input type="text" name="text" class="form-control rounded-pill" placeholder="Comentar..." style="padding-right: 42px; padding-left: 16px; border: 1px solid #e2e8f0; font-size: 13px; background: #f8fafc; height: 38px; font-weight: 500; transition: all 0.2s ease;" required>
+                                <button type="submit" class="btn btn-sm position-absolute" style="right: 6px; top: 50%; transform: translateY(-50%); color: #64748b; background: transparent; border: none; padding: 0 8px;">
+                                    <i class="bi bi-send-fill" style="color: #0AA423; font-size: 14px;"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state py-5 w-100" style="text-align: center; padding: 60px 20px; background: #ffffff; border-radius: 20px; border: 2px dashed #e2e8f0;">
+                <div style="width: 72px; height: 72px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #94a3b8; font-size: 32px;">
+                    <i class="bi bi-chat-dots"></i>
+                </div>
+                <h4 style="color: #1e293b; font-weight: 700; margin-bottom: 10px; font-size: 20px; font-family: 'Outfit', sans-serif;">Sem posts ainda</h4>
+                <p style="color: #64748b; font-size: 14px; margin: 0 auto; max-width: 320px; line-height: 1.5;">Seja o primeiro a publicar no Netgram!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Right Sidebar: Feed Filters -->
+    <div class="col-lg-3 d-none d-lg-block">
+        <div class="card sidebar-info-card border-0 shadow-sm" style="border-radius: 16px;">
+            <h6 class="fw-bold mb-3" style="color: #1e293b; font-size: 14px; font-family: 'Outfit', sans-serif; letter-spacing: -0.2px;">Filtros do Feed</h6>
+            <div class="d-flex flex-column gap-2">
+                <a href="?filter=all" class="feed-filter-item w-100 {% if not request.GET.filter or request.GET.filter == 'all' %}feed-filter-active{% endif %}" style="justify-content: flex-start; padding: 10px 18px;">
+                    <i class="bi bi-globe" style="color: #0AA423; font-size: 15px;"></i> Feed Geral
+                </a>
+                <a href="?filter=rh" class="feed-filter-item w-100 {% if request.GET.filter == 'rh' %}feed-filter-active{% endif %}" style="justify-content: flex-start; padding: 10px 18px;">
+                    <i class="bi bi-megaphone-fill" style="color: #0AA423; font-size: 15px;"></i> Comunicados do RH
+                </a>
+                <a href="?filter=birthdays" class="feed-filter-item w-100 {% if request.GET.filter == 'birthdays' %}feed-filter-active{% endif %}" style="justify-content: flex-start; padding: 10px 18px;">
+                    <i class="bi bi-balloon-fill" style="color: #0AA423; font-size: 15px;"></i> Aniversariantes
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+{% block extra_js %}
+<script>
+function previewPhoto(input) {
+    const fileNameSpan = document.getElementById('photoFileName');
+    if (input.files && input.files.length > 0) {
+        if (input.files.length === 1) {
+            fileNameSpan.innerHTML = '<i class="bi bi-check-circle-fill"></i> ' + input.files[0].name;
+        } else {
+            fileNameSpan.innerHTML = '<i class="bi bi-check-circle-fill"></i> ' + input.files.length + ' fotos anexadas';
+        }
+        fileNameSpan.style.display = 'flex';
+    } else {
+        fileNameSpan.style.display = 'none';
+        fileNameSpan.innerHTML = '';
+    }
+}
+
+function toggleComments(id) {
+    const c = document.getElementById('comments-' + id);
+    c.style.display = c.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleLike(event, btnElement, url) {
+    event.preventDefault();
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.error) return;
+        const isLiked = btnElement.getAttribute('data-liked') === 'true';
+        const icon = btnElement.querySelector('i.bi');
+
+        if (isLiked) {
+            btnElement.setAttribute('data-liked', 'false');
+            btnElement.style.color = '#475569';
+            btnElement.style.background = '#f8fafc';
+            btnElement.style.borderColor = '#e2e8f0';
+            icon.className = 'bi bi-heart';
+            icon.style.color = '#475569';
+        } else {
+            btnElement.setAttribute('data-liked', 'true');
+            btnElement.style.color = '#0AA423';
+            btnElement.style.background = '#eaf6ec';
+            btnElement.style.borderColor = '#b4e4be';
+            icon.className = 'bi bi-heart-fill';
+            icon.style.color = '#0AA423';
+        }
+
+        window.location.reload();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.buzz-post-text-container').forEach(container => {
+        let text = container.getAttribute('data-raw-text') || '';
+        text = text.replace('📢 **COMUNICADO OFICIAL:**', '');
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #0f172a; font-size: 15px;">$1</strong>');
+        text = text.trim().replace(/\n/g, '<br>');
+        container.innerHTML = text;
+    });
+});
+</script>
+{% endblock %}

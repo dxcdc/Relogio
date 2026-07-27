@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+{% block title %}Trocas de Turno{% endblock %}
+
+{% block breadcrumb %}
+<span style="color: #64748b; font-size: 14px; font-weight: 500;">
+    <a href="#" style="color: #64748b; text-decoration: none;">Gestão de Ponto</a> / Trocas de Turno
+</span>
+{% endblock %}
+
+{% block content %}
+<style>
+/* Premium Dashboard Aesthetic */
+:root {
+    --card-bg: #ffffff;
+    --card-border: #e2e8f0;
+    --primary: #4f46e5;
+    --primary-light: #e0e7ff;
+    --success: #10b981;
+    --danger: #ef4444;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --radius: 16px;
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+}
+
+.swap-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.swap-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+}
+
+.swap-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Avatar stacking for swaps */
+.swap-avatars {
+    display: flex;
+    align-items: center;
+    position: relative;
+    width: 80px;
+    height: 48px;
+}
+.avatar-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid white;
+    object-fit: cover;
+    position: absolute;
+}
+.avatar-requester {
+    left: 0;
+    z-index: 2;
+}
+.avatar-target {
+    left: 28px;
+    z-index: 1;
+}
+
+.swap-details h5 {
+    margin: 0 0 6px 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.swap-details p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.swap-controls {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+/* Status Pills */
+.status-pill {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.status-pending { background: #fffcf0; color: #d97706; border: 1px solid #fef3c7; }
+.status-approved { background: #f0fdf4; color: #166534; border: 1px solid #dcfce3; }
+.status-rejected { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
+.status-neutral { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+.action-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.btn-resolve {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: var(--text-main);
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+    outline: none !important;
+    box-shadow: none !important;
+}
+.btn-resolve:hover, .btn-resolve:focus {
+    background: #e2e8f0;
+    color: var(--text-main);
+}
+
+.btn-danger-action { background: white; color: var(--danger); border: 1px solid #fecdd3; padding: 6px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; transition: all 0.2s; box-shadow: none !important; outline: none; }
+.btn-danger-action:hover, .btn-danger-action:focus { background: #fef2f2; }
+
+.btn-primary-action { background: var(--success); color: white; border: none; padding: 6px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; transition: all 0.2s; box-shadow: none !important; outline: none; }
+.btn-primary-action:hover, .btn-primary-action:focus { background: #059669; }
+
+/* Mobile Responsiveness Rules */
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    .swap-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 16px;
+    }
+    .swap-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .swap-controls {
+        width: 100%;
+        align-items: flex-start;
+    }
+    .action-group {
+        justify-content: flex-start;
+        width: 100%;
+    }
+    .swap-details h5 .status-pill {
+        margin-left: 0 !important;
+        margin-top: 4px;
+    }
+}
+</style>
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+            <i class="bi bi-arrow-left-right"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 22px;">Minhas Trocas</h1>
+            <p class="text-muted mb-0" style="font-size: 13px;">Gerencie suas trocas de turno e permissões com colegas</p>
+        </div>
+    </div>
+    {% if not user.is_admin %}
+    <button type="button" class="btn btn-dark d-flex align-items-center gap-2 px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#swapModal" style="border-radius: 12px; font-weight: 600; background: #0f172a; border: none;">
+        <i class="bi bi-plus-lg"></i> Solicitar Troca
+    </button>
+    {% endif %}
+</div>
+
+<div class="claim-list-wrapper">
+    {% for req in swap_requests %}
+    <div class="swap-card">
+        <div class="swap-info">
+            <div class="swap-avatars">
+                {% if req.requester.picture %}
+                    <img src="{{ req.requester.picture.picture.url }}" alt="Req" class="avatar-circle avatar-requester">
+                {% else %}
+                    <div class="avatar-circle avatar-requester">{{ req.requester.full_name.0|upper }}</div>
+                {% endif %}
+                
+                {% if req.target_employee.picture %}
+                    <img src="{{ req.target_employee.picture.picture.url }}" alt="Tgt" class="avatar-circle avatar-target">
+                {% else %}
+                    <div class="avatar-circle avatar-target" style="background: var(--primary-light); color: var(--primary);">{{ req.target_employee.full_name.0|upper }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="swap-details">
+                <h5>
+                    {{ req.requester.full_name }} 
+                    <i class="bi bi-arrow-right text-muted mx-2" style="font-size: 14px;"></i> 
+                    {{ req.target_employee.full_name }}
+                    
+                    {% if req.status == 'PENDING' %}<span class="status-pill status-pending ms-3">Pendente</span>
+                    {% elif 'PENDING' in req.status %}<span class="status-pill status-pending ms-3">Em Análise</span>
+                    {% elif req.status == 'APPROVED' %}<span class="status-pill status-approved ms-3">Aprovado</span>
+                    {% elif req.status == 'REJECTED' %}<span class="status-pill status-rejected ms-3">Rejeitado</span>
+                    {% else %}<span class="status-pill status-neutral ms-3">{{ req.get_status_display }}</span>{% endif %}
+                </h5>
+                <p>
+                    <i class="bi bi-calendar2-check opacity-75 me-1"></i> Data da Troca: <strong>{{ req.date|date:"d/m/Y" }}</strong> &nbsp;|&nbsp; 
+                    <i class="bi bi-clock-history opacity-75 me-1"></i> Solicitado em: {{ req.created_at|date:"d/m/Y" }}
+                </p>
+                {% if req.reason %}
+                <p class="mt-2 text-muted" style="font-weight: 500;">
+                    <i class="bi bi-chat-left-text opacity-75 me-1"></i> "{{ req.reason }}"
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="swap-controls">
+            <div class="action-group">
+                {% if req.status == 'PENDING_TARGET' and req.target_employee.user == request.user %}
+                    <button onclick="resolveSwap({{ req.pk }}, 'REJ')" class="btn-danger-action"><i class="bi bi-x-lg me-1"></i> Rejeitar</button>
+                    <button onclick="resolveSwap({{ req.pk }}, 'APP')" class="btn-primary-action"><i class="bi bi-check-lg me-1"></i> Aceitar</button>
+                {% elif req.status == 'PENDING_SUPERVISOR' and user.is_supervisor %}
+                    <button onclick="resolveSwap({{ req.pk }}, 'REJ')" class="btn-danger-action"><i class="bi bi-x-lg me-1"></i> Rejeitar</button>
+                    <button onclick="resolveSwap({{ req.pk }}, 'APP')" class="btn-primary-action"><i class="bi bi-check-lg me-1"></i> Autorizar</button>
+                {% elif req.status == 'PENDING_HR' and user.is_admin %}
+                    <button onclick="resolveSwap({{ req.pk }}, 'REJ')" class="btn-danger-action"><i class="bi bi-x-lg me-1"></i> Rejeitar</button>
+                    <button onclick="resolveSwap({{ req.pk }}, 'APP')" class="btn-primary-action"><i class="bi bi-check-lg me-1"></i> Efetivar Troca</button>
+                {% endif %}
+                
+                <button type="button" class="btn-resolve" data-bs-toggle="modal" data-bs-target="#adminScheduleModal" data-request-id="{{ req.pk }}">
+                   <i class="bi bi-calendar-range me-1"></i> Ver Escalas
+                </button>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5 text-muted" style="background: white; border: 1px dashed #cbd5e1; border-radius: 16px; margin-top: 16px;">
+        <i class="bi bi-arrow-left-right fs-1" style="opacity: 0.5;"></i>
+        <p class="mt-3" style="font-weight: 500;">Nenhuma solicitação de troca de turno encontrada.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% include "attendance/_swap_schedule_modal.html" %}
+
+<script>
+    function resolveSwap(reqId, action) {
+        if(!confirm(action === 'APP' ? 'Confirmar aprovação/aceite?' : 'Confirmar rejeição?')) return;
+        
+        fetch('{% url "swap_request_resolve" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ request_id: reqId, action: action })
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
+            if(data.success) {
+                window.location.reload();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro ao processar solicitação.");
+        });
+    }
+</script>
+{% include "attendance/_swap_inbox_modal.html" %}
+{% endblock %}

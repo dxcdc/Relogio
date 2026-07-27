@@ -1,0 +1,1540 @@
+{% extends "base.html" %}
+{% block title %}{% if view_mode == 'inbox' %}Central de Aprovações{% else %}Minhas Solicitações{% endif %}{% endblock %}
+
+{% block breadcrumb %}
+<span style="color: #64748b; font-size: 14px; font-weight: 500;">Inboxes / {% if view_mode == 'inbox' %}Central de Aprovações{% else %}Minhas Solicitações{% endif %}</span>
+{% endblock %}
+
+{% block content %}
+<style>
+/* Dashboard Design System Adoption */
+:root {
+    --card-bg: #ffffff;
+    --card-border: #e2e8f0;
+    --primary: #4f46e5;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --radius: 16px;
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+}
+
+.inbox-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--card-border);
+    padding-bottom: 1px;
+}
+
+.inbox-tab {
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.inbox-tab:hover {
+    color: var(--text-main);
+}
+
+.inbox-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.inbox-badge {
+    background: #f1f5f9;
+    color: var(--text-main);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+}
+
+/* Inbox Card */
+.inbox-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inbox-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+}
+
+.inbox-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.inbox-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.inbox-details h5 {
+    margin: 0 0 4px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.inbox-details p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.inbox-controls {
+    text-align: right;
+}
+
+.inbox-date {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.status-pill {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 8px;
+}
+
+.status-pending { background: #fffcf0; color: #d97706; border: 1px solid #fef3c7; }
+.status-approved { background: #f0fdf4; color: #166534; border: 1px solid #dcfce3; }
+.status-rejected { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
+
+.btn-resolve {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: var(--text-main);
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.btn-resolve:hover {
+    background: #e2e8f0;
+    color: var(--text-main);
+}
+.btn-action-primary {
+    background: #10b981; color: white; border: none; padding: 6px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none;
+}
+.btn-action-primary:hover { background: #059669; color: white; }
+.btn-action-danger {
+    background: white; border: 1px solid #fecdd3; color: #ef4444; padding: 6px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none;
+}
+.btn-action-danger:hover { background: #fef2f2; }
+
+/* Views */
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* Modal Detail Grid */
+.detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
+.detail-item { display: flex; flex-direction: column; gap: 4px; }
+.detail-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+.detail-value { font-size: 13px; font-weight: 500; color: var(--text-main); }
+/* Timeline */
+.timeline-item { display: flex; gap: 16px; align-items: stretch; }
+.timeline-icon-col { display: flex; flex-direction: column; align-items: center; }
+.timeline-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; z-index: 2; margin-top: 2px;}
+.timeline-line { width: 2px; flex-grow: 1; min-height: 20px; background: var(--card-border); margin: 4px 0; }
+.timeline-content { padding-bottom: 20px; }
+.timeline-title { font-weight: 700; font-size: 13px; color: var(--text-main); margin-bottom: 2px;}
+.timeline-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4;}
+.icon-success { background: #10b981; color: white; }
+.icon-danger { background: #ef4444; color: white; }
+.icon-warning { background: #f59e0b; color: white; }
+.icon-neutral { background: #e2e8f0; color: #64748b; }
+
+/* Mobile Responsiveness Rules */
+@media (max-width: 768px) {
+    .inbox-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 16px;
+    }
+    .inbox-controls {
+        text-align: left;
+        width: 100%;
+    }
+    .inbox-controls .d-flex.justify-content-end {
+        justify-content: flex-start !important;
+    }
+    .inbox-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+    }
+    .inbox-tabs::-webkit-scrollbar {
+        height: 4px;
+    }
+    .inbox-tabs::-webkit-scrollbar-thumb {
+        background-color: var(--card-border);
+        border-radius: 10px;
+    }
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+    .modal-body .row > .col-md-7 {
+        border-right: none !important;
+        border-bottom: 1px solid var(--card-border);
+        padding-right: calc(var(--bs-gutter-x) * .5) !important;
+        padding-bottom: 24px;
+        margin-bottom: 24px;
+    }
+    .modal-body .row > .col-md-5 {
+        padding-left: calc(var(--bs-gutter-x) * .5) !important;
+    }
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+}
+</style>
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+            <i class="bi {% if view_mode == 'inbox' %}bi-inboxes-fill{% else %}bi-mailbox2{% endif %}"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 22px;">{% if view_mode == 'inbox' %}Central de Aprovações{% else %}Minhas Solicitações{% endif %}</h1>
+            <p class="text-muted mb-0" style="font-size: 13px;">Gerencie e acompanhe pendências agrupadas em um único painel.</p>
+        </div>
+    </div>
+</div>
+
+<div class="inbox-tabs">
+    <button class="inbox-tab active" onclick="switchTab('tab-leaves', this)">
+        <i class="bi bi-calendar2-check"></i> Licenças & Ausências <span class="inbox-badge">{{ requests.count }}</span>
+    </button>
+    {% if user.employee.sub_division.allow_shift_swaps or view_mode == 'inbox' %}
+    <button class="inbox-tab" onclick="switchTab('tab-swaps', this)">
+        <i class="bi bi-arrow-left-right"></i> Trocas de Turno <span class="inbox-badge">{{ swaps.count }}</span>
+    </button>
+    {% endif %}
+    <button class="inbox-tab" onclick="switchTab('tab-adjustments', this)">
+        <i class="bi bi-clock-history"></i> Ajustes de Ponto <span class="inbox-badge">{{ adjustments.count }}</span>
+    </button>
+    {% if view_mode == 'inbox' %}
+    {% if user.is_admin or user.is_hr %}
+    <button class="inbox-tab" onclick="switchTab('tab-claims', this)" id="tab-claims-btn">
+        <i class="bi bi-receipt"></i> Reembolsos
+        {% if claims_pending.count > 0 %}
+            <span class="inbox-badge" style="background:#fef3c7;color:#d97706;">{{ claims_pending.count }} pendente{{ claims_pending.count|pluralize:"s" }}</span>
+        {% else %}
+            <span class="inbox-badge">{{ claims.count }}</span>
+        {% endif %}
+    </button>
+    {% endif %}
+    <button class="inbox-tab" onclick="switchTab('tab-pending-punches', this)">
+        <i class="bi bi-camera"></i> Batidas de Ponto
+        {% if pending_punches_count > 0 %}
+            <span class="inbox-badge" style="background:#fef3c7;color:#d97706;">{{ pending_punches_count }} pendente{{ pending_punches_count|pluralize:"s" }}</span>
+        {% else %}
+            <span class="inbox-badge">{{ pending_punches.count }}</span>
+        {% endif %}
+    </button>
+    {% endif %}
+
+</div>
+
+
+<div id="tab-leaves" class="tab-pane active">
+    {% for lr in requests %}
+    <div class="inbox-card">
+        <div class="inbox-info">
+            {% if lr.employee.picture %}
+            <img src="{{ lr.employee.picture.picture.url }}" alt="Avatar" class="inbox-avatar" style="object-fit: cover;">
+            {% else %}
+            <div class="inbox-avatar">{{ lr.employee.full_name.0|upper }}</div>
+            {% endif %}
+            <div class="inbox-details">
+                <h5>{{ lr.employee.full_name }}</h5>
+                <p><i class="bi bi-tag opacity-75 me-1"></i> {{ lr.leave_type.name }} &nbsp;|&nbsp; <i class="bi bi-calendar-event opacity-75 me-1"></i> {{ lr.from_date|date:"d/m/Y" }} até {{ lr.to_date|date:"d/m/Y" }}</p>
+                {% if lr.attachment %}
+                <p class="mt-1"><a href="{{ lr.attachment.url }}" target="_blank" style="color: var(--primary); text-decoration: none;"><i class="bi bi-paperclip"></i> Anexo adicionado</a></p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="inbox-controls">
+            <div>
+                {% if lr.status == 'PENDING' %}<span class="status-pill status-pending">Pendente</span>
+                {% elif lr.status == 'SUPERVISOR_APPROVED' %}<span class="status-pill" style="background:#fff7ed;color:#ea580c;border:1px solid #ffedd5;">Ag. RH</span>
+                {% elif lr.status == 'APPROVED' %}<span class="status-pill status-approved">Aprovada</span>
+                {% elif lr.status == 'REJECTED' %}<span class="status-pill status-rejected">Rejeitada</span>
+                {% else %}<span class="status-pill status-pending">{{ lr.get_status_display }}</span>{% endif %}
+            </div>
+            <div class="inbox-date">Solicitado em {{ lr.date_applied|date:"d/m/Y" }}</div>
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="button" class="btn-resolve" data-bs-toggle="modal" data-bs-target="#modalLeave{{ lr.pk }}"><i class="bi bi-eye"></i></button>
+                {% if view_mode == 'inbox' %}
+                    {% if lr.status == 'PENDING' or lr.status == 'SUPERVISOR_APPROVED' and user.is_hr %}
+                        <a href="{% url 'leave_approve' lr.pk %}" class="btn-action-primary" onclick="return confirm('Aprovar a solicitação?')">Aprovar</a>
+                        <a href="{% url 'leave_reject' lr.pk %}" class="btn-action-danger" onclick="return confirm('Rejeitar a solicitação?')">Rejeitar</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-inbox fs-1"></i>
+        <p class="mt-2">Sem solicitações de licença pendentes.</p>
+    </div>
+    {% endfor %}
+</div>
+
+
+{% if user.employee.sub_division.allow_shift_swaps or view_mode == 'inbox' %}
+<div id="tab-swaps" class="tab-pane">
+    {% for swap in swaps %}
+    <div class="inbox-card">
+        <div class="inbox-info">
+            {% if swap.requester.picture %}
+            <img src="{{ swap.requester.picture.picture.url }}" alt="Avatar" class="inbox-avatar" style="object-fit: cover;">
+            {% else %}
+            <div class="inbox-avatar" style="background: #e0e7ff; color: #4f46e5;">{{ swap.requester.full_name.0|upper }}</div>
+            {% endif %}
+            <div class="inbox-details">
+                <h5>{{ swap.requester.full_name }} <i class="bi bi-arrow-right mx-1 text-muted"></i> {{ swap.target_employee.full_name }}</h5>
+                <p><i class="bi bi-calendar opacity-75 me-1"></i> Data da Troca: {{ swap.date|date:"d/m/Y" }}</p>
+                <p class="mt-1"><i class="bi bi-info-circle opacity-75 me-1"></i> {{ swap.reason|truncatechars:60 }}</p>
+            </div>
+        </div>
+        <div class="inbox-controls">
+            <div>
+                {% if swap.status == 'PENDING_TARGET' %}<span class="status-pill status-pending">Ag. Destinatário</span>
+                {% elif swap.status == 'PENDING_SUPERVISOR' %}<span class="status-pill status-pending">Ag. Gestor</span>
+                {% elif swap.status == 'PENDING_HR' %}<span class="status-pill" style="background:#fff7ed;color:#ea580c;border:1px solid #ffedd5;">Ag. RH</span>
+                {% elif swap.status == 'APPROVED' %}<span class="status-pill status-approved">Aprovada</span>
+                {% else %}<span class="status-pill status-rejected">Cancelada/Rejeitada</span>{% endif %}
+            </div>
+            <div class="inbox-date">Iniciado em {{ swap.created_at|date:"d/m/Y" }}</div>
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="button" class="btn-resolve" data-bs-toggle="modal" data-bs-target="#adminScheduleModal" data-request-id="{{ swap.pk }}">Acessar Painel de Trocas</button>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-arrow-left-right fs-1"></i>
+        <p class="mt-2">Sem solicitações de troca pendentes.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+
+
+<div id="tab-adjustments" class="tab-pane">
+    
+{% for lr in requests %}
+
+<div class="modal fade" id="modalLeave{{ lr.pk }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0" style="border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+      <div class="modal-header border-0 bg-light d-flex justify-content-between align-items-center" style="padding: 20px 24px;">
+        <h5 class="modal-title fw-bold text-dark d-flex align-items-center flex-wrap gap-2" style="font-size: 18px;">
+            <div><i class="bi bi-file-earmark-medical me-2" style="color: #10b981;"></i>Detalhes Gerais - #{{ lr.pk }}</div>
+            <div style="transform: translateY(1px);">
+                {% if lr.status == 'PENDING' %}<span class="badge" style="background:#fffcf0; color:#d97706; border:1px solid #fef3c7; border-radius:20px; font-weight:600; font-size:11px; padding: 4px 10px;">Pendente</span>
+                {% elif lr.status == 'SUPERVISOR_APPROVED' %}<span class="badge" style="background:#fff7ed; color:#ea580c; border:1px solid #ffedd5; border-radius:20px; font-weight:600; font-size:11px; padding: 4px 10px;">Ag. RH</span>
+                {% elif lr.status == 'APPROVED' %}<span class="badge" style="background:#f0fdf4; color:#166534; border:1px solid #dcfce3; border-radius:20px; font-weight:600; font-size:11px; padding: 4px 10px;">Aprovada</span>
+                {% elif lr.status == 'REJECTED' %}<span class="badge" style="background:#fef2f2; color:#991b1b; border:1px solid #fee2e2; border-radius:20px; font-weight:600; font-size:11px; padding: 4px 10px;">Rejeitada</span>
+                {% else %}<span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; border-radius:20px; font-weight:600; font-size:11px; padding: 4px 10px;">{{ lr.get_status_display }}</span>{% endif %}
+            </div>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <div class="modal-body" style="padding: 24px;">
+        <div class="row">
+            
+            <div class="col-md-7 border-end pe-4">
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Funcionário</span>
+                        <div class="detail-value d-flex align-items-center gap-2 mt-1">
+                            {% if lr.employee.picture %}
+                            <img src="{{ lr.employee.picture.picture.url }}" alt="avatar" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+                            {% else %}
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #db2777; color: white; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">{{ lr.employee.full_name.0|upper }}</div>
+                            {% endif %}
+                            {{ lr.employee.full_name }}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Tipo de Licença</span>
+                        <span class="detail-value text-primary mt-1" style="color: var(--primary);">{{ lr.leave_type.name }}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Solicitado em</span>
+                        <span class="detail-value mt-1">{{ lr.date_applied|date:"d/m/Y" }}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Período</span>
+                        <span class="detail-value mt-1"><i class="bi bi-calendar-event me-1 opacity-50"></i> {{ lr.from_date|date:"d/m/Y" }} a {{ lr.to_date|date:"d/m/Y" }}</span>
+                    </div>
+                </div>
+                
+                <div class="detail-item mb-3">
+                    <span class="detail-label">Motivo / Comentário Técnico</span>
+                    <span class="detail-value mt-1 opacity-75 d-block" style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0; font-size: 13px;">{{ lr.comment|default:"Sem comentários fornecidos pelo solicitante." }}</span>
+                </div>
+                
+                {% if lr.rejection_reason %}
+                <div class="mt-3 p-3 rounded" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                    <div style="font-size: 11px; font-weight: 700; color: #b91c1c; text-transform: uppercase; margin-bottom: 4px;">
+                        <i class="bi bi-exclamation-octagon me-1"></i> Motivo da Rejeição
+                    </div>
+                    <div style="font-size: 13px; color: #991b1b;">{{ lr.rejection_reason }}</div>
+                </div>
+                {% endif %}
+                
+                {% if lr.attachment %}
+                <div class="mt-4 pt-3" style="border-top: 1px dashed var(--card-border);">
+                    <div class="detail-label mb-2"><i class="bi bi-paperclip me-1"></i> Atestado Anexado</div>
+                    {% if lr.attachment.name|slice:"-4:" == ".pdf" %}
+                    <a href="{{ lr.attachment.url }}" target="_blank" class="btn btn-outline-danger btn-sm rounded-pill fw-bold" style="font-size:12px;">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Abrir PDF
+                    </a>
+                    {% else %}
+                    <a href="{{ lr.attachment.url }}" target="_blank" class="d-inline-block">
+                        <img src="{{ lr.attachment.url }}" alt="Atestado" style="max-width: 100%; max-height: 120px; border-radius: 8px; border: 1px solid var(--card-border); object-fit: cover; transition: transform 0.2s;">
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if lr.action_logs.all %}
+                
+                <div class="mt-4 pt-3" style="border-top: 1px dashed var(--card-border); max-height: 140px; overflow-y: auto;">
+                    <div class="detail-label mb-2"><i class="bi bi-clock-history me-1"></i> Informações do Sistema</div>
+                    {% for log in lr.action_logs.all %}
+                    <div class="d-flex align-items-center gap-2 mb-2" style="font-size: 11px; color: var(--text-muted);">
+                        • {{ log.get_action_display }} por {{ log.performed_by.get_full_name|default:log.performed_by.username }} em {{ log.performed_at|date:"d/m/Y H:i" }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+            </div>
+            
+            
+            <div class="col-md-5 ps-4">
+                <span class="detail-label d-block mb-3"><i class="bi bi-signpost-split me-1"></i> Fluxo de Aprovação</span>
+                
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon-col">
+                        <div class="timeline-icon icon-success"><i class="bi bi-person-fill"></i></div>
+                        <div class="timeline-line" style="background: #10b981;"></div>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Solicitado</div>
+                        <div class="timeline-desc">{{ lr.date_applied|date:"d/m/Y" }}</div>
+                    </div>
+                </div>
+
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon-col">
+                        {% if lr.status == 'SUPERVISOR_APPROVED' or lr.status == 'APPROVED' %}
+                            <div class="timeline-icon icon-success"><i class="bi bi-check-lg"></i></div>
+                        {% elif lr.status == 'REJECTED' %}
+                            <div class="timeline-icon icon-danger"><i class="bi bi-x-lg"></i></div>
+                        {% elif lr.status == 'CANCELLED' %}
+                            <div class="timeline-icon icon-neutral"><i class="bi bi-ban"></i></div>
+                        {% else %}
+                            <div class="timeline-icon icon-warning"><i class="bi bi-hourglass-split"></i></div>
+                        {% endif %}
+                        <div class="timeline-line" style="background: {% if lr.status == 'APPROVED' %}#10b981{% elif lr.status == 'REJECTED' %}#ef4444{% else %}var(--card-border){% endif %};"></div>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Supervisão</div>
+                        <div class="timeline-desc">
+                            {% if lr.status == 'PENDING' %}<span class="text-warning fw-medium">Análise pendente</span>
+                            {% elif lr.status == 'SUPERVISOR_APPROVED' %}Pré-aprovado
+                            {% elif lr.status == 'APPROVED' %}Validado
+                            {% elif lr.status == 'REJECTED' %}Rejeitado
+                            {% elif lr.status == 'CANCELLED' %}Cancelado
+                            {% else %}—{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon-col">
+                        {% if lr.status == 'APPROVED' %}
+                            <div class="timeline-icon icon-success"><i class="bi bi-check-lg"></i></div>
+                        {% elif lr.status == 'REJECTED' %}
+                            <div class="timeline-icon icon-danger"><i class="bi bi-x-lg"></i></div>
+                        {% elif lr.status == 'SUPERVISOR_APPROVED' %}
+                            <div class="timeline-icon icon-warning"><i class="bi bi-hourglass-split"></i></div>
+                        {% elif lr.status == 'CANCELLED' %}
+                            <div class="timeline-icon icon-neutral"><i class="bi bi-ban"></i></div>
+                        {% else %}
+                            <div class="timeline-icon icon-neutral"><i class="bi bi-building"></i></div>
+                        {% endif %}
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Recursos Humanos</div>
+                        <div class="timeline-desc">
+                            {% if lr.status == 'APPROVED' %}Aprovado.
+                            {% elif lr.status == 'REJECTED' %}Rejeitado.
+                            {% elif lr.status == 'SUPERVISOR_APPROVED' %}<span class="text-warning fw-medium">Aguardando validação</span>
+                            {% elif lr.status == 'CANCELLED' %}Fluxo abortado.
+                            {% else %}Em aguardo.{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div id="rejectBox{{ lr.pk }}" class="col-12 mt-3" style="display: none;">
+                <div class="p-3 rounded-3" style="background: #f8fafc; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.04);">
+                    <form method="post" action="{% url 'leave_reject' lr.pk %}">
+                        {% csrf_token %}
+                        <div style="font-size: 12px; font-weight: 700; color: #b91c1c; text-transform: uppercase; margin-bottom: 8px;">
+                            <i class="bi bi-pencil-fill me-1"></i> Descreva o motivo da rejeição
+                        </div>
+                        <textarea class="form-control" name="rejection_reason" rows="2" required placeholder="Escreva aqui para o funcionário ver..." style="font-size: 13px;"></textarea>
+                        <div class="d-flex justify-content-end gap-2 mt-2">
+                             <button type="button" class="btn btn-sm btn-light rounded-pill border" onclick="document.getElementById('rejectBox{{ lr.pk }}').style.display='none'">Ocultar Formulario</button>
+                             <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3">Confirmar Rejeição do Fluxo</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+        </div>
+      </div>
+      
+      <div class="modal-footer border-0 bg-light" style="padding: 16px 24px; display: flex; justify-content: space-between;">
+         <div></div>
+         <div class="d-flex gap-2">
+             {% if lr.status == 'PENDING' %}
+                 {% if user.role == 'Supervisor' or user.is_hr or user.is_admin %}
+                     <button type="button" class="btn rounded-pill px-4 text-danger btn-light border" onclick="document.getElementById('rejectBox{{ lr.pk }}').style.display='block'">Rejeitar</button>
+                     <form method="post" action="{% url 'leave_approve' lr.pk %}" style="display:inline;">{% csrf_token %}<button type="submit" class="btn rounded-pill px-4 text-white hover-up" style="background-color: #10b981; border: none; transition: transform 0.2s;">Aprovar Fluxo</button></form>
+                 {% endif %}
+             {% elif lr.status == 'SUPERVISOR_APPROVED' %}
+                 {% if user.is_hr or user.is_admin %}
+                     <button type="button" class="btn rounded-pill px-4 text-danger btn-light border" onclick="document.getElementById('rejectBox{{ lr.pk }}').style.display='block'">Rejeitar Definitivamente</button>
+                     <form method="post" action="{% url 'leave_approve' lr.pk %}" style="display:inline;">{% csrf_token %}<button type="submit" class="btn rounded-pill px-4 text-white hover-up" style="background-color: #10b981; border: none; transition: transform 0.2s;">Aprovação Final (RH)</button></form>
+                 {% endif %}
+             {% endif %}
+         </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% for adj in adjustments %}
+    <div class="inbox-card">
+        <div class="inbox-info">
+            {% if adj.employee.picture %}
+            <img src="{{ adj.employee.picture.picture.url }}" alt="Avatar" class="inbox-avatar" style="object-fit: cover;">
+            {% else %}
+            <div class="inbox-avatar" style="background: #fce7f3; color: #db2777;">{{ adj.employee.full_name.0|upper }}</div>
+            {% endif %}
+            <div class="inbox-details">
+                <h5>{{ adj.employee.full_name }}</h5>
+                <p><i class="bi bi-calendar-event opacity-75 me-1"></i> Ponto referente a: {{ adj.date|date:"d/m/Y" }}</p>
+                <div class="mt-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-clock opacity-50"></i> <strong style="font-size: 13px;">{{ adj.requested_punches|first|default:"--" }} às {{ adj.requested_punches|last|default:"--" }}</strong>
+                </div>
+            </div>
+        </div>
+        <div class="inbox-controls">
+            <div>
+                {% if adj.status == 'PENDING' %}<span class="status-pill status-pending">Ag. Gestor</span>
+                {% elif adj.status == 'SUPERVISOR_APPROVED' %}<span class="status-pill" style="background:#fff7ed;color:#ea580c;border:1px solid #ffedd5;">Ag. RH</span>
+                {% elif adj.status == 'APPROVED' %}<span class="status-pill status-approved">Aprovado</span>
+                {% else %}<span class="status-pill status-rejected">Rejeitado</span>{% endif %}
+            </div>
+            <div class="inbox-date">Aberto em {{ adj.created_at|date:"d/m/Y" }}</div>
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="button" class="btn-resolve" data-bs-toggle="modal" data-bs-target="#modalAdj{{ adj.pk }}">Analisar Solicitação</button>
+            </div>
+        </div>
+    </div>
+    
+    {% empty %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-pencil-square fs-1"></i>
+        <p class="mt-2">Sem ajustes de ponto pendentes.</p>
+    </div>
+    {% endfor %}
+</div>
+
+
+{% if view_mode == 'inbox' %}
+<div id="tab-pending-punches" class="tab-pane">
+    {% for p in pending_punches %}
+    <div class="inbox-card">
+        <div class="inbox-info">
+            {% if p.employee.picture %}
+            <img src="{{ p.employee.picture.picture.url }}" alt="Avatar" class="inbox-avatar" style="object-fit:cover;">
+            {% else %}
+            <div class="inbox-avatar" style="background:#fce7f3;color:#db2777;">{{ p.employee.full_name.0|upper }}</div>
+            {% endif %}
+            <div class="inbox-details">
+                <h5>{{ p.employee.full_name }}</h5>
+                <p>
+                    <i class="bi bi-camera opacity-75 me-1"></i>
+                    Registro de Marcação
+                    &nbsp;|&nbsp;
+                    <i class="bi bi-clock opacity-75 me-1"></i>
+                    {{ p.requested_at|date:"d/m/Y" }} às {{ p.requested_at|time:"H:i" }}
+                </p>
+                <p class="mt-1" style="font-size:12px;color:#94a3b8;">{{ p.fail_reason|truncatechars:70 }}</p>
+            </div>
+        </div>
+        <div class="inbox-controls">
+            <div>
+                {% if p.status == 'PENDING' %}
+                    <span class="status-pill status-pending">⏳ Aguardando Aprovação</span>
+                {% elif p.status == 'APPROVED' %}
+                    <span class="status-pill status-approved">Aprovada</span>
+                {% elif p.status == 'REJECTED' %}
+                    <span class="status-pill status-rejected">❌ Rejeitada</span>
+                {% else %}
+                    <span class="status-pill status-pending">{{ p.status }}</span>
+                {% endif %}
+            </div>
+            <div class="inbox-date">{{ p.requested_at|date:"d/m/Y H:i" }}</div>
+            <div class="d-flex gap-2 justify-content-end">
+                
+                <button type="button" class="btn-resolve" data-bs-toggle="modal" data-bs-target="#modalPendingPunch{{ p.pk }}">
+                    <i class="bi bi-eye"></i> Detalhes
+                </button>
+                {% if p.status == 'PENDING' %}
+                <form method="post" action="{% url 'pending_punch_approve' p.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-action-primary"
+                        onclick="return confirm('Aprovar ponto de {{ p.employee.full_name }}? O registro sera feito com o horario original.')">
+                        <i class="bi bi-check-lg"></i> Aprovar
+                    </button>
+                </form>
+                <form method="post" action="{% url 'pending_punch_reject' p.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-action-danger"
+                        onclick="return confirm('Rejeitar e descartar esta batida de {{ p.employee.full_name }}?')">
+                        <i class="bi bi-x-lg"></i> Rejeitar
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="modal fade" id="modalPendingPunch{{ p.pk }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0" style="border-radius:16px;overflow:hidden;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
+          <div class="modal-header border-0 bg-light" style="padding:20px 24px;">
+            <h5 class="modal-title fw-bold d-flex align-items-center gap-2" style="font-size:18px;">
+              <i class="bi bi-camera me-1" style="color:#f59e0b;"></i>
+              Batida de Ponto
+              {% if p.status == 'PENDING' %}
+              <span class="badge" style="background:#fffcf0;color:#d97706;border:1px solid #fef3c7;border-radius:20px;font-weight:600;font-size:11px;padding:4px 10px;"><i class="bi bi-hourglass-split me-1"></i>Pendente</span>
+              {% elif p.status == 'APPROVED' %}
+              <span class="badge" style="background:#f0fdf4;color:#166534;border:1px solid #dcfce7;border-radius:20px;font-weight:600;font-size:11px;padding:4px 10px;"><i class="bi bi-check-circle me-1"></i>Aprovado</span>
+              {% elif p.status == 'REJECTED' %}
+              <span class="badge" style="background:#fef2f2;color:#991b1b;border:1px solid #fee2e2;border-radius:20px;font-weight:600;font-size:11px;padding:4px 10px;"><i class="bi bi-x-circle me-1"></i>Rejeitado</span>
+              {% endif %}
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body" style="padding:24px;">
+            <div class="row">
+              
+              <div class="col-md-7 border-end pe-4">
+                <div class="detail-grid">
+                  <div class="detail-item">
+                    <span class="detail-label">Funcionário</span>
+                    <div class="detail-value d-flex align-items-center gap-2 mt-1">
+                      {% if p.employee.picture %}
+                      <img src="{{ p.employee.picture.picture.url }}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">
+                      {% else %}
+                      <div style="width:24px;height:24px;border-radius:50%;background:#db2777;color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">{{ p.employee.full_name.0|upper }}</div>
+                      {% endif %}
+                      {{ p.employee.full_name }}
+                    </div>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Tipo de Batida</span>
+                    <span class="detail-value mt-1">
+                      <span style="color:#4f46e5;font-weight:600;"><i class="bi bi-clock-history"></i> Registro de Ponto</span>
+                    </span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Data</span>
+                    <span class="detail-value mt-1">{{ p.requested_at|date:"d/m/Y" }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Horário da Tentativa</span>
+                    <span class="detail-value mt-1" style="font-size:20px;font-weight:700;color:#4f46e5;">{{ p.requested_at|time:"H:i" }}</span>
+                  </div>
+                </div>
+
+                
+                <div class="detail-item mt-3">
+                  <span class="detail-label"><i class="bi bi-exclamation-triangle me-1"></i> Motivo da Pendência</span>
+                  <div class="detail-value mt-2 p-3 rounded-3" style="background:#fffbeb;border:1px solid #fde68a;font-size:13px;line-height:1.6;color:#78350f;">
+                    {{ p.fail_reason }}
+                  </div>
+                </div>
+
+                
+                <div class="detail-item mt-3">
+                  <span class="detail-label"><i class="bi bi-geo-alt me-1"></i> Localização GPS</span>
+                  <div class="mt-2">
+                    {% if p.lat and p.lng %}
+                    <div style="font-size:13px;color:#475569;margin-bottom:6px;">
+                      Lat: <strong>{{ p.lat }}</strong> &nbsp;|&nbsp; Lng: <strong>{{ p.lng }}</strong>
+                    </div>
+                    <a href="https://www.google.com/maps?q={{ p.lat }},{{ p.lng }}" target="_blank"
+                       class="btn btn-sm btn-outline-secondary rounded-pill px-3" style="font-size:12px;">
+                      <i class="bi bi-map me-1"></i> Abrir no Google Maps
+                    </a>
+                    {% else %}
+                    <div class="d-flex align-items-center gap-2" style="color:#ef4444;font-size:13px;">
+                      <i class="bi bi-geo-alt-fill"></i> Coordenadas não disponíveis
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              
+              <div class="col-md-5 ps-4">
+                <span class="detail-label d-block mb-3"><i class="bi bi-camera me-1"></i> Foto Capturada</span>
+                {% if p.photo %}
+                <a href="{{ p.photo.url }}" target="_blank">
+                  <img src="{{ p.photo.url }}" alt="Foto do ponto"
+                    style="width:100%;max-height:200px;object-fit:cover;border-radius:12px;border:2px solid #e2e8f0;transition:transform 0.2s;">
+                </a>
+                <p class="text-muted mt-2" style="font-size:12px;">Clique na foto para ampliar</p>
+                {% else %}
+                <div class="d-flex flex-column align-items-center justify-content-center rounded-3 py-5"
+                     style="background:#f8fafc;border:2px dashed #e2e8f0;color:#94a3b8;">
+                  <i class="bi bi-camera-slash" style="font-size:36px;"></i>
+                  <p class="mt-2 mb-0" style="font-size:13px;">Foto não capturada</p>
+                </div>
+                {% endif %}
+
+                
+                <div class="mt-4 pt-3" style="border-top:1px dashed #e2e8f0;">
+                  <span class="detail-label d-block mb-3"><i class="bi bi-signpost-split me-1"></i> Status</span>
+                  <div class="timeline-item">
+                    <div class="timeline-icon-col">
+                      <div class="timeline-icon icon-success"><i class="bi bi-person-fill"></i></div>
+                      <div class="timeline-line" style="background: {% if p.status == 'APPROVED' %}#10b981{% elif p.status == 'REJECTED' %}#ef4444{% else %}#e2e8f0{% endif %};"></div>
+                    </div>
+                    <div class="timeline-content">
+                      <div class="timeline-title">Tentativa registrada</div>
+                      <div class="timeline-desc">{{ p.requested_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                  </div>
+                  <div class="timeline-item">
+                    <div class="timeline-icon-col">
+                      {% if p.status == 'APPROVED' %}
+                      <div class="timeline-icon icon-success"><i class="bi bi-check-lg"></i></div>
+                      {% elif p.status == 'REJECTED' %}
+                      <div class="timeline-icon icon-danger"><i class="bi bi-x-lg"></i></div>
+                      {% else %}
+                      <div class="timeline-icon icon-warning"><i class="bi bi-hourglass-split"></i></div>
+                      {% endif %}
+                    </div>
+                    <div class="timeline-content">
+                      {% if p.status == 'APPROVED' %}
+                      <div class="timeline-title">Aprovado pelo gestor</div>
+                      <div class="timeline-desc" style="color:#16a34a;">Ponto registrado com sucesso</div>
+                      {% elif p.status == 'REJECTED' %}
+                      <div class="timeline-title">Rejeitado pelo gestor</div>
+                      <div class="timeline-desc" style="color:#dc2626;">Batida descartada</div>
+                      {% else %}
+                      <div class="timeline-title">Aguardando gestor</div>
+                      <div class="timeline-desc" style="color:#d97706;">Aprovação pendente</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer border-0 bg-light" style="padding:16px 24px;display:flex;justify-content:space-between;">
+            <button type="button" class="btn btn-light border rounded-pill px-4" data-bs-dismiss="modal">Fechar</button>
+            <div class="d-flex gap-2">
+              {% if p.status == 'PENDING' %}
+              <form method="post" action="{% url 'pending_punch_reject' p.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn rounded-pill px-4 btn-light border text-danger"
+                    onclick="return confirm('Rejeitar esta batida de {{ p.employee.full_name }}?')">
+                  Rejeitar
+                </button>
+              </form>
+              <form method="post" action="{% url 'pending_punch_approve' p.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn rounded-pill px-4 text-white"
+                    style="background:#10b981;border:none;"
+                    onclick="return confirm('Aprovar ponto de {{ p.employee.full_name }}? O registro sera feito com o horario original.')">
+                  <i class="bi bi-check-lg me-1"></i> Aprovar Batida
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-camera-fill fs-1"></i>
+        <p class="mt-2">Nenhuma batida de ponto aguardando aprovação.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+
+
+
+{% for lr in requests %}
+
+<div class="modal fade" id="modalLeave{{ lr.pk }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0" style="border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+      <div class="modal-header border-0 bg-light d-flex justify-content-between align-items-center" style="padding: 20px 24px;">
+        <h5 class="modal-title fw-bold text-dark d-flex align-items-center flex-wrap gap-2" style="font-size: 18px;">
+            <div><i class="bi bi-file-earmark-medical me-2" style="color: #10b981;"></i>Detalhes Gerais - #{{ lr.pk }}</div>
+            <div style="transform: translateY(1px);">
+                {% if lr.status == 'PENDING' %}<span class="badge" style="background:#fffcf0; color:#d97706; border:1px solid #fef3c7; border-radius:20px; font-weight:600; font-size:11px; padding: 4px 10px;">Pendente</span>
+                {% elif lr.status == 'SUPERVISOR_APPROVED' %}<span class="badge" style="background:#fff7ed; color:#ea580c; border:1px solid #ffedd5; border-radius:20px; font-weight:600; font-size:11px; padding: 4px 10px;">Ag. RH</span>
+                {% elif lr.status == 'APPROVED' %}<span class="badge" style="background:#f0fdf4; color:#166534; border:1px solid #dcfce3; border-radius:20px; font-weight:600; font-size:11px; padding: 4px 10px;">Aprovada</span>
+                {% elif lr.status == 'REJECTED' %}<span class="badge" style="background:#fef2f2; color:#991b1b; border:1px solid #fee2e2; border-radius:20px; font-weight:600; font-size:11px; padding: 4px 10px;">Rejeitada</span>
+                {% else %}<span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; border-radius:20px; font-weight:600; font-size:11px; padding: 4px 10px;">{{ lr.get_status_display }}</span>{% endif %}
+            </div>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <div class="modal-body" style="padding: 24px;">
+        <div class="row">
+            
+            <div class="col-md-7 border-end pe-4">
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Funcionário</span>
+                        <div class="detail-value d-flex align-items-center gap-2 mt-1">
+                            {% if lr.employee.picture %}
+                            <img src="{{ lr.employee.picture.picture.url }}" alt="avatar" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+                            {% else %}
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #db2777; color: white; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">{{ lr.employee.full_name.0|upper }}</div>
+                            {% endif %}
+                            {{ lr.employee.full_name }}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Tipo de Licença</span>
+                        <span class="detail-value text-primary mt-1" style="color: var(--primary);">{{ lr.leave_type.name }}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Solicitado em</span>
+                        <span class="detail-value mt-1">{{ lr.date_applied|date:"d/m/Y" }}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Período</span>
+                        <span class="detail-value mt-1"><i class="bi bi-calendar-event me-1 opacity-50"></i> {{ lr.from_date|date:"d/m/Y" }} a {{ lr.to_date|date:"d/m/Y" }}</span>
+                    </div>
+                </div>
+                
+                <div class="detail-item mb-3">
+                    <span class="detail-label">Motivo / Comentário Técnico</span>
+                    <span class="detail-value mt-1 opacity-75 d-block" style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0; font-size: 13px;">{{ lr.comment|default:"Sem comentários fornecidos pelo solicitante." }}</span>
+                </div>
+                
+                {% if lr.rejection_reason %}
+                <div class="mt-3 p-3 rounded" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                    <div style="font-size: 11px; font-weight: 700; color: #b91c1c; text-transform: uppercase; margin-bottom: 4px;">
+                        <i class="bi bi-exclamation-octagon me-1"></i> Motivo da Rejeição
+                    </div>
+                    <div style="font-size: 13px; color: #991b1b;">{{ lr.rejection_reason }}</div>
+                </div>
+                {% endif %}
+                
+                {% if lr.attachment %}
+                <div class="mt-4 pt-3" style="border-top: 1px dashed var(--card-border);">
+                    <div class="detail-label mb-2"><i class="bi bi-paperclip me-1"></i> Atestado Anexado</div>
+                    {% if lr.attachment.name|slice:"-4:" == ".pdf" %}
+                    <a href="{{ lr.attachment.url }}" target="_blank" class="btn btn-outline-danger btn-sm rounded-pill fw-bold" style="font-size:12px;">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Abrir PDF
+                    </a>
+                    {% else %}
+                    <a href="{{ lr.attachment.url }}" target="_blank" class="d-inline-block">
+                        <img src="{{ lr.attachment.url }}" alt="Atestado" style="max-width: 100%; max-height: 120px; border-radius: 8px; border: 1px solid var(--card-border); object-fit: cover; transition: transform 0.2s;">
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if lr.action_logs.all %}
+                
+                <div class="mt-4 pt-3" style="border-top: 1px dashed var(--card-border); max-height: 140px; overflow-y: auto;">
+                    <div class="detail-label mb-2"><i class="bi bi-clock-history me-1"></i> Informações do Sistema</div>
+                    {% for log in lr.action_logs.all %}
+                    <div class="d-flex align-items-center gap-2 mb-2" style="font-size: 11px; color: var(--text-muted);">
+                        • {{ log.get_action_display }} por {{ log.performed_by.get_full_name|default:log.performed_by.username }} em {{ log.performed_at|date:"d/m/Y H:i" }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+            </div>
+            
+            
+            <div class="col-md-5 ps-4">
+                <span class="detail-label d-block mb-3"><i class="bi bi-signpost-split me-1"></i> Fluxo de Aprovação</span>
+                
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon-col">
+                        <div class="timeline-icon icon-success"><i class="bi bi-person-fill"></i></div>
+                        <div class="timeline-line" style="background: #10b981;"></div>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Solicitado</div>
+                        <div class="timeline-desc">{{ lr.date_applied|date:"d/m/Y" }}</div>
+                    </div>
+                </div>
+
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon-col">
+                        {% if lr.status == 'SUPERVISOR_APPROVED' or lr.status == 'APPROVED' %}
+                            <div class="timeline-icon icon-success"><i class="bi bi-check-lg"></i></div>
+                        {% elif lr.status == 'REJECTED' %}
+                            <div class="timeline-icon icon-danger"><i class="bi bi-x-lg"></i></div>
+                        {% elif lr.status == 'CANCELLED' %}
+                            <div class="timeline-icon icon-neutral"><i class="bi bi-ban"></i></div>
+                        {% else %}
+                            <div class="timeline-icon icon-warning"><i class="bi bi-hourglass-split"></i></div>
+                        {% endif %}
+                        <div class="timeline-line" style="background: {% if lr.status == 'APPROVED' %}#10b981{% elif lr.status == 'REJECTED' %}#ef4444{% else %}var(--card-border){% endif %};"></div>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Supervisão</div>
+                        <div class="timeline-desc">
+                            {% if lr.status == 'PENDING' %}<span class="text-warning fw-medium">Análise pendente</span>
+                            {% elif lr.status == 'SUPERVISOR_APPROVED' %}Pré-aprovado
+                            {% elif lr.status == 'APPROVED' %}Validado
+                            {% elif lr.status == 'REJECTED' %}Rejeitado
+                            {% elif lr.status == 'CANCELLED' %}Cancelado
+                            {% else %}—{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon-col">
+                        {% if lr.status == 'APPROVED' %}
+                            <div class="timeline-icon icon-success"><i class="bi bi-check-lg"></i></div>
+                        {% elif lr.status == 'REJECTED' %}
+                            <div class="timeline-icon icon-danger"><i class="bi bi-x-lg"></i></div>
+                        {% elif lr.status == 'SUPERVISOR_APPROVED' %}
+                            <div class="timeline-icon icon-warning"><i class="bi bi-hourglass-split"></i></div>
+                        {% elif lr.status == 'CANCELLED' %}
+                            <div class="timeline-icon icon-neutral"><i class="bi bi-ban"></i></div>
+                        {% else %}
+                            <div class="timeline-icon icon-neutral"><i class="bi bi-building"></i></div>
+                        {% endif %}
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Recursos Humanos</div>
+                        <div class="timeline-desc">
+                            {% if lr.status == 'APPROVED' %}Aprovado.
+                            {% elif lr.status == 'REJECTED' %}Rejeitado.
+                            {% elif lr.status == 'SUPERVISOR_APPROVED' %}<span class="text-warning fw-medium">Aguardando validação</span>
+                            {% elif lr.status == 'CANCELLED' %}Fluxo abortado.
+                            {% else %}Em aguardo.{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div id="rejectBox{{ lr.pk }}" class="col-12 mt-3" style="display: none;">
+                <div class="p-3 rounded-3" style="background: #f8fafc; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.04);">
+                    <form method="post" action="{% url 'leave_reject' lr.pk %}">
+                        {% csrf_token %}
+                        <div style="font-size: 12px; font-weight: 700; color: #b91c1c; text-transform: uppercase; margin-bottom: 8px;">
+                            <i class="bi bi-pencil-fill me-1"></i> Descreva o motivo da rejeição
+                        </div>
+                        <textarea class="form-control" name="rejection_reason" rows="2" required placeholder="Escreva aqui para o funcionário ver..." style="font-size: 13px;"></textarea>
+                        <div class="d-flex justify-content-end gap-2 mt-2">
+                             <button type="button" class="btn btn-sm btn-light rounded-pill border" onclick="document.getElementById('rejectBox{{ lr.pk }}').style.display='none'">Ocultar Formulario</button>
+                             <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3">Confirmar Rejeição do Fluxo</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+        </div>
+      </div>
+      
+      <div class="modal-footer border-0 bg-light" style="padding: 16px 24px; display: flex; justify-content: space-between;">
+         <div></div>
+         <div class="d-flex gap-2">
+             {% if lr.status == 'PENDING' %}
+                 {% if user.role == 'Supervisor' or user.is_hr or user.is_admin %}
+                     <button type="button" class="btn rounded-pill px-4 text-danger btn-light border" onclick="document.getElementById('rejectBox{{ lr.pk }}').style.display='block'">Rejeitar</button>
+                     <form method="post" action="{% url 'leave_approve' lr.pk %}" style="display:inline;">{% csrf_token %}<button type="submit" class="btn rounded-pill px-4 text-white hover-up" style="background-color: #10b981; border: none; transition: transform 0.2s;">Aprovar Fluxo</button></form>
+                 {% endif %}
+             {% elif lr.status == 'SUPERVISOR_APPROVED' %}
+                 {% if user.is_hr or user.is_admin %}
+                     <button type="button" class="btn rounded-pill px-4 text-danger btn-light border" onclick="document.getElementById('rejectBox{{ lr.pk }}').style.display='block'">Rejeitar Definitivamente</button>
+                     <form method="post" action="{% url 'leave_approve' lr.pk %}" style="display:inline;">{% csrf_token %}<button type="submit" class="btn rounded-pill px-4 text-white hover-up" style="background-color: #10b981; border: none; transition: transform 0.2s;">Aprovação Final (RH)</button></form>
+                 {% endif %}
+             {% endif %}
+         </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% for adj in adjustments %}
+    
+    <div class="modal fade" id="modalAdj{{ adj.pk }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+          <div class="modal-header border-0 bg-light" style="padding: 20px 24px;">
+            <h5 class="modal-title fw-bold text-dark d-flex align-items-center flex-wrap gap-2" style="font-size: 18px;">
+            <div><i class="bi bi-clock-history me-2" style="color: #10b981;"></i>Ajuste Solicitado</div>
+            <div style="transform: translateY(1px);">
+                {% if adj.status == 'PENDING' %}
+                    <span class="badge" style="background:#fffcf0; color:#d97706; border:1px solid #fef3c7; border-radius:20px; font-weight:600; font-size:11px; padding: 4px 10px;">
+                        <i class="bi bi-person-gear me-1"></i> Aguardando Gestor
+                    </span>
+                {% elif adj.status == 'SUPERVISOR_APPROVED' %}
+                    <span class="badge" style="background:#fff7ed; color:#ea580c; border:1px solid #ffedd5; border-radius:20px; font-weight:600; font-size:11px; padding: 4px 10px;">
+                        <i class="bi bi-building me-1"></i> Aguardando RH
+                    </span>
+                {% elif adj.status == 'APPROVED' %}
+                    <span class="badge" style="background:#f0fdf4; color:#166534; border:1px solid #dcfce3; border-radius:20px; font-weight:600; font-size:11px; padding: 4px 10px;">
+                        <i class="bi bi-check-circle me-1"></i> Aprovado
+                    </span>
+                {% else %}
+                    <span class="badge" style="background:#fef2f2; color:#991b1b; border:1px solid #fee2e2; border-radius:20px; font-weight:600; font-size:11px; padding: 4px 10px;">
+                        <i class="bi bi-x-circle me-1"></i> Rejeitado
+                    </span>
+                {% endif %}
+            </div>
+          </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" style="padding: 24px;">
+            <div class="d-flex align-items-center mb-4">
+                {% if adj.employee.picture %}
+                    <img src="{{ adj.employee.picture.picture.url }}" class="rounded-circle me-3" width="48" height="48" style="object-fit: cover;">
+                {% else %}
+                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center me-3" style="background: #db2777; width:48px; height:48px; font-weight:bold;">{{ adj.employee.full_name.0|upper }}</div>
+                {% endif %}
+                <div>
+                    <h6 class="mb-0 fw-bold">{{ adj.employee.full_name }}</h6>
+                    <small class="text-muted">Data do Ponto: {{ adj.date|date:"d/m/Y" }}</small>
+                </div>
+            </div>
+            
+            <div class="bg-light p-3 rounded-3 mb-3">
+                <small class="text-muted d-block mb-2 text-center" style="font-size:11px; text-transform:uppercase; letter-spacing: 0.5px;">Horários Solicitados</small>
+                <div class="d-flex flex-wrap justify-content-center gap-4">
+                    {% for p_time in adj.requested_punches %}
+                    <div class="text-center">
+                        <small class="text-muted d-block mb-1" style="font-size:11px;">
+                            {% if forloop.counter|divisibleby:2 %}Saída{% else %}Entrada{% endif %}
+                        </small>
+                        <span class="fw-bold" style="font-size: 15px; color: #0f172a;">{{ p_time|default:"--" }}</span>
+                    </div>
+                    {% empty %}
+                    <div class="text-muted" style="font-size:13px;">Nenhum horário especificado</div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <h6 class="fw-bold mb-2 mt-4" style="font-size: 14px;">Motivo do Ajuste</h6>
+            <p class="text-muted" style="font-size: 14px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">{{ adj.reason }}</p>
+            
+          </div>
+          <div class="modal-footer border-0 bg-light" style="padding: 16px 24px; display: flex; justify-content: space-between;">
+             <button type="button" class="btn btn-light rounded-pill border" data-bs-dismiss="modal">Fechar</button>
+             <div class="d-flex gap-2">
+                 {% if view_mode == 'inbox' %}
+                     {% if adj.status == 'PENDING' %}
+                         {% if user.role == 'Supervisor' or user.is_admin %}
+                         <form method="post" action="{% url 'adjustment_reject_action' adj.pk %}">{% csrf_token %}<button type="submit" class="btn btn-danger rounded-pill px-4">Rejeitar</button></form>
+                         <form method="post" action="{% url 'adjustment_approve_action' adj.pk %}">{% csrf_token %}<button type="submit" class="btn rounded-pill px-4 text-white" style="background-color: #10b981; border: none;">Pré-Aprovar</button></form>
+                         {% elif user.is_hr %}
+                         <form method="post" action="{% url 'adjustment_reject_action' adj.pk %}">{% csrf_token %}<button type="submit" class="btn btn-danger rounded-pill px-4">Rejeitar</button></form>
+                         {% endif %}
+                     {% elif adj.status == 'SUPERVISOR_APPROVED' %}
+                         {% if user.is_hr or user.is_admin %}
+                         <form method="post" action="{% url 'adjustment_reject_action' adj.pk %}">{% csrf_token %}<button type="submit" class="btn btn-danger rounded-pill px-4">Rejeitar</button></form>
+                         <form method="post" action="{% url 'adjustment_approve_action' adj.pk %}">{% csrf_token %}<button type="submit" class="btn rounded-pill px-4 text-white" style="background-color: #10b981; border: none;">Aprovar Final (RH)</button></form>
+                         {% endif %}
+                     {% endif %}
+                 {% endif %}
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+{% endfor %}
+
+{% if view_mode == 'inbox' %}
+{% if user.is_admin or user.is_hr %}
+
+
+
+<div id="tab-claims" class="tab-pane">
+    {% for claim in claims %}
+    <div class="inbox-card">
+        <div class="inbox-info">
+            {% if claim.employee.picture %}
+            <img src="{{ claim.employee.picture.picture.url }}" alt="Avatar" class="inbox-avatar" style="object-fit: cover;">
+            {% else %}
+            <div class="inbox-avatar" style="background:#e0e7ff;color:#4f46e5;">{{ claim.employee.full_name.0|upper }}</div>
+            {% endif %}
+            <div class="inbox-details">
+                <h5>{{ claim.employee.full_name }}</h5>
+                <p>
+                    <i class="bi bi-receipt opacity-75 me-1"></i>
+                    {{ claim.claim_event }} &nbsp;|&nbsp;
+                    <i class="bi bi-tag opacity-75 me-1"></i>
+                    Ref: {{ claim.reference_id|default:"—" }}
+                </p>
+                <p style="margin-top:4px;">
+                    <strong style="color:#4f46e5;">R$ {{ claim.total_amount }}</strong>
+                    &nbsp;·&nbsp;
+                    <span style="font-size:12px;color:#64748b;">{{ claim.expenses.count }} despesa(s)</span>
+                </p>
+            </div>
+        </div>
+        <div class="inbox-controls">
+            <div>
+                {% if claim.status == 'SUBMITTED' %}
+                    <span class="status-pill status-pending">Ag. Supervisor</span>
+                {% elif claim.status == 'SUPERVISOR_APPROVED' %}
+                    <span class="status-pill" style="background:#fff7ed;color:#ea580c;border:1px solid #ffedd5;">Ag. RH/Admin</span>
+                {% elif claim.status == 'APPROVED' %}
+                    <span class="status-pill status-approved">Aprovado</span>
+                {% elif claim.status == 'REJECTED' %}
+                    <span class="status-pill status-rejected">Rejeitado</span>
+                {% endif %}
+            </div>
+            <div class="inbox-date">Enviado em {{ claim.submitted_date|date:"d/m/Y"|default:claim.created_at|date:"d/m/Y" }}</div>
+            <div class="d-flex gap-2 justify-content-end">
+                
+                <button type="button" class="btn-resolve"
+                        data-bs-toggle="modal" data-bs-target="#modalClaimDetail{{ claim.pk }}">
+                    <i class="bi bi-eye"></i> Ver
+                </button>
+                {% if claim.status == 'SUBMITTED' and user.is_supervisor %}
+                    <button type="button" class="btn-action-danger"
+                            onclick="openClaimRejectModal({{ claim.pk }})">Rejeitar</button>
+                    <form method="post" action="{% url 'claim_approve' claim.pk %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-action-primary">Pré-Aprovar</button>
+                    </form>
+                {% endif %}
+                {% if claim.status == 'SUPERVISOR_APPROVED' and user.is_admin %}
+                    <button type="button" class="btn-action-danger"
+                            onclick="openClaimRejectModal({{ claim.pk }})">Rejeitar</button>
+                    <form method="post" action="{% url 'claim_final_approve' claim.pk %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-action-primary">Aprovação Final</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-receipt fs-1"></i>
+        <p class="mt-2">Nenhum reembolso registrado.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+
+
+
+{% for claim in claims %}
+
+
+<div class="modal fade" id="modalClaimDetail{{ claim.pk }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width:760px;">
+    <div class="modal-content border-0" style="border-radius:20px;overflow:hidden;box-shadow:0 32px 64px -12px rgba(0,0,0,.22);">
+
+      
+      <div class="modal-header border-0" style="background:#f8fafc;padding:22px 28px;">
+        <h5 class="modal-title fw-bold d-flex align-items-center gap-3" style="font-size:18px;color:#0f172a;">
+            <div style="width:38px;height:38px;border-radius:50%;background:#e0e7ff;color:#4f46e5;display:flex;align-items:center;justify-content:center;font-size:16px;">
+                <i class="bi bi-receipt-cutoff"></i>
+            </div>
+            Solicitação #{{ claim.pk }}
+            
+            {% if claim.status == 'SUBMITTED' %}
+                <span style="background:#fffcf0;color:#d97706;border:1px solid #fef3c7;border-radius:20px;font-size:11px;font-weight:700;padding:3px 10px;">Ag. Supervisor</span>
+            {% elif claim.status == 'SUPERVISOR_APPROVED' %}
+                <span style="background:#fff7ed;color:#ea580c;border:1px solid #ffedd5;border-radius:20px;font-size:11px;font-weight:700;padding:3px 10px;">Ag. RH/Admin</span>
+            {% elif claim.status == 'APPROVED' %}
+                <span style="background:#f0fdf4;color:#166534;border:1px solid #dcfce3;border-radius:20px;font-size:11px;font-weight:700;padding:3px 10px;">Aprovado</span>
+            {% elif claim.status == 'REJECTED' %}
+                <span style="background:#fef2f2;color:#991b1b;border:1px solid #fee2e2;border-radius:20px;font-size:11px;font-weight:700;padding:3px 10px;">Rejeitado</span>
+            {% endif %}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      
+      <div class="modal-body" style="padding:0;">
+        <div class="row g-0">
+
+          
+          <div class="col-md-5 border-end" style="padding:24px 28px;">
+
+            
+            <div class="d-flex align-items-center gap-3 mb-4">
+                {% if claim.employee.picture %}
+                <img src="{{ claim.employee.picture.picture.url }}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
+                {% else %}
+                <div style="width:44px;height:44px;border-radius:50%;background:#e0e7ff;color:#4f46e5;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;">{{ claim.employee.full_name.0|upper }}</div>
+                {% endif %}
+                <div>
+                    <div style="font-size:15px;font-weight:700;color:#0f172a;">{{ claim.employee.full_name }}</div>
+                    <div style="font-size:12px;color:#64748b;">{{ claim.employee.job_title|default:"Funcionário" }}</div>
+                </div>
+            </div>
+
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+                <div>
+                    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:3px;">Evento</div>
+                    <div style="font-size:13px;font-weight:600;color:#0f172a;">{{ claim.claim_event }}</div>
+                </div>
+                <div>
+                    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:3px;">Referência</div>
+                    <div style="font-size:13px;font-weight:600;color:#0f172a;">{{ claim.reference_id|default:"—" }}</div>
+                </div>
+                <div>
+                    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:3px;">Enviado em</div>
+                    <div style="font-size:13px;font-weight:600;color:#0f172a;">{{ claim.submitted_date|date:"d/m/Y"|default:claim.created_at|date:"d/m/Y" }}</div>
+                </div>
+                <div>
+                    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:3px;">Total</div>
+                    <div style="font-size:16px;font-weight:800;color:#4f46e5;">R$ {{ claim.total_amount }}</div>
+                </div>
+            </div>
+
+            {% if claim.description %}
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:20px;font-size:13px;color:#475569;">
+                {{ claim.description }}
+            </div>
+            {% endif %}
+
+            
+            <div style="border-top:1px solid #f1f5f9;padding-top:18px;">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:14px;">
+                    <i class="bi bi-signpost-split me-1"></i> Fluxo de Aprovação
+                </div>
+
+                
+                <div style="display:flex;gap:12px;align-items:stretch;margin-bottom:4px;">
+                    <div style="display:flex;flex-direction:column;align-items:center;">
+                        {% if claim.status == 'SUPERVISOR_APPROVED' or claim.status == 'APPROVED' or claim.status == 'PAID' or claim.status == 'SUBMITTED' %}
+                            <div style="width:24px;height:24px;border-radius:50%;background:#10b981;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;"><i class="bi bi-person-badge"></i></div>
+                            <div style="width:2px;flex-grow:1;min-height:16px;background:#10b981;margin:3px 0;"></div>
+                        {% elif claim.status == 'REJECTED' %}
+                            <div style="width:24px;height:24px;border-radius:50%;background:#ef4444;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;"><i class="bi bi-x-lg"></i></div>
+                            <div style="width:2px;flex-grow:1;min-height:16px;background:#e2e8f0;margin:3px 0;"></div>
+                        {% else %}
+                            <div style="width:24px;height:24px;border-radius:50%;background:#10b981;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;"><i class="bi bi-person-badge"></i></div>
+                            <div style="width:2px;flex-grow:1;min-height:16px;background:#e2e8f0;margin:3px 0;"></div>
+                        {% endif %}
+                    </div>
+                    <div style="padding-bottom:14px;">
+                        <div style="font-size:13px;font-weight:700;color:#0f172a;">Enviado pelo Gestor</div>
+                        <div style="font-size:11px;color:#64748b;">
+                            {{ claim.submitted_date|date:"d/m/Y"|default:claim.created_at|date:"d/m/Y" }}
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div style="display:flex;gap:12px;">
+                    <div>
+                        {% if claim.status == 'APPROVED' or claim.status == 'PAID' %}
+                            <div style="width:24px;height:24px;border-radius:50%;background:#10b981;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;"><i class="bi bi-check-lg"></i></div>
+                        {% elif claim.status == 'REJECTED' %}
+                            <div style="width:24px;height:24px;border-radius:50%;background:#ef4444;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;"><i class="bi bi-x-lg"></i></div>
+                        {% elif claim.status == 'SUPERVISOR_APPROVED' %}
+                            <div style="width:24px;height:24px;border-radius:50%;background:#f59e0b;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;"><i class="bi bi-hourglass-split"></i></div>
+                        {% else %}
+                            <div style="width:24px;height:24px;border-radius:50%;background:#e2e8f0;color:#64748b;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;"><i class="bi bi-building"></i></div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div style="font-size:13px;font-weight:700;color:#0f172a;">RH / Administração</div>
+                        <div style="font-size:11px;color:#64748b;">
+                            {% if claim.status == 'APPROVED' or claim.status == 'PAID' %}Aprovado definitivamente.
+                            {% elif claim.status == 'REJECTED' %}Rejeitado.
+                            {% elif claim.status == 'SUPERVISOR_APPROVED' %}<span style="color:#f59e0b;font-weight:600;">Aguardando validação</span>
+                            {% else %}Em aguardo.{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if claim.rejection_reason %}
+            <div style="margin-top:16px;background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:12px 14px;">
+                <div style="font-size:10px;font-weight:700;color:#b91c1c;text-transform:uppercase;margin-bottom:4px;"><i class="bi bi-exclamation-octagon me-1"></i> Motivo da Rejeição</div>
+                <div style="font-size:13px;color:#991b1b;">{{ claim.rejection_reason }}</div>
+            </div>
+            {% endif %}
+
+          </div>
+
+          
+          <div class="col-md-7" style="padding:24px 28px;">
+
+            
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:12px;">
+                <i class="bi bi-list-check me-1"></i> Despesas ({{ claim.expenses.count }})
+            </div>
+
+            {% if claim.expenses.all %}
+            <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px;">
+                <thead>
+                    <tr style="border-bottom:2px solid #f1f5f9;">
+                        <th style="text-align:left;padding:6px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8;">Tipo</th>
+                        <th style="text-align:left;padding:6px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8;">Data</th>
+                        <th style="text-align:right;padding:6px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8;">Valor</th>
+                        <th style="text-align:left;padding:6px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8;">Nota</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exp in claim.expenses.all %}
+                    <tr style="border-bottom:1px solid #f8fafc;">
+                        <td style="padding:8px 8px;">
+                            <span style="background:#e0e7ff;color:#4f46e5;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap;">{{ exp.expense_type }}</span>
+                        </td>
+                        <td style="padding:8px 8px;color:#64748b;">{{ exp.expense_date|date:"d/m/Y" }}</td>
+                        <td style="padding:8px 8px;text-align:right;font-weight:700;color:#4f46e5;">R$ {{ exp.amount }}</td>
+                        <td style="padding:8px 8px;color:#94a3b8;font-size:12px;">{{ exp.note|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="border-top:2px solid #f1f5f9;">
+                        <td colspan="2" style="padding:10px 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#64748b;">Total</td>
+                        <td style="padding:10px 8px;text-align:right;font-size:16px;font-weight:800;color:#4f46e5;">R$ {{ claim.total_amount }}</td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align:center;padding:24px 0;color:#94a3b8;margin-bottom:24px;">
+                <i class="bi bi-receipt" style="font-size:28px;"></i>
+                <p style="margin-top:8px;font-size:13px;">Nenhuma despesa registrada.</p>
+            </div>
+            {% endif %}
+
+            
+            {% if claim.attachments.all %}
+            <div style="border-top:1px solid #f1f5f9;padding-top:18px;">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:12px;">
+                    <i class="bi bi-paperclip me-1"></i> Comprovantes ({{ claim.attachments.count }})
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    {% for att in claim.attachments.all %}
+                    <a href="{{ att.file.url }}" target="_blank"
+                       style="display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;text-decoration:none;color:#0f172a;transition:background .15s;">
+                        <i class="bi bi-file-earmark-text" style="font-size:18px;color:#4f46e5;flex-shrink:0;"></i>
+                        <div style="overflow:hidden;">
+                            <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ att.file_name }}</div>
+                            <div style="font-size:10px;color:#94a3b8;">{{ att.uploaded_at|date:"d/m/Y" }}</div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="modal-footer border-0" style="background:#f8fafc;padding:16px 28px;justify-content:space-between;">
+          <a href="{% url 'claim_detail' claim.pk %}" style="font-size:13px;color:#64748b;text-decoration:none;">
+              <i class="bi bi-box-arrow-up-right me-1"></i> Abrir página completa
+          </a>
+          <div class="d-flex gap-2">
+              <button class="btn btn-light rounded-pill border px-4" data-bs-dismiss="modal">Fechar</button>
+              {% if claim.status == 'SUBMITTED' and user.is_supervisor %}
+                  <button type="button" class="btn btn-outline-danger rounded-pill px-4"
+                          onclick="openClaimRejectModal({{ claim.pk }});bootstrap.Modal.getInstance(document.getElementById('modalClaimDetail{{ claim.pk }}')).hide()">Rejeitar</button>
+                  <form method="post" action="{% url 'claim_approve' claim.pk %}" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn rounded-pill px-4 text-white" style="background:#10b981;border:none;">Pré-Aprovar</button>
+                  </form>
+              {% endif %}
+              {% if claim.status == 'SUPERVISOR_APPROVED' and user.is_admin %}
+                  <button type="button" class="btn btn-outline-danger rounded-pill px-4"
+                          onclick="openClaimRejectModal({{ claim.pk }});bootstrap.Modal.getInstance(document.getElementById('modalClaimDetail{{ claim.pk }}')).hide()">Rejeitar</button>
+                  <form method="post" action="{% url 'claim_final_approve' claim.pk %}" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn rounded-pill px-4 text-white" style="background:#10b981;border:none;">Aprovação Final</button>
+                  </form>
+              {% endif %}
+          </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="modalRejectClaim{{ claim.pk }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="border-radius:16px;overflow:hidden;box-shadow:0 20px 40px -8px rgba(0,0,0,.15);">
+      <div class="modal-header border-0 bg-light" style="padding:20px 24px;">
+        <h5 class="modal-title fw-bold" style="font-size:17px;">
+          <i class="bi bi-x-circle me-2" style="color:#ef4444;"></i> Rejeitar Reembolso
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:24px;">
+        <p style="font-size:14px;color:#64748b;margin-bottom:16px;">
+            Funcionário: <strong>{{ claim.employee.full_name }}</strong><br>
+            Evento: {{ claim.claim_event }} — R$ {{ claim.total_amount }}
+        </p>
+        <form method="post" action="{% url 'claim_reject' claim.pk %}" id="rejectClaimForm{{ claim.pk }}">
+            {% csrf_token %}
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;display:block;margin-bottom:6px;">
+                Motivo da Rejeição
+            </label>
+            <textarea name="rejection_reason" rows="3" required
+                      placeholder="Descreva o motivo para o funcionário..."
+                      style="width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;resize:vertical;outline:none;box-sizing:border-box;"></textarea>
+        </form>
+      </div>
+      <div class="modal-footer border-0" style="padding:16px 24px;">
+          <button class="btn btn-light rounded-pill border px-4" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-danger rounded-pill px-4"
+                  onclick="document.getElementById('rejectClaimForm{{ claim.pk }}').submit()">
+              Confirmar Rejeição
+          </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endfor %}
+{% endif %}
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Corrige bug de backdrop do modal movendo-os direto pro body
+    document.querySelectorAll('.modal').forEach(function(m) {
+        document.body.appendChild(m);
+    });
+});
+
+function switchTab(tabId, element) {
+    document.querySelectorAll('.inbox-tab').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+
+    element.classList.add('active');
+    var panel = document.getElementById(tabId);
+    if (panel) panel.classList.add('active');
+}
+
+function openClaimRejectModal(pk) {
+    var modalEl = document.getElementById('modalRejectClaim' + pk);
+    if (modalEl) {
+        var modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+}
+</script>
+{% include "attendance/_swap_schedule_modal.html" %}
+{% endblock %}

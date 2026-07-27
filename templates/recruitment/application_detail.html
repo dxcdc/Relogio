@@ -1,0 +1,554 @@
+{% extends "base.html" %}
+{% load recruitment_tags %}
+{% block title %}Candidatura — {{ app.name }}{% endblock %}
+{% block breadcrumb %}
+<span style="color:var(--text-secondary);font-size:13px;">
+    Recrutamento /
+    <a href="{% url 'applications_review' app.job_opening.pk %}" style="color:var(--text-secondary);text-decoration:none;">Candidaturas</a>
+    / {{ app.name }}
+</span>
+{% endblock %}
+
+{% block content %}
+<style>
+    /* ── Layout ── */
+    .hero-banner {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #064e3b 100%);
+        margin: -24px -24px 40px -24px;
+        padding: 40px 40px 120px 40px;
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-banner::before {
+        content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
+        background: radial-gradient(circle at top right, rgba(13,192,42,0.15) 0%, transparent 60%);
+    }
+
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 24px;
+        align-items: start;
+        margin-top: -120px;
+        position: relative;
+        z-index: 10;
+        padding: 0 16px;
+    }
+    @media (max-width: 900px) { .profile-grid { grid-template-columns: 1fr; margin-top: -60px; padding: 0; } }
+
+    /* ── Left sidebar cards ── */
+    .side-card {
+        background: #fff;
+        border-radius: 20px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        padding: 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 24px rgba(32,42,68,0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .side-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba(32,42,68,0.08);
+    }
+
+    /* Avatar */
+    .big-avatar {
+        width: 86px; height: 86px; border-radius: 24px;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 900; font-size: 36px; color: #fff;
+        background: linear-gradient(135deg, #202a44, #0dc02a);
+        margin: 0 auto 16px;
+        box-shadow: 0 6px 16px rgba(13,192,42,0.15);
+        position: relative;
+    }
+
+    /* Score ring */
+    .score-ring-wrap {
+        display: flex; flex-direction: column; align-items: center;
+        padding: 20px 0 8px;
+    }
+    .score-ring {
+        width: 120px; height: 120px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        flex-direction: column;
+        margin-bottom: 12px;
+        position: relative;
+    }
+    .score-ring svg {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        transform: rotate(-90deg);
+    }
+    .score-ring-val { font-size: 30px; font-weight: 900; position: relative; z-index: 1; }
+    .score-ring-lbl { font-size: 10.5px; font-weight: 600; color: #94a3b8; position: relative; z-index: 1; }
+
+    /* Section title */
+    .sec-title {
+        font-size: 12px; font-weight: 800; color: #94a3b8;
+        text-transform: uppercase; letter-spacing: 0.7px;
+        margin: 0 0 14px; display: flex; align-items: center; gap: 7px;
+    }
+    .sec-title::after { content:''; flex:1; height:1px; background:#f1f5f9; }
+
+    /* Info rows */
+    .info-row {
+        display: flex; align-items: center; gap: 10px;
+        font-size: 13px; color: #475569; padding: 7px 0;
+        border-bottom: 1px solid #f8fafc;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row i { color: #0dc02a; font-size: 15px; flex-shrink: 0; width: 18px; text-align: center; }
+    .info-row a { color: #202a44; text-decoration: none; font-weight: 500; }
+    .info-row a:hover { color: #0dc02a; }
+    .btn-copy { background: transparent; border: none; padding: 0 4px; color: #cbd5e1; font-size: 13px; cursor: pointer; border-radius: 4px; transition: all 0.2s ease; }
+    .btn-copy:hover { color: #0dc02a; }
+    .btn-whatsapp { background: #25d366; color: #ffffff !important; width: 22px; height: 22px; border-radius: 6px; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+    .btn-whatsapp i::before { color: #ffffff; }
+    .btn-whatsapp:hover { background: #1ebc59; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(37, 211, 102, 0.3); }
+
+    /* ── Right content ── */
+    .main-card {
+        background: #fff;
+        border-radius: 20px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        padding: 32px;
+        box-shadow: 0 8px 24px rgba(32,42,68,0.05);
+        margin-bottom: 20px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .main-card:hover {
+        box-shadow: 0 12px 32px rgba(32,42,68,0.08);
+    }
+
+    /* Skill pills */
+    .sk { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; padding: 6px 14px; border-radius: 8px; transition: all 0.2s ease; }
+    .sk:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .sk-hit     { background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; }
+    .sk-miss    { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; }
+    .sk-desired { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; border: none; }
+    .sk-extra   { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+    /* Status pill */
+    .status-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 12px; font-weight: 700; padding: 5px 14px;
+        border-radius: 20px;
+    }
+    .sp-pending  { background: rgba(245,158,11,0.12); color: #b45309; border: 1px solid rgba(245,158,11,0.25); }
+    .sp-accepted { background: rgba(13,192,42,0.12);  color: #0a7e19; border: 1px solid rgba(13,192,42,0.25); }
+    .sp-rejected { background: rgba(239,68,68,0.08);  color: #b91c1c; border: 1px solid rgba(239,68,68,0.15); }
+
+    /* PDF embed */
+    .pdf-frame {
+        width: 100%; border-radius: 12px; border: 1.5px solid #e4ecf4;
+        background: #f8fafc; min-height: 560px;
+    }
+    .pdf-no-file {
+        background: #f8fafc; border: 1.5px dashed #dde6f0;
+        border-radius: 12px; padding: 48px; text-align: center; color: #94a3b8;
+    }
+
+    /* Action buttons */
+    .btn-accept {
+        background: linear-gradient(135deg,#0dc02a,#0a9b21); border:none; border-radius:11px;
+        color:#fff; font-size:13.5px; font-weight:700; padding:10px 24px;
+        display:inline-flex; align-items:center; gap:8px;
+        box-shadow:0 4px 14px rgba(13,192,42,0.32); text-decoration:none;
+        transition:all 0.18s; cursor:pointer;
+    }
+    .btn-accept:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(13,192,42,0.42); color:#fff; }
+
+    .btn-reject {
+        background:#fff; border:1.5px solid #fca5a5; border-radius:11px;
+        color:#dc2626; font-size:13.5px; font-weight:700; padding:10px 24px;
+        display:inline-flex; align-items:center; gap:8px;
+        transition:all 0.15s; cursor:pointer;
+    }
+    .btn-reject:hover { background:#fef2f2; }
+
+    .btn-back {
+        background:#fff; border:1.5px solid #e2e8f0; border-radius:11px;
+        color:#475569; font-size:13px; font-weight:600; padding:9px 18px;
+        display:inline-flex; align-items:center; gap:6px;
+        text-decoration:none; transition:all 0.15s;
+    }
+    .btn-back:hover { border-color:#202a44; color:#202a44; }
+
+    /* Score colors */
+    .col-high { color: #0a9b21; } .col-mid { color: #d97706; } .col-low { color: #dc2626; }
+    .trk-high { stroke: #0dc02a; } .trk-mid { stroke: #f59e0b; } .trk-low { stroke: #ef4444; }
+</style>
+
+<!-- PAGE HEADER (HERO) -->
+<div class="hero-banner">
+    <div style="position:relative; z-index:2;" class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <a href="{% url 'applications_review' app.job_opening.pk %}" class="btn-back" style="background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.2); color:#fff;">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+            <div>
+                <h1 style="font-size:22px;font-weight:800;color:#fff;margin:0;">Perfil da Candidatura</h1>
+                <p style="color:#94a3b8;font-size:13.5px;margin:0;">Análise completa antes de aceitar na pipeline</p>
+            </div>
+        </div>
+
+        <!-- Status + Actions -->
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div style="display:inline-flex; align-items:center; gap:8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 10px; padding: 9px 18px; font-size: 13.5px; font-weight: 600;">
+                {% if app.status == 'PENDING' %}<i class="bi bi-hourglass-split"></i> Aguardando
+                {% elif app.status == 'ACCEPTED' %}<i class="bi bi-check-circle-fill" style="color:#10b981;"></i> Aceito → Pipeline
+                {% else %}<i class="bi bi-x-circle-fill" style="color:#ef4444;"></i> Reprovado{% endif %}
+            </div>
+
+            {% if app.status == 'PENDING' %}
+            <a href="{% url 'application_accept' app.pk %}" 
+               onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 16px rgba(16, 185, 129, 0.4)';" 
+               onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.2)';"
+               style="display:inline-flex; align-items:center; gap:8px; background: #10b981; border: 1px solid #059669; color: #fff; border-radius: 10px; padding: 9px 22px; font-size: 13.5px; font-weight: 700; text-decoration:none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); transition:all 0.2s;">
+                <i class="bi bi-person-check-fill"></i> Aceitar → Pipeline
+            </a>
+            <button type="button" data-bs-toggle="modal" data-bs-target="#rejectModal"
+                    onmouseover="this.style.background='rgba(239, 68, 68, 0.25)';" 
+                    onmouseout="this.style.background='rgba(239, 68, 68, 0.15)';"
+                    style="display:inline-flex; align-items:center; gap:8px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; border-radius: 10px; padding: 9px 22px; font-size: 13.5px; font-weight: 700; cursor:pointer; transition:all 0.2s;">
+                <i class="bi bi-person-x-fill"></i> Reprovar
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- MAIN GRID -->
+<div class="profile-grid">
+
+    <!-- ═══════════════ LEFT SIDEBAR ═══════════════ -->
+    <div>
+        <!-- Avatar + name -->
+        <div class="side-card" style="text-align:center;">
+            <div class="big-avatar">{{ app.name|slice:":1"|upper }}</div>
+            <h2 style="font-size:18px;font-weight:800;color:#0f172a;margin:0 0 4px;">{{ app.name }}</h2>
+            <p style="font-size:13px;color:#64748b;margin:0;">
+                <i class="bi bi-briefcase me-1" style="color:#0dc02a;"></i>{{ app.job_opening.title }}
+            </p>
+            {% if app.job_opening.department %}
+            <p style="font-size:11.5px;color:#94a3b8;margin:4px 0 0;">
+                <i class="bi bi-building me-1"></i>{{ app.job_opening.department }}
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- Match Score Ring -->
+        <div class="side-card">
+            <div class="sec-title"><i class="bi bi-bullseye"></i> Match Score</div>
+            <div class="score-ring-wrap">
+                {% with score=app.match_score %}
+                <div class="score-ring">
+                    <svg viewBox="0 0 120 120">
+                        <defs>
+                            <linearGradient id="gradHigh" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#0dc02a" />
+                                <stop offset="100%" stop-color="#059669" />
+                            </linearGradient>
+                            <linearGradient id="gradMid" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#f59e0b" />
+                                <stop offset="100%" stop-color="#d97706" />
+                            </linearGradient>
+                            <linearGradient id="gradLow" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ef4444" />
+                                <stop offset="100%" stop-color="#dc2626" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Track -->
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="#f1f5f9" stroke-width="10"/>
+                        <!-- Progress -->
+                        <circle cx="60" cy="60" r="52" fill="none"
+                                stroke="{% if score >= 80 %}url(#gradHigh){% elif score >= 50 %}url(#gradMid){% else %}url(#gradLow){% endif %}"
+                                stroke-width="10"
+                                stroke-linecap="round"
+                                stroke-dasharray="326.7"
+                                style="stroke-dashoffset: calc(326.7 - (326.7 * {{ score|floatformat:'0' }} / 100));
+                                {% if score >= 80 %}filter: drop-shadow(0 0 8px rgba(13,192,42,0.5));{% endif %}"/>
+                    </svg>
+                    <span class="score-ring-val {% if score >= 80 %}col-high{% elif score >= 50 %}col-mid{% else %}col-low{% endif %}">
+                        {{ score|floatformat:0 }}%
+                    </span>
+                    <span class="score-ring-lbl">compatibilidade</span>
+                </div>
+                {% if score >= 80 %}
+                <div style="font-size:13px;font-weight:700;color:#0a7e19;"><i class="bi bi-stars me-1"></i>Ótimo match!</div>
+                <p style="font-size:12px;color:#64748b;text-align:center;margin:4px 0 0;">Candidato altamente compatível com a vaga.</p>
+                {% elif score >= 50 %}
+                <div style="font-size:13px;font-weight:700;color:#d97706;"><i class="bi bi-lightning-fill me-1"></i>Match parcial</div>
+                <p style="font-size:12px;color:#64748b;text-align:center;margin:4px 0 0;">Possui parte dos requisitos da vaga.</p>
+                {% elif score > 0 %}
+                <div style="font-size:13px;font-weight:700;color:#dc2626;"><i class="bi bi-exclamation-triangle me-1"></i>Baixo match</div>
+                <p style="font-size:12px;color:#64748b;text-align:center;margin:4px 0 0;">Poucas skills compatíveis com a vaga.</p>
+                {% else %}
+                <div style="font-size:12px;color:#94a3b8;">Sem critérios de skill definidos para esta vaga.</div>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="side-card">
+            <div class="sec-title"><i class="bi bi-person-lines-fill"></i> Contato</div>
+            <div class="info-row">
+                <i class="bi bi-envelope-fill"></i>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <a href="mailto:{{ app.email }}">{{ app.email }}</a>
+                    <button type="button" onclick="copyToClipboard('{{ app.email|escapejs }}', this)" class="btn-copy" title="Copiar"><i class="bi bi-copy"></i></button>
+                </div>
+            </div>
+            {% if app.phone %}
+            <div class="info-row">
+                <i class="bi bi-telephone-fill"></i>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <a href="tel:{{ app.phone }}">{{ app.phone }}</a>
+                    <button type="button" onclick="copyToClipboard('{{ app.phone|escapejs }}', this)" class="btn-copy" title="Copiar"><i class="bi bi-copy"></i></button>
+                    <a href="https://wa.me/55{{ app.phone|cut:' '|cut:'-'|cut:'('|cut:')' }}" target="_blank" class="btn-whatsapp" title="Chamar no WhatsApp">
+                        <i class="bi bi-whatsapp"></i>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            {% if app.linkedin_url %}
+            <div class="info-row">
+                <i class="bi bi-linkedin"></i>
+                <a href="{{ app.linkedin_url }}" target="_blank">Ver perfil LinkedIn</a>
+            </div>
+            {% endif %}
+            <div class="info-row">
+                <i class="bi bi-clock-fill"></i>
+                <span>Cadastrado em {{ app.created_at|date:"d/m/Y \à\s H:i" }}</span>
+            </div>
+        </div>
+
+
+    </div>
+
+    <!-- ═══════════════ RIGHT MAIN ═══════════════ -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+
+        <!-- Skill Breakdown -->
+        <div class="main-card" style="margin-bottom:0;">
+            <div class="sec-title"><i class="bi bi-stars"></i> Análise de Skills vs Vaga</div>
+
+            {% if breakdown.matched_required %}
+            <div style="margin-bottom:18px;">
+                <div style="font-size:12px;font-weight:700;color:#0a7e19;margin-bottom:8px;">
+                    <i class="bi bi-check-circle-fill me-1"></i>
+                    Skills Obrigatórias Atendidas ({{ breakdown.matched_required|length }})
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px;">
+                    {% for skill in breakdown.matched_required %}
+                    <span class="sk sk-hit"><i class="bi bi-{{ skill.icon }}" style="font-size:11px;"></i>{{ skill.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if breakdown.missing_required %}
+            <div style="margin-bottom:18px;">
+                <div style="font-size:12px;font-weight:700;color:#b91c1c;margin-bottom:8px;">
+                    <i class="bi bi-x-circle-fill me-1"></i>
+                    Skills Obrigatórias Faltantes ({{ breakdown.missing_required|length }})
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px;">
+                    {% for skill in breakdown.missing_required %}
+                    <span class="sk sk-miss"><i class="bi bi-{{ skill.icon }}" style="font-size:11px;"></i>{{ skill.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if breakdown.matched_desired %}
+            <div style="margin-bottom:18px;">
+                <div style="font-size:12px;font-weight:700;color:#3b4869;margin-bottom:8px;">
+                    <i class="bi bi-hand-thumbs-up-fill me-1"></i>
+                    Skills Desejáveis Atendidas ({{ breakdown.matched_desired|length }})
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px;">
+                    {% for skill in breakdown.matched_desired %}
+                    <span class="sk sk-desired"><i class="bi bi-{{ skill.icon }}" style="font-size:11px;"></i>{{ skill.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if breakdown.missing_desired %}
+            <div style="margin-bottom:18px;">
+                <div style="font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:8px;">
+                    <i class="bi bi-dash-circle me-1"></i>
+                    Skills Desejáveis Não Declaradas ({{ breakdown.missing_desired|length }})
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px;">
+                    {% for skill in breakdown.missing_desired %}
+                    <span class="sk sk-extra"><i class="bi bi-{{ skill.icon }}" style="font-size:11px;"></i>{{ skill.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- All candidate skills -->
+            {% if app.skills.exists %}
+            <div style="border-top:1px solid #f1f5f9;padding-top:16px;margin-top:4px;">
+                <div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:8px;">
+                    <i class="bi bi-person-badge me-1"></i> Todas as skills declaradas pelo candidato
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    {% for skill in app.skills.all %}
+                    <span style="font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:20px;background:#f8fafc;color:#475569;border:1px solid #e2e8f0;">
+                        <i class="bi bi-{{ skill.icon }} me-1" style="font-size:10px;"></i>{{ skill.name }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:24px;color:#94a3b8;">
+                <i class="bi bi-dash-circle" style="font-size:24px;display:block;margin-bottom:8px;opacity:0.4;"></i>
+                Candidato não declarou nenhuma skill.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- RH Notes (if rejected) -->
+        {% if app.status == 'REJECTED' %}
+        <div style="background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); border: 1.5px solid #fecdd3; position: relative; overflow: hidden; border-radius: 20px; padding: 24px; box-shadow: 0 4px 14px rgba(225, 29, 72, 0.08);">
+            <div style="position: absolute; top: -20px; right: 20px; opacity: 0.05;">
+                <i class="bi bi-person-x-fill" style="font-size: 120px; color: #e11d48;"></i>
+            </div>
+            <div style="color: #e11d48; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 13px;">
+                <i class="bi bi-exclamation-octagon-fill" style="font-size: 16px;"></i> MOTIVO DA REPROVAÇÃO
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.6); padding: 18px 24px; border-radius: 12px; border: 1px dashed #fda4af; position: relative; z-index: 2;">
+                <p style="font-size: 14px; font-weight: 600; color: #9f1239; margin: 0; line-height: 1.6;">
+                    {% if app.rh_notes %}{{ app.rh_notes }}{% else %}Nenhuma nota interna registrada para esta reprovação.{% endif %}
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Curriculum / PDF -->
+        <div class="main-card">
+            <div class="sec-title mb-3"><i class="bi bi-file-earmark-person-fill"></i> Currículo</div>
+
+            {% if app.resume %}
+                {% with fname=app.resume.name %}
+                {% if fname|lower|slice:"-3:" == "pdf" %}
+                <!-- PDF inline viewer -->
+                <div style="width: 100%; height: 800px; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #f8fafc; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                    <iframe src="{{ app.resume.url }}#view=FitH" style="width: 100%; height: 100%; border: none; display: block;"
+                            title="Currículo de {{ app.name }}">
+                        <p>Seu navegador não suporta visualização de PDF.
+                        <a href="{{ app.resume.url }}" target="_blank">Clique aqui para baixar.</a></p>
+                    </iframe>
+                </div>
+                {% else %}
+                <!-- Non-PDF file -->
+                <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border:1px solid rgba(22,101,52,0.1); border-radius:16px; padding:24px; display:flex; align-items:center; gap:16px; box-shadow: 0 4px 12px rgba(22,101,52,0.05);">
+                    <div style="width: 56px; height: 56px; background: #fff; border-radius: 14px; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); flex-shrink:0;">
+                        <i class="bi bi-file-earmark-image-fill" style="font-size:28px;color:#0dc02a;"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:800;color:#1e293b;font-size:14.5px;">{{ app.resume.name|slice:"16:" }}</div>
+                        <div style="font-size:12.5px;color:#64748b;margin-top:4px;">
+                            Arquivo anexado · <a href="{{ app.resume.url }}" target="_blank" style="color:#0a9b21;font-weight:700;text-decoration:none;"><i class="bi bi-box-arrow-up-right me-1"></i>Abrir / Baixar</a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endwith %}
+            {% else %}
+            <div class="pdf-no-file">
+                <i class="bi bi-file-earmark-x" style="font-size:44px;display:block;margin-bottom:12px;opacity:0.3;"></i>
+                <p style="margin:0;font-size:14px;font-weight:600;color:#94a3b8;">Nenhum currículo enviado</p>
+                <p style="margin:4px 0 0;font-size:12px;">O candidato não anexou um arquivo de currículo.</p>
+            </div>
+            {% endif %}
+        </div>
+
+
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyToClipboard(text, btn) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() {
+            var icon = btn.querySelector('i');
+            icon.className = 'bi bi-check2';
+            btn.style.color = '#0dc02a';
+            setTimeout(function() {
+                icon.className = 'bi bi-copy';
+                btn.style.color = '';
+            }, 1500);
+        });
+    } else {
+        // Fallback for older browsers or insecure contexts
+        var textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            var icon = btn.querySelector('i');
+            icon.className = 'bi bi-check2';
+            btn.style.color = '#0dc02a';
+            setTimeout(function() {
+                icon.className = 'bi bi-copy';
+                btn.style.color = '';
+            }, 1500);
+        } catch (err) {
+            console.error('Fallback: Oops, unable to copy', err);
+        }
+        document.body.removeChild(textArea);
+    }
+}
+</script>
+<!-- Modal Reprovar -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+      <div class="modal-header" style="border-bottom: 1px solid #f1f5f9; padding: 20px 24px;">
+        <h5 class="modal-title" id="rejectModalLabel" style="font-weight: 800; color: #0f172a; font-size: 18px;">
+          <i class="bi bi-person-x-fill text-danger me-2"></i> Reprovar Candidato
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" action="{% url 'application_reject' app.pk %}">
+          {% csrf_token %}
+          <div class="modal-body" style="padding: 24px;">
+              <p style="font-size: 14px; color: #475569; margin-bottom: 24px;">
+                  Você está reprovando <strong>{{ app.name }}</strong> para a vaga de <strong>{{ app.job_opening.title }}</strong>.
+              </p>
+              
+              <div class="mb-4">
+                  <label for="rh_notes" class="form-label" style="font-size: 13.5px; font-weight: 700; color: #1e293b;">Notas Internas do RH</label>
+                  <textarea class="form-control" id="rh_notes" name="rh_notes" rows="2" placeholder="Motivo interno da reprovação (visível apenas para o RH)"></textarea>
+              </div>
+
+              <div class="mb-2">
+                  <label for="candidate_feedback" class="form-label" style="font-size: 13.5px; font-weight: 700; color: #1e293b;">Feedback para o Candidato <span style="color:#ef4444;">*</span></label>
+                  <textarea class="form-control" id="candidate_feedback" name="candidate_feedback" rows="4" placeholder="Olá {{ app.name }}, agradecemos o seu interesse na vaga..." required></textarea>
+                  <div class="form-text" style="font-size: 12px; color: #64748b; margin-top: 8px;">
+                      <i class="bi bi-envelope-check" style="color:#0dc02a;"></i> Uma notificação contendo esta mensagem será enviada por email para <strong>{{ app.email }}</strong>.
+                  </div>
+              </div>
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid #f1f5f9; padding: 16px 24px; background: #f8fafc; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px; font-size: 13.5px; font-weight: 600;">Cancelar</button>
+            <button type="submit" class="btn btn-danger" style="border-radius: 8px; font-size: 13.5px; font-weight: 700; padding: 8px 20px;">
+                Confirmar Reprovação e Enviar Feedback
+            </button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

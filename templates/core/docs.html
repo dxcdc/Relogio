@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Documentação de Endpoints{% endblock %}
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;">Documentação de Endpoints</span>{% endblock %}
+
+{% block content %}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+            <i class="bi bi-book"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 22px;">Endpoints do Sistema</h1>
+            <p class="text-muted mb-0" style="font-size: 13px;">Referência completa de todas as rotas disponíveis no OrangeHRM Django</p>
+        </div>
+    </div>
+</div>
+
+
+<div class="card mb-4">
+    <div class="card-body py-3 d-flex align-items-center gap-3 flex-wrap" style="font-size: 12px;">
+        <strong style="color: var(--text-secondary);">Métodos HTTP:</strong>
+        <span class="method-badge get">GET</span><span style="color:var(--text-secondary)">Leitura/visualização</span>
+        <span class="method-badge post">POST</span><span style="color:var(--text-secondary)">Envio de formulários</span>
+        <span class="method-badge both">GET/POST</span><span style="color:var(--text-secondary)">Exibe o form (GET) e envia (POST)</span>
+    </div>
+</div>
+
+
+<div class="row g-3">
+{% for module in modules %}
+<div class="col-xl-6">
+    <div class="card h-100">
+        <div class="card-header" style="border-left: 4px solid {{ module.color }};">
+            <h5 class="card-title" style="color: {{ module.color }};">
+                <i class="bi {{ module.icon }} me-2"></i>{{ module.name }}
+            </h5>
+            <span style="font-size: 11px; color: var(--text-secondary);">{{ module.endpoints|length }} endpoint(s)</span>
+        </div>
+        <div class="card-body p-0">
+            <table class="table mb-0" style="font-size: 12px;">
+                <thead>
+                    <tr>
+                        <th style="width: 90px; padding: 8px 16px;">Método</th>
+                        <th style="padding: 8px 16px;">URL</th>
+                        <th style="padding: 8px 16px;">O que faz</th>
+                        <th style="width: 130px; padding: 8px 16px;">Permissão</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for ep in module.endpoints %}
+                <tr style="border-top: 1px solid var(--border-color);">
+                    <td style="padding: 8px 16px; vertical-align: middle;">
+                        {% if ep.method == 'GET' %}
+                        <span class="method-badge get">GET</span>
+                        {% elif ep.method == 'POST' %}
+                        <span class="method-badge post">POST</span>
+                        {% else %}
+                        <span class="method-badge both">GET/POST</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 8px 16px; vertical-align: middle;">
+                        <a href="{{ ep.url }}" style="color: var(--orange-primary); font-family: 'Courier New', monospace; font-size: 11px; text-decoration: none; font-weight: 600;">
+                            {{ ep.url }}
+                        </a>
+                    </td>
+                    <td style="padding: 8px 16px; vertical-align: middle; color: var(--text-secondary);">
+                        {{ ep.desc }}
+                    </td>
+                    <td style="padding: 8px 16px; vertical-align: middle;">
+                        {% if ep.roles == 'Todos' %}
+                        <span style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.25); border-radius: 6px; padding: 2px 8px; font-size: 10px; font-weight: 600; white-space: nowrap;">Todos</span>
+                        {% elif 'Admin' in ep.roles and 'Supervisor' not in ep.roles %}
+                        <span style="background: rgba(239,68,68,0.1); color: #dc2626; border: 1px solid rgba(239,68,68,0.25); border-radius: 6px; padding: 2px 8px; font-size: 10px; font-weight: 600; white-space: nowrap;">Admin</span>
+                        {% elif 'Supervisor' in ep.roles %}
+                        <span style="background: rgba(79,70,229,0.1); color: #4f46e5; border: 1px solid rgba(79,70,229,0.25); border-radius: 6px; padding: 2px 8px; font-size: 10px; font-weight: 600; white-space: nowrap;">Supervisor+</span>
+                        {% else %}
+                        <span style="background: rgba(148,163,184,0.1); color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 6px; padding: 2px 8px; font-size: 10px; white-space: nowrap;">{{ ep.roles }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endfor %}
+</div>
+
+
+<div class="card mt-4">
+    <div class="card-body py-3" style="font-size: 12px; color: var(--text-secondary);">
+        <div class="row g-2">
+            <div class="col-md-4">
+                <strong>Perfis de acesso:</strong><br>
+                <i class="bi bi-shield-lock-fill" style="color:#dc2626;"></i> <strong>Admin</strong> — acesso total<br>
+                <i class="bi bi-person-check-fill" style="color:#4f46e5;"></i> <strong>Supervisor</strong> — aprova, visualiza equipe<br>
+                <i class="bi bi-person-fill"></i> <strong>ESS</strong> — visualiza e edita apenas os próprios dados
+            </div>
+            <div class="col-md-4">
+                <strong>Convenções de URL:</strong><br>
+                <code style="font-size:11px;">&lt;id&gt;</code> — número inteiro (ex: <code>/pim/42/</code>)<br>
+                <code style="font-size:11px;">?mine=1</code> — filtro para ver apenas os próprios registros<br>
+                <code style="font-size:11px;">?status=</code> — filtro de status (PENDING, ACTIVE, etc.)
+            </div>
+            <div class="col-md-4">
+                <strong>Boas práticas:</strong><br>
+                Todas as rotas de POST usam <code>{% templatetag openblock %} csrf_token {% templatetag closeblock %}</code> automaticamente.<br>
+                Acessos não autorizados redirecionam para o Dashboard com mensagem de erro.
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.method-badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; }
+.method-badge.get { background: rgba(16,185,129,0.12); color: #059669; border: 1px solid rgba(16,185,129,0.3); }
+.method-badge.post { background: rgba(249,115,22,0.12); color: #ea580c; border: 1px solid rgba(249,115,22,0.3); }
+.method-badge.both { background: rgba(99,102,241,0.12); color: #4f46e5; border: 1px solid rgba(99,102,241,0.3); }
+</style>
+{% endblock %}

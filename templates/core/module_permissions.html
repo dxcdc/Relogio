@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Permissões de Módulo{% endblock %}
+{% block breadcrumb %}Admin / Permissões Modulares{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+            <i class="bi bi-ui-checks-grid"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 22px;">Permissões de Módulos</h1>
+            <p class="text-muted mb-0" style="font-size: 13px;">Habilite e gerencie o acesso das ferramentas para os cargos.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-2">
+    
+    <div class="col-md-3 mb-4">
+        <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                <h6 class="fw-bold text-muted mb-3" style="font-size: 12px; letter-spacing: 1px;">SELECIONE O CARGO</h6>
+            </div>
+            <div class="card-body p-2">
+                <div class="nav flex-column nav-pills" id="role-tabs" role="tablist" aria-orientation="vertical">
+                    {% for r in roles %}
+                    <button class="nav-link text-start {% if forloop.first %}active{% endif %} mb-1 py-3 px-3 d-flex align-items-center role-tab-btn" 
+                            id="tab-{{ r.role }}" data-bs-toggle="pill" data-bs-target="#pane-{{ r.role }}" 
+                            type="button" role="tab" aria-controls="pane-{{ r.role }}" 
+                            aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+                        <div class="role-icon rounded-circle me-3 d-flex align-items-center justify-content-center text-white fw-bold shadow-sm">
+                            {{ r.role|make_list|first|upper }}
+                        </div>
+                        {{ r.get_role_display }}
+                    </button>
+                    {% empty %}
+                    <div class="text-center text-muted p-4">
+                        <i class="bi bi-shield-lock fs-3 mb-2 d-block"></i>
+                        Nenhum cargo encontrado.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="col-md-9">
+        <div class="tab-content" id="role-tab-content">
+            {% for r in roles %}
+            <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="pane-{{ r.role }}" role="tabpanel" aria-labelledby="tab-{{ r.role }}">
+                
+                <div class="d-flex align-items-center mb-4">
+                    <h4 class="mb-0 fw-bold text-dark">Permissões de {{ r.get_role_display }}</h4>
+                </div>
+
+                <div class="row g-4">
+                    
+                    <div class="col-12 col-xl-6">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius: var(--radius);">
+                            <div class="card-header bg-white border-bottom pt-4 pb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                                        <i class="bi bi-person-badge fs-5"></i>
+                                    </div>
+                                    <h5 class="mb-0 fw-bold" style="font-size: 16px;">Módulos Gerais (Colaborador)</h5>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <ul class="list-group list-group-flush" style="border-radius: var(--radius);">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div>
+                                            <div class="fw-bold" style="font-size: 14px; color: #334155;">Netgram</div>
+                                            <div class="text-muted" style="font-size: 12px;">Rede social interna da empresa</div>
+                                        </div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="netgram" {% if r.netgram %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div>
+                                            <div class="fw-bold" style="font-size: 14px; color: #334155;">Netgram: Criar Postagens</div>
+                                            <div class="text-muted" style="font-size: 12px;">Permitir que o colaborador crie publicações no mural</div>
+                                        </div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="netgram_post" {% if r.netgram_post %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div>
+                                            <div class="fw-bold" style="font-size: 14px; color: #334155;">Organograma</div>
+                                            <div class="text-muted" style="font-size: 12px;">Estrutura hierárquica e contatos</div>
+                                        </div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="org_chart" {% if r.org_chart %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div>
+                                            <div class="fw-bold" style="font-size: 14px; color: #334155;">Meu Ponto</div>
+                                            <div class="text-muted" style="font-size: 12px;">Bater ponto e ver próprio histórico</div>
+                                        </div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="attendance" {% if r.attendance %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div>
+                                            <div class="fw-bold" style="font-size: 14px; color: #334155;">Minhas Férias/Ausências</div>
+                                            <div class="text-muted" style="font-size: 12px;">Solicitar licenças e ver atestados</div>
+                                        </div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="leave" {% if r.leave %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div>
+                                            <div class="fw-bold" style="font-size: 14px; color: #334155;">Minhas Trocas</div>
+                                            <div class="text-muted" style="font-size: 12px;">Troca de turnos/DSR com colegas</div>
+                                        </div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="swap" {% if r.swap %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div>
+                                            <div class="fw-bold" style="font-size: 14px; color: #334155;">Todos Reembolsos</div>
+                                            <div class="text-muted" style="font-size: 12px;">Solicitação de reembolso de despesas</div>
+                                        </div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="claim" {% if r.claim %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div>
+                                            <div class="fw-bold" style="font-size: 14px; color: #334155;">Desempenho</div>
+                                            <div class="text-muted" style="font-size: 12px;">Avaliações de performance (OKRs)</div>
+                                        </div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="performance" {% if r.performance %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div>
+                                            <div class="fw-bold" style="font-size: 14px; color: #334155;">Suporte & Chamados</div>
+                                            <div class="text-muted" style="font-size: 12px;">Abertura de tickets e report de bugs</div>
+                                        </div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="support_tickets" {% if r.support_tickets %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div>
+                                            <div class="fw-bold" style="font-size: 14px; color: #334155;">Mural de Avisos</div>
+                                            <div class="text-muted" style="font-size: 12px;">Postar comunicados no Dashboard</div>
+                                        </div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="announcements" {% if r.announcements %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div>
+                                            <div class="fw-bold" style="font-size: 14px; color: #334155;">Agenda Corporativa</div>
+                                            <div class="text-muted" style="font-size: 12px;">Calendário e agendamento corporativo de reuniões, entrevistas, integrações</div>
+                                        </div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="agenda" {% if r.agenda %}checked{% endif %}></div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-6 d-flex flex-column gap-4">
+                        
+                        <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                            <div class="card-header bg-white border-bottom pt-4 pb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                                        <i class="bi bi-people fs-5"></i>
+                                    </div>
+                                    <h5 class="mb-0 fw-bold" style="font-size: 16px;">Gestão de Equipe (Liderança)</h5>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <ul class="list-group list-group-flush" style="border-radius: var(--radius);">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div class="fw-bold" style="font-size: 14px; color: #334155;">Equipe: Funcionários</div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="team_employees" {% if r.team_employees %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div class="fw-bold" style="font-size: 14px; color: #334155;">Equipe: Central de Aprovações</div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="team_approvals" {% if r.team_approvals %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div class="fw-bold" style="font-size: 14px; color: #334155;">Equipe: Ponto (Subordinados)</div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="team_attendance" {% if r.team_attendance %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div class="fw-bold" style="font-size: 14px; color: #334155;">Relatórios Gerenciais</div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="reports" {% if r.reports %}checked{% endif %}></div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        
+                        <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                            <div class="card-header bg-white border-bottom pt-4 pb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                                        <i class="bi bi-shield-check fs-5"></i>
+                                    </div>
+                                    <h5 class="mb-0 fw-bold" style="font-size: 16px;">Administração do Sistema</h5>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <ul class="list-group list-group-flush" style="border-radius: var(--radius);">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div class="fw-bold" style="font-size: 14px; color: #334155;">Admin: Cadastros Base</div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="admin_core" {% if r.admin_core %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div class="fw-bold" style="font-size: 14px; color: #334155;">Admin: Escalas/Fechamento</div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="admin_attendance" {% if r.admin_attendance %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div class="fw-bold" style="font-size: 14px; color: #334155;">Log de Auditoria</div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="audit" {% if r.audit %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div class="fw-bold" style="font-size: 14px; color: #334155;">Endpoints (API)</div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="endpoints" {% if r.endpoints %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div class="fw-bold" style="font-size: 14px; color: #334155;">Integrações (API Externa)</div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="integrations" {% if r.integrations %}checked{% endif %}></div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        
+                        <div class="card border-0 shadow-sm" style="border-radius: var(--radius);">
+                            <div class="card-header bg-white border-bottom pt-4 pb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                                        <i class="bi bi-sliders fs-5"></i>
+                                    </div>
+                                    <h5 class="mb-0 fw-bold" style="font-size: 16px;">Configurações Adicionais</h5>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <ul class="list-group list-group-flush" style="border-radius: var(--radius);">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div>
+                                            <div class="fw-bold" style="font-size: 14px; color: #334155;">Foto Obrigatória no Ponto</div>
+                                            <div class="text-muted" style="font-size: 12px;">Exigir foto em todas as pausas e retornos</div>
+                                        </div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="attendance_photo_all_punches" {% if r.attendance_photo_all_punches %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div>
+                                            <div class="fw-bold" style="font-size: 14px; color: #334155;">Bloquear Ponto Antecipado</div>
+                                            <div class="text-muted" style="font-size: 12px;">Impedir batida antes do limite de Tolerância configurado na Escala do funcionário.</div>
+                                        </div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="attendance_block_early_punch" {% if r.attendance_block_early_punch %}checked{% endif %}></div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                                        <div>
+                                            <div class="fw-bold" style="font-size: 14px; color: #334155;">Bloquear Ponto na Folga</div>
+                                            <div class="text-muted" style="font-size: 12px;">Impedir bater ponto em DSR/Feriado sem exceção na escala</div>
+                                        </div>
+                                        <div class="form-check form-switch"><input class="form-check-input permission-toggle" type="checkbox" data-role="{{ r.role }}" data-module="attendance_block_off_days" {% if r.attendance_block_off_days %}checked{% endif %}></div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Filtro de Busca nas Abas
+    const searchInput = document.getElementById('searchInput');
+    const roleTabs = document.querySelectorAll('#role-tabs button');
+
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            const filter = searchInput.value.toLowerCase();
+            
+            roleTabs.forEach(tab => {
+                let textValue = tab.textContent || tab.innerText;
+                if (textValue.toLowerCase().indexOf(filter) > -1) {
+                    tab.style.display = "flex"; // Usa flex por causa da classe original
+                } else {
+                    tab.style.display = "none";
+                }
+            });
+        });
+    }
+
+    // Auto salvamento nos Switches
+    const toggles = document.querySelectorAll('.permission-toggle');
+    toggles.forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const roleType = this.getAttribute('data-role');
+            const module = this.getAttribute('data-module');
+            const isActive = this.checked;
+            
+            const formData = new FormData();
+            formData.append('role_type', roleType);
+            formData.append('module', module);
+            formData.append('is_active', isActive);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            fetch("{% url 'module_permissions_list' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status !== 'ok') {
+                    alert("Erro ao alterar permissão do módulo.");
+                    this.checked = !isActive; // Reverte na tela se houver falha
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Falha de conexão.");
+                this.checked = !isActive;
+            });
+        });
+    });
+});
+</script>
+<style>
+/* Estilo das Abas de Cargos */
+.role-tab-btn {
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s;
+    color: #475569; /* Slate 600 */
+    background-color: transparent;
+}
+.role-tab-btn:hover {
+    color: #0f172a;
+    background-color: #f8fafc;
+}
+.role-tab-btn.active {
+    background-color: #10b981 !important; /* Verde tema */
+    color: white !important;
+}
+
+/* Ícone dentro das abas */
+.role-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    transition: all 0.2s;
+}
+
+/* Quando a aba estiver ativa, o ícone fica com fundo branco translúcido para contraste */
+.role-tab-btn.active .role-icon {
+    background: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Aumenta o tamanho dos interruptores no painel */
+.form-check-input {
+    width: 2.5em !important;
+    height: 1.25em !important;
+}
+.form-check-input:checked {
+    background-color: #10b981;
+    border-color: #10b981;
+}
+</style>
+{% endblock %}

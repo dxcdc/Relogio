@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+{% block title %}Candidaturas — {{ job.title }}{% endblock %}
+{% block breadcrumb %}<span style="color:var(--text-secondary);font-size:13px;">Recrutamento / Vagas / Candidaturas</span>{% endblock %}
+
+{% block content %}
+<style>
+/* ── Hero banner ───────────────────────────────────────────── */
+.cr-banner {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a2f 60%, #14532d 100%);
+    border-radius: 24px;
+    padding: 28px 36px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    position: relative;
+    overflow: hidden;
+}
+.cr-banner::before {
+    content: '';
+    position: absolute; top: -40px; right: -40px;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: rgba(13,192,42,.12);
+}
+.cr-banner::after {
+    content: '';
+    position: absolute; bottom: -60px; right: 180px;
+    width: 150px; height: 150px; border-radius: 50%;
+    background: rgba(255,255,255,.04);
+}
+.cr-banner-title { font-size: 22px; font-weight: 900; color: #fff; margin: 0 0 4px; position:relative; }
+.cr-banner-sub   { font-size: 13px; color: rgba(255,255,255,.6); margin: 0; position:relative; }
+.cr-banner-badge {
+    background: rgba(13,192,42,.2); border: 1px solid rgba(13,192,42,.35);
+    color: #4ade80; font-size: 11px; font-weight: 700;
+    padding: 3px 12px; border-radius: 20px; margin-left: 10px;
+}
+.cr-banner-actions { display:flex; gap:10px; position:relative; flex-shrink:0; }
+.cr-btn-back {
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+    border-radius: 11px; color: #fff; font-size: 13px; font-weight: 600;
+    padding: 9px 18px; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: background .15s;
+}
+.cr-btn-back:hover { background: rgba(255,255,255,.18); color:#fff; }
+.cr-btn-portal {
+    background: #16a34a; border: none; border-radius: 11px;
+    color: #fff; font-size: 13px; font-weight: 700;
+    padding: 9px 18px; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 7px;
+    box-shadow: 0 4px 14px rgba(22,163,74,.4);
+    transition: opacity .15s;
+}
+.cr-btn-portal:hover { opacity: .88; color:#fff; }
+
+/* ── Stats row ─────────────────────────────────────────────── */
+.cr-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+@media(max-width:700px){ .cr-stats { grid-template-columns: repeat(2,1fr); } }
+.cr-stat {
+    background: #fff; border: 1px solid #e8ecf4; border-radius: 18px;
+    padding: 18px 22px; display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.cr-stat-icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+}
+.cr-stat-num { font-size: 24px; font-weight: 900; line-height: 1; }
+.cr-stat-lbl { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+
+/* ── Tabs ──────────────────────────────────────────────────── */
+.cr-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap:wrap; }
+.cr-tab {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 20px; border-radius: 50px;
+    font-size: 13px; font-weight: 600;
+    border: 1.5px solid #e2e8f0; background: #fff; color: #64748b;
+    text-decoration: none; transition: all .15s;
+}
+.cr-tab:hover { border-color: #0f172a; color: #0f172a; }
+.cr-tab.active { background: #0f172a; border-color: #0f172a; color: #fff; }
+.cr-tab-cnt {
+    font-size: 11px; font-weight: 800;
+    background: rgba(255,255,255,.18); border-radius: 20px; padding: 1px 8px;
+}
+.cr-tab:not(.active) .cr-tab-cnt { background: #f1f5f9; color: #64748b; }
+
+/* ── Candidate card ────────────────────────────────────────── */
+.cr-card {
+    background: #fff; border-radius: 20px;
+    border: 1.5px solid #e4ecf4; overflow: hidden;
+    transition: box-shadow .2s, border-color .2s;
+}
+.cr-card:hover { box-shadow: 0 10px 36px rgba(15,23,42,.09); border-color: #c0d4e8; }
+
+.cr-card-body { display: grid; grid-template-columns: 56px 1fr auto; gap: 18px; padding: 22px 26px 18px; align-items: start; }
+@media(max-width:680px){ .cr-card-body { grid-template-columns: 56px 1fr; } }
+
+/* Avatar */
+.cr-avatar {
+    width: 52px; height: 52px; border-radius: 15px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 22px; color: #fff;
+    background: linear-gradient(135deg, #1e293b, #16a34a);
+    box-shadow: 0 4px 14px rgba(22,163,74,.28);
+}
+
+/* Name & meta */
+.cr-name { font-size: 16px; font-weight: 800; color: #0f172a; margin: 0 0 6px; }
+.cr-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 5px 16px; font-size: 12.5px; color: #64748b; margin-bottom: 12px; }
+.cr-meta a { color: #16a34a; text-decoration: none; font-weight: 600; }
+.cr-meta a:hover { text-decoration: underline; }
+.cr-meta-item { display: inline-flex; align-items: center; gap: 4px; }
+
+/* Skills */
+.cr-skills { display: flex; flex-wrap: wrap; gap: 5px; }
+.sk-req  { background: rgba(22,163,74,.1);  color: #15803d; border: 1px solid rgba(22,163,74,.25); font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+.sk-des  { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+.sk-none { font-size: 12px; color: #94a3b8; }
+
+/* Status badges */
+.cr-status { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 3px 11px; border-radius: 20px; }
+.cr-status-acc { background: rgba(22,163,74,.1); color: #15803d; }
+.cr-status-rej { background: rgba(239,68,68,.08); color: #b91c1c; }
+
+/* Score column */
+.cr-score-col {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    min-width: 90px; padding-top: 4px;
+}
+.cr-score-circle {
+    width: 66px; height: 66px; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 900; line-height: 1;
+    border: 4px solid;
+    position: relative;
+}
+.cr-score-pct { font-size: 10px; font-weight: 700; opacity: .65; }
+.score-high-c { border-color: #16a34a; color: #15803d; background: rgba(22,163,74,.06); }
+.score-mid-c  { border-color: #d97706; color: #b45309; background: rgba(217,119,6,.06); }
+.score-low-c  { border-color: #dc2626; color: #b91c1c; background: rgba(220,38,38,.06); }
+.score-zero-c { border-color: #e2e8f0; color: #94a3b8; background: #f8fafc; }
+.cr-score-tag { font-size: 10.5px; font-weight: 700; text-align: center; }
+.cr-score-lbl { font-size: 9.5px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .5px; }
+
+/* Footer */
+.cr-footer {
+    padding: 12px 26px 14px; background: #f8fafc;
+    border-top: 1.5px solid #f0f4f8;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.cr-btn-sm {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 15px; border-radius: 10px;
+    font-size: 12.5px; font-weight: 700; cursor: pointer;
+    transition: all .15s; text-decoration: none;
+}
+.cr-btn-neutral { background: #fff; border: 1.5px solid #dde6f0; color: #334155; }
+.cr-btn-neutral:hover { border-color: #0f172a; color: #0f172a; }
+.cr-btn-accept  { background: #16a34a; border: none; color: #fff; box-shadow: 0 3px 10px rgba(22,163,74,.3); }
+.cr-btn-accept:hover { background: #15803d; transform: translateY(-1px); color: #fff; }
+.cr-btn-reject  { background: #fff; border: 1.5px solid #fca5a5; color: #dc2626; }
+.cr-btn-reject:hover { background: #fef2f2; }
+
+/* Empty */
+.cr-empty { text-align: center; padding: 70px 20px; color: #94a3b8; }
+.cr-empty i { font-size: 54px; display: block; margin-bottom: 16px; opacity: .22; }
+</style>
+
+<!-- BANNER -->
+<div class="cr-banner">
+    <div>
+        <h1 class="cr-banner-title">
+            <i class="bi bi-inbox-fill me-2" style="font-size:20px;vertical-align:middle;opacity:.85;"></i>
+            Candidaturas Recebidas
+        </h1>
+        <p class="cr-banner-sub">
+            Vaga: <strong style="color:rgba(255,255,255,.9);">{{ job.title }}</strong>
+            {% if pending_count > 0 %}
+            <span class="cr-banner-badge">{{ pending_count }} aguardando</span>
+            {% endif %}
+        </p>
+    </div>
+    <div class="cr-banner-actions">
+        <a href="{% url 'job_list' %}" class="cr-btn-back"><i class="bi bi-arrow-left"></i> Vagas</a>
+        <a href="{% url 'public_apply' job.pk %}" target="_blank" class="cr-btn-portal">
+            <i class="bi bi-box-arrow-up-right"></i> Ver portal público
+        </a>
+    </div>
+</div>
+
+<!-- STATS -->
+<div class="cr-stats">
+    <div class="cr-stat">
+        <div class="cr-stat-icon" style="background:#fef3c7;">
+            <i class="bi bi-hourglass-split" style="color:#d97706;"></i>
+        </div>
+        <div>
+            <div class="cr-stat-num" style="color:#d97706;">{{ pending_count }}</div>
+            <div class="cr-stat-lbl">Aguardando</div>
+        </div>
+    </div>
+    <div class="cr-stat">
+        <div class="cr-stat-icon" style="background:#dcfce7;">
+            <i class="bi bi-person-check-fill" style="color:#16a34a;"></i>
+        </div>
+        <div>
+            <div class="cr-stat-num" style="color:#16a34a;">{{ accepted_count }}</div>
+            <div class="cr-stat-lbl">Aceitos</div>
+        </div>
+    </div>
+    <div class="cr-stat">
+        <div class="cr-stat-icon" style="background:#fee2e2;">
+            <i class="bi bi-person-x-fill" style="color:#dc2626;"></i>
+        </div>
+        <div>
+            <div class="cr-stat-num" style="color:#dc2626;">{{ rejected_count }}</div>
+            <div class="cr-stat-lbl">Reprovados</div>
+        </div>
+    </div>
+    <div class="cr-stat">
+        <div class="cr-stat-icon" style="background:#ede9fe;">
+            <i class="bi bi-people-fill" style="color:#7c3aed;"></i>
+        </div>
+        <div>
+            <div class="cr-stat-num" style="color:#7c3aed;">{{ total_count }}</div>
+            <div class="cr-stat-lbl">Total</div>
+        </div>
+    </div>
+</div>
+
+<!-- TABS -->
+<div class="cr-tabs">
+    <a href="?status=PENDING" class="cr-tab {% if status_filter == 'PENDING' %}active{% endif %}">
+        <i class="bi bi-hourglass-split"></i> Aguardando
+        <span class="cr-tab-cnt">{{ pending_count }}</span>
+    </a>
+    <a href="?status=ACCEPTED" class="cr-tab {% if status_filter == 'ACCEPTED' %}active{% endif %}">
+        <i class="bi bi-person-check"></i> Aceitos
+        <span class="cr-tab-cnt">{{ accepted_count }}</span>
+    </a>
+    <a href="?status=REJECTED" class="cr-tab {% if status_filter == 'REJECTED' %}active{% endif %}">
+        <i class="bi bi-person-x"></i> Reprovados
+        <span class="cr-tab-cnt">{{ rejected_count }}</span>
+    </a>
+</div>
+
+<!-- CARDS -->
+{% if applications %}
+<div class="d-flex flex-column gap-3">
+{% for app in applications %}
+<div class="cr-card">
+    <div class="cr-card-body">
+
+        <!-- Avatar -->
+        <div class="cr-avatar">{{ app.name|slice:":1"|upper }}</div>
+
+        <!-- Info -->
+        <div>
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                <span class="cr-name">{{ app.name }}</span>
+                {% if app.status == 'ACCEPTED' %}
+                <span class="cr-status cr-status-acc"><i class="bi bi-check-circle-fill"></i> Aceito → Pipeline</span>
+                {% elif app.status == 'REJECTED' %}
+                <span class="cr-status cr-status-rej"><i class="bi bi-x-circle-fill"></i> Reprovado</span>
+                {% endif %}
+            </div>
+            <div class="cr-meta">
+                <span class="cr-meta-item"><i class="bi bi-envelope"></i> {{ app.email }}</span>
+                {% if app.phone %}<span class="cr-meta-item"><i class="bi bi-telephone"></i> {{ app.phone }}</span>{% endif %}
+                {% if app.linkedin_url %}<a href="{{ app.linkedin_url }}" target="_blank" class="cr-meta-item"><i class="bi bi-linkedin"></i> LinkedIn</a>{% endif %}
+                {% if app.resume %}<a href="{{ app.resume.url }}" target="_blank" class="cr-meta-item"><i class="bi bi-file-earmark-text"></i> Currículo</a>{% endif %}
+                <span class="cr-meta-item" style="color:#94a3b8;"><i class="bi bi-clock"></i> {{ app.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="cr-skills">
+                {% for skill in app.skills.all %}
+                <span class="{% if skill in job.required_skills.all %}sk-req{% else %}sk-des{% endif %}">
+                    {{ skill.name }}
+                </span>
+                {% empty %}
+                <span class="sk-none"><i class="bi bi-dash me-1"></i>Nenhuma skill declarada</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Score -->
+        <div class="cr-score-col">
+            <div class="cr-score-circle
+                {% if app.match_score >= 80 %}score-high-c
+                {% elif app.match_score >= 50 %}score-mid-c
+                {% elif app.match_score > 0 %}score-low-c
+                {% else %}score-zero-c{% endif %}">
+                {{ app.match_score|floatformat:0 }}<span class="cr-score-pct">%</span>
+            </div>
+            <span class="cr-score-lbl">match</span>
+            <span class="cr-score-tag
+                {% if app.match_score >= 80 %}score-high-c" style="color:#16a34a;">🎯 Ótimo
+                {% elif app.match_score >= 50 %}" style="color:#d97706;">⚡ Parcial
+                {% elif app.match_score > 0 %}" style="color:#dc2626;">⚠ Baixo
+                {% else %}" style="color:#94a3b8;">Sem critérios
+                {% endif %}
+            </span>
+        </div>
+
+    </div>
+
+    <!-- Footer actions -->
+    {% if app.status == 'PENDING' %}
+    <div class="cr-footer">
+        <a href="{% url 'application_detail' app.pk %}" class="cr-btn-sm cr-btn-neutral">
+            <i class="bi bi-person-lines-fill"></i> Ver Perfil Completo
+        </a>
+        <a href="{% url 'application_accept' app.pk %}" class="cr-btn-sm cr-btn-accept">
+            <i class="bi bi-person-check-fill"></i> Aceitar → Pipeline
+        </a>
+        <form method="POST" action="{% url 'application_reject' app.pk %}" style="display:inline;margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="cr-btn-sm cr-btn-reject">
+                <i class="bi bi-person-x-fill"></i> Reprovar
+            </button>
+        </form>
+    </div>
+    {% elif app.status == 'ACCEPTED' %}
+    <div class="cr-footer">
+        <a href="{% url 'application_detail' app.pk %}" class="cr-btn-sm cr-btn-neutral">
+            <i class="bi bi-person-lines-fill"></i> Ver Perfil
+        </a>
+    </div>
+    {% elif app.status == 'REJECTED' %}
+    <div class="cr-footer">
+        <a href="{% url 'application_detail' app.pk %}" class="cr-btn-sm cr-btn-neutral" style="color:#64748b;">
+            <i class="bi bi-person-lines-fill"></i> Ver Perfil
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+</div>
+
+{% else %}
+<div class="cr-empty">
+    <i class="bi bi-inbox"></i>
+    <h3 style="font-size:18px;font-weight:800;color:#475569;margin-bottom:8px;">Nenhuma candidatura aqui</h3>
+    <p style="font-size:13.5px;">
+        {% if status_filter == 'PENDING' %}Não há candidaturas aguardando análise.
+        {% elif status_filter == 'ACCEPTED' %}Nenhuma candidatura foi aceita ainda.
+        {% else %}Nenhuma candidatura foi reprovada.{% endif %}
+    </p>
+</div>
+{% endif %}
+
+{% endblock %}

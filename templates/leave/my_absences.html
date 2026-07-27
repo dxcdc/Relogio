@@ -1,0 +1,499 @@
+{% extends "base.html" %}
+{% block title %}Minhas ausências{% endblock %}
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;">Leave / Minhas ausências</span>{% endblock %}
+{% block content %}
+
+<style>
+    /* ── OUTER GRID ── */
+    .calendar-grid {
+        display: grid;
+        /* Each card needs at least 238px for 7 × 30px cells + 8px gaps */
+        grid-template-columns: repeat(auto-fill, minmax(238px, 1fr));
+        gap: 1rem;
+        /* align-items: stretch ensures same height per row, combined with min-height it will be perfectly uniform */
+    }
+
+    /* ── CARD ── */
+    .calendar-card {
+        background: var(--card-bg, #fff);
+        border-radius: 14px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        padding: 16px 14px 12px;
+        border: 1px solid var(--border-color, #e2e8f0);
+        width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+    }
+    .calendar-body {
+        min-height: 198px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+    .month-title {
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        color: var(--text-primary, #1e293b);
+        margin-bottom: 10px;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+    }
+
+    /* ── DAY-HEADER ROW ── */
+    .days-header {
+        display: grid;
+        grid-template-columns: repeat(7, 30px);
+        gap: 3px;
+        justify-content: center;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--border-color, #f1f5f9);
+        margin-bottom: 4px;
+    }
+    .days-header span {
+        width: 30px;
+        text-align: center;
+        font-size: 9px;
+        font-weight: 700;
+        color: #94a3b8;
+        line-height: 1;
+    }
+    .days-header span:first-child { color: #f87171; } /* Dom */
+
+    /* ── WEEK ROWS ── */
+    .week-row {
+        display: grid;
+        grid-template-columns: repeat(7, 30px);
+        gap: 3px;
+        justify-content: center;
+        margin-bottom: 3px;
+    }
+
+    /* ── DAY CELLS ── fixed 30×30px, never shrinks ── */
+    .day-cell {
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11.5px;
+        font-weight: 500;
+        color: var(--text-secondary, #475569);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background 0.15s;
+        box-sizing: border-box;
+    }
+    .day-cell:not(.day-empty):not([class*="bg-"]):hover {
+        background: var(--hover-bg, #f1f5f9);
+    }
+    .day-cell.is-today-marker {
+        outline: 2px solid #10b981;
+        outline-offset: -1px;
+        font-weight: 700;
+        color: #059669;
+    }
+    .day-empty {
+        background: transparent !important;
+        color: transparent !important;
+        pointer-events: none;
+        cursor: default;
+    }
+    .day-weekend { color: #94a3b8; }
+    .day-sunday  { color: #f87171 !important; }
+
+    /* ── STATUS / CATEGORY COLORS ── */
+    .bg-pendente { background-color: #f87171 !important; color: #fff !important; font-weight: 700; }
+    .bg-ferias   { background-color: #34d399 !important; color: #fff !important; font-weight: 700; }
+    .bg-banco    { background-color: #60a5fa !important; color: #fff !important; font-weight: 700; }
+    .bg-folga    { background-color: #818cf8 !important; color: #fff !important; font-weight: 700; }
+    .bg-medica   { background-color: #fbbf24 !important; color: #fff !important; font-weight: 700; }
+    .bg-feriado  { background-color: #f43f5e !important; color: #fff !important; font-weight: 700; }
+
+    /* ── FILTERS SIDEBAR ── */
+    .filters-sidebar {
+        background: var(--card-bg, #fff);
+        border-radius: 14px;
+        padding: 1.5rem;
+        border: 1px solid var(--border-color, #e2e8f0);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .filter-group { margin-bottom: 1.5rem; }
+    .filter-group-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        margin-bottom: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .filter-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 13px;
+        color: var(--text-primary, #334155);
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+    }
+    .color-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        flex-shrink: 0;
+    }
+</style>
+
+<div class="row">
+    <div class="col-lg-9 col-xl-10">
+        <div class="row align-items-center justify-content-between mb-4 g-3">
+            <div class="col-12 col-md-auto d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+                    <i class="bi bi-calendar3"></i>
+                </div>
+                <div>
+                    <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 22px;">Minhas ausências</h1>
+                    <p class="text-muted mb-0" style="font-size: 13px;">Consulte suas solicitações e calendário anual.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-auto d-flex align-items-center justify-content-between justify-content-md-end gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <a href="?year={{ prev_year }}" class="btn btn-light rounded-circle px-2 py-1"><i class="bi bi-chevron-left"></i></a>
+                    <h5 class="mb-0 fw-bold">{{ year }}</h5>
+                    <a href="?year={{ next_year }}" class="btn btn-light rounded-circle px-2 py-1"><i class="bi bi-chevron-right"></i></a>
+                </div>
+                <a href="{% url 'leave_create' %}" onclick="openLeaveModal(event, this.href)" class="btn btn-dark d-flex align-items-center gap-2 px-4 shadow-sm" style="border-radius: 12px; font-weight: 600; background: #0f172a; border: none;">
+                    <i class="bi bi-plus-lg"></i> Nova Solicitação
+                </a>
+            </div>
+        </div>
+
+        <div class="calendar-grid">
+            {% for month in months %}
+            <div class="calendar-card">
+                <div class="month-title">{{ month.name }}</div>
+                <div class="days-header">
+                    <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+                </div>
+                <div class="calendar-body">
+                    {% for week in month.weeks %}
+                    <div class="week-row">
+                        {% for day in week %}
+                            {% if day.is_current_month %}
+                                <div class="day-cell {{ day.color_class }}{% if day.is_sunday %} day-sunday{% elif day.is_weekend %} day-weekend{% endif %}{% if day.is_today %} is-today-marker{% endif %}"
+                                     data-category="{{ day.category }}"
+                                     data-status="{{ day.status }}"
+                                     {% if day.hover_text %}
+                                     data-bs-toggle="tooltip" title="{{ day.hover_text }}"
+                                     {% endif %}
+                                     style="cursor: pointer;"
+                                     onclick="openLeaveModalForDate(event, '{{ day.date|date:'Y-m-d' }}')">
+                                    {{ day.day }}
+                                </div>
+                            {% else %}
+                                <div class="day-cell day-empty"></div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-xl-2 mt-4 mt-lg-0">
+        <div class="filters-sidebar sticky-top" style="top: 2rem;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0">Filtros</h6>
+                <i class="bi bi-filter" style="font-size: 18px;"></i>
+            </div>
+            
+            <div class="filter-group">
+                <div class="filter-group-title">ESTADO</div>
+                <label class="filter-item">
+                    <input type="checkbox" class="form-check-input filter-cb" data-filter-type="status" value="pendente" checked>
+                    <span class="color-dot bg-pendente"></span>
+                    Pendente
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox" class="form-check-input filter-cb" data-filter-type="status" value="confirmado" checked>
+                    <span class="color-dot bg-ferias"></span>
+                    Confirmados
+                </label>
+            </div>
+
+            <div class="filter-group">
+                <div class="filter-group-title">
+                    TIPO 
+                    <a href="#" class="text-primary text-decoration-none" style="font-size: 10px; text-transform: none;" onclick="selectAllTypes(event)">Desvincular todos</a>
+                </div>
+                <label class="filter-item">
+                    <input type="checkbox" class="form-check-input filter-cb" data-filter-type="category" value="ferias" checked>
+                    <span class="color-dot bg-ferias"></span>
+                    Férias
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox" class="form-check-input filter-cb" data-filter-type="category" value="banco" checked>
+                    <span class="color-dot bg-banco"></span>
+                    Banco de horas
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox" class="form-check-input filter-cb" data-filter-type="category" value="folga" checked>
+                    <span class="color-dot bg-folga"></span>
+                    Folga Plantão
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox" class="form-check-input filter-cb" data-filter-type="category" value="medica" checked>
+                    <span class="color-dot bg-medica"></span>
+                    Licença médica
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox" class="form-check-input filter-cb" data-filter-type="category" value="feriado" checked>
+                    <span class="color-dot bg-feriado"></span>
+                    Feriados
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const checkboxes = document.querySelectorAll('.filter-cb');
+        checkboxes.forEach(cb => cb.addEventListener('change', applyFilters));
+
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+
+    function applyFilters() {
+        const activeStatuses = Array.from(document.querySelectorAll('.filter-cb[data-filter-type="status"]:checked')).map(cb => cb.value);
+        const activeCategories = Array.from(document.querySelectorAll('.filter-cb[data-filter-type="category"]:checked')).map(cb => cb.value);
+
+        document.querySelectorAll('.day-cell[data-category]').forEach(cell => {
+            const category = cell.getAttribute('data-category');
+            const status = cell.getAttribute('data-status');
+            
+            // Default: It should be active if its status AND category are checked.
+            // But holidays don't have pending/confirmed status typically. So if it's a holiday, just check category.
+            let show = false;
+            
+            if (category === 'feriado') {
+                show = activeCategories.includes('feriado');
+            } else if (category && category !== 'normal') {
+                // Must have both category and status checked
+                const statusType = (status === 'PENDING' || status === 'SUPERVISOR_APPROVED') ? 'pendente' : 'confirmado';
+                show = activeCategories.includes(category) && activeStatuses.includes(statusType);
+            } else {
+                // Normal days have no visual state to toggle off, they just stay normal text.
+                show = true; 
+            }
+
+            // By "hiding", we just remove the colored background class, reverting it to a normal day.
+            // Or if you want to fade it out, you can lower opacity. The screenshot implies the colored badges disappear.
+            if (!show && category !== 'normal') {
+                // To safely toggle without losing the original class, we store it.
+                if (!cell.hasAttribute('data-original-class')) {
+                    cell.setAttribute('data-original-class', cell.className);
+                }
+                cell.className = 'day-cell'; // reset to base
+            } else if (category !== 'normal') {
+                if (cell.hasAttribute('data-original-class')) {
+                    cell.className = cell.getAttribute('data-original-class');
+                }
+            }
+        });
+    }
+
+    function selectAllTypes(e) {
+        e.preventDefault();
+        const typesCb = document.querySelectorAll('.filter-cb[data-filter-type="category"]');
+        const allChecked = Array.from(typesCb).every(cb => cb.checked);
+        typesCb.forEach(cb => cb.checked = !allChecked);
+        applyFilters();
+        e.target.innerText = allChecked ? "Selecionar todos" : "Desvincular todos";
+    }
+
+    let leaveModalObj = null;
+
+    function openLeaveModalForDate(event, dateStr) {
+        const url = "{% url 'leave_create' %}?date=" + dateStr;
+        openLeaveModal(event, url);
+    }
+
+    function openLeaveModal(event, url) {
+        event.preventDefault();
+        
+        const modalEl = document.getElementById('leaveModal');
+        if (!leaveModalObj) {
+            document.body.appendChild(modalEl);
+            leaveModalObj = new bootstrap.Modal(modalEl);
+        }
+        
+        const modalBody = document.getElementById('leaveModalBody');
+        const modalLabel = document.getElementById('leaveModalLabel');
+        
+        modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>';
+        leaveModalObj.show();
+
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                const formElement = doc.querySelector('.card-body form');
+                const titleEl = doc.querySelector('.page-title');
+                
+                if (titleEl) modalLabel.innerHTML = titleEl.innerHTML;
+                
+                if (formElement) {
+                    modalBody.innerHTML = '';
+                    modalBody.appendChild(formElement);
+                    setupLeaveModalForm(modalBody, url);
+                    
+                    if (typeof TomSelect !== 'undefined' && modalBody.querySelector('#id_leave_type')) {
+                        new TomSelect('#id_leave_type', {
+                            create: false,
+                            sortField: {field: "text", direction: "asc"},
+                            placeholder: 'Buscar ou Selecione a licença...'
+                        });
+                    }
+                } else {
+                    modalBody.innerHTML = '<div class="alert alert-danger">Erro ao carregar o formulário.</div>';
+                }
+            })
+            .catch(err => {
+                modalBody.innerHTML = '<div class="alert alert-danger">Erro de rede. Tente novamente.</div>';
+            });
+    }
+
+    function setupLeaveModalForm(modalBody, url) {
+        const cancelBtn = modalBody.querySelector('.btn-outline-secondary');
+        if (cancelBtn) {
+            cancelBtn.removeAttribute('href');
+            cancelBtn.setAttribute('data-bs-dismiss', 'modal');
+        }
+        
+        const form = modalBody.querySelector('form');
+        if (form) {
+            
+            // Re-bind smart date auto calculation
+            const dataElement = modalBody.querySelector('#leave-type-data');
+            let defaultDaysMap = {};
+            if (dataElement) {
+                try { 
+                    defaultDaysMap = JSON.parse(dataElement.getAttribute('data-json') || '{}');
+                } catch(e) {}
+            }
+            
+            function autoCalcDate() {
+                const typeInput = modalBody.querySelector('#id_leave_type');
+                const fromInput = modalBody.querySelector('#id_from_date');
+                const toInput = modalBody.querySelector('#id_to_date');
+                
+                if (typeInput && fromInput && toInput && typeInput.value && fromInput.value) {
+                    const typeId = typeInput.value;
+                    const days = defaultDaysMap[typeId];
+                    if (days !== undefined && days !== null) {
+                        const daysToAdd = days - 1;
+                        if (daysToAdd >= 0) {
+                            const [y, m, d] = fromInput.value.split('-');
+                            const baseDate = new Date(y, m - 1, d);
+                            baseDate.setDate(baseDate.getDate() + daysToAdd);
+                            
+                            const formatNum = (num) => String(num).padStart(2, '0');
+                            toInput.value = `${baseDate.getFullYear()}-${formatNum(baseDate.getMonth()+1)}-${formatNum(baseDate.getDate())}`;
+                        }
+                    }
+                }
+            }
+            
+            // We listen directly on form for changes to from_date and leave_type
+            form.addEventListener('change', function(e) {
+                if (e.target.id === 'id_leave_type' || e.target.id === 'id_from_date') {
+                    autoCalcDate();
+                }
+            });
+            // Initial calc
+            autoCalcDate();
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enviando...';
+                
+                fetch(url, {
+                    method: 'POST',
+                    body: new FormData(form)
+                })
+                .then(res => {
+                    if (res.redirected) {
+                        leaveModalObj.hide();
+                        window.location.reload();
+                    } else {
+                        return res.text();
+                    }
+                })
+                .then(html => {
+                    if (html) {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const formElement = doc.querySelector('.card-body form');
+                        if (formElement) {
+                            modalBody.innerHTML = '';
+                            modalBody.appendChild(formElement);
+                            setupLeaveModalForm(modalBody, url);
+                            
+                            if (typeof TomSelect !== 'undefined' && modalBody.querySelector('#id_leave_type')) {
+                                new TomSelect('#id_leave_type', {
+                                    create: false,
+                                    sortField: {field: "text", direction: "asc"},
+                                    placeholder: 'Buscar ou Selecione a licença...'
+                                });
+                            }
+                        }
+                    }
+                })
+                .catch(err => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                    alert('Erro ao enviar solicitação.');
+                });
+            });
+        }
+    }
+</script>
+
+
+<div class="modal fade" id="leaveModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+      <div class="modal-header border-0 pb-0" style="padding: 24px 28px 0;">
+        <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #ecfdf5; border-radius: 12px; color: #10b981; font-size: 18px;">
+                <i class="bi bi-calendar-event"></i>
+            </div>
+            <h5 class="modal-title fw-bold" id="leaveModalLabel" style="color: #0f172a; font-size: 18px; margin: 0;">Nova Solicitação</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="leaveModalBody" style="padding: 24px 28px;">
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Saldos de Licenca{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+            <i class="bi bi-calendar2-check-fill"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 22px;">Saldos de Licenças/Férias</h1>
+            <p class="text-muted mb-0" style="font-size: 13px;">{{ entitlements.count }} concessões registradas</p>
+        </div>
+    </div>
+    {% if request.user.is_admin %}
+    <a href="{% url 'leave_entitlement_create' %}" class="btn btn-dark d-flex align-items-center gap-2 px-4 shadow-sm" style="border-radius: 12px; font-weight: 600; background: #0f172a; border: none;">
+        <i class="bi bi-plus-lg"></i> Novo Saldo
+    </a>
+    {% endif %}
+</div>
+
+<div class="card" style="border-radius: 16px; border: none; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); overflow: hidden;">
+    <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+            <thead style="background: #f8fafc;">
+                <tr>
+                    <th style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">FUNCIONÁRIO</th>
+                    <th style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">TIPO DE LICENÇA</th>
+                    <th style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">PERÍODO</th>
+                    <th style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">USO / SALDO TOTAL</th>
+                    {% if request.user.is_admin %}<th class="text-end" style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase; padding: 16px 24px; border-bottom: 2px solid #e2e8f0;">AÇÕES</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for ent in entitlements %}
+                <tr>
+                    <td style="font-weight: 600; color: #334155; padding: 16px 24px;">{{ ent.employee.full_name }}</td>
+                    <td style="color: #64748b; font-size: 13px; font-weight: 500; padding: 16px 24px;">
+                        <span style="background: #f0fdf4; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">{{ ent.leave_type.name }}</span>
+                    </td>
+                    <td style="color: #64748b; font-size: 13px; font-weight: 500; padding: 16px 24px;">{{ ent.from_date|date:"d/m/Y" }} - {{ ent.to_date|date:"d/m/Y" }}</td>
+                    <td style="color: #64748b; font-size: 13px; font-weight: 500; padding: 16px 24px;">
+                        <span class="text-danger fw-bold">{{ ent.days_used }}</span> usados de <span class="fw-bold">{{ ent.no_of_days }}</span> totais 
+                        (Saldo real: <span class="text-success fw-bold">{{ ent.days_remaining }}</span>)
+                    </td>
+                    {% if request.user.is_admin %}
+                    <td class="text-end" style="padding: 16px 24px;">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'leave_entitlement_edit' ent.pk %}" class="btn btn-sm btn-light text-primary border-0 shadow-sm" style="border-radius: 8px; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; background: #fff;" title="Editar">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a href="{% url 'leave_entitlement_delete' ent.pk %}" class="btn btn-sm btn-light text-danger border-0 shadow-sm" style="border-radius: 8px; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; background: #fff;" onclick="return confirm('Confirmar remoção de saldo?')" title="Remover">
+                                <i class="bi bi-trash3-fill"></i>
+                            </a>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5" style="color:#94a3b8;">
+                        <i class="bi bi-calendar2-check mb-2 d-block" style="font-size: 24px;"></i>
+                        Nenhum saldo encontrado.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

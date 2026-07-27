@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}Salvar Registro{% endblock %}
+{% block content %}
+<div class="mb-4">
+    <h1 class="fw-bold" style="color: #1e293b;"><i class="bi bi-journal-text text-success"></i> Formulário</h1>
+</div>
+<div class="card shadow-sm border-0" style="border-radius: 16px; max-width: 600px;">
+    <div class="card-body p-4">
+        <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <div class="mt-4 d-flex justify-content-end gap-2">
+                <a href="javascript:history.back()" class="btn btn-light rounded-pill px-4">Cancelar</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-4" style="background: #10b981; border: none;"><i class="bi bi-check-lg"></i> Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

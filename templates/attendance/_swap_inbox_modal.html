@@ -1,0 +1,128 @@
+
+<div class="modal fade" id="swapModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+            <div class="modal-header" style="border-bottom: 1px solid #e2e8f0; padding: 24px;">
+                <h5 class="modal-title" style="font-weight: 700; color: #1e1b4b; display: flex; align-items: center; gap: 12px;">
+                    <i class="bi bi-arrow-left-right text-success"></i> Nova Troca de Turno
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="swapRequestForm">
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight: 600; color: #475569; font-size: 14px;">Data da Troca</label>
+                        <input type="date" id="swapDate" class="form-control" style="border-radius: 12px; padding: 12px;" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight: 600; color: #475569; font-size: 14px;">Colega de Trabalho</label>
+                        <select id="swapTarget" class="form-select no-ts" style="border-radius: 12px; padding: 12px;" required>
+                            <option value="">Selecione um colega...</option>
+                            {% for col in colleagues %}
+                                <option value="{{ col.id }}">{{ col.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text" style="font-size: 12px; color: #94a3b8; margin-top: 8px;">
+                            <i class="bi bi-info-circle"></i> Apenas colegas do mesmo setor podem trocar turnos.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label" style="font-weight: 600; color: #475569; font-size: 14px;">Motivo (Opcional)</label>
+                        <textarea id="swapReason" class="form-control" rows="3" style="border-radius: 12px; padding: 12px;" placeholder="Qual o motivo da troca?"></textarea>
+                    </div>
+                    
+                    <div id="swapAlert" class="alert d-none" role="alert" style="border-radius: 12px; font-size: 14px;"></div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #e2e8f0; padding: 16px 24px;">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 12px; font-weight: 600; padding: 10px 20px;">Cancelar</button>
+                <button type="button" id="btnSubmitSwap" class="btn btn-success" style="border-radius: 12px; font-weight: 600; padding: 10px 24px; background: #10b981; border: none;">
+                    <i class="bi bi-send"></i> Enviar Solicitação
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Mover modal para o body para evitar bugs de z-index do fundo escuro (backdrop)
+    const modalEl = document.getElementById('swapModal');
+    if (modalEl) {
+        document.body.appendChild(modalEl);
+        
+        // Inicializar TomSelect APÓS o Modal abrir completamente (previne bugs de renderização oculta)
+        modalEl.addEventListener('shown.bs.modal', function () {
+            const targetEl = document.getElementById('swapTarget');
+            if (typeof TomSelect !== 'undefined' && targetEl && !targetEl.classList.contains('tomselected')) {
+                new TomSelect(targetEl, {
+                    placeholder: 'Selecione um colega...',
+                    plugins: ['dropdown_input']
+                });
+            }
+        });
+    }
+    const btnSubmit = document.getElementById('btnSubmitSwap');
+    const form = document.getElementById('swapRequestForm');
+    const alertBox = document.getElementById('swapAlert');
+    
+    if(btnSubmit) {
+        btnSubmit.addEventListener('click', function() {
+            const dateVal = document.getElementById('swapDate').value;
+            const targetVal = document.getElementById('swapTarget').value;
+            const reasonVal = document.getElementById('swapReason').value;
+            
+            if(!dateVal || !targetVal) {
+                alertBox.className = 'alert alert-warning';
+                alertBox.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Preencha a data e selecione o colega.';
+                alertBox.classList.remove('d-none');
+                return;
+            }
+            
+            btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...';
+            btnSubmit.disabled = true;
+            
+            fetch("{% url 'swap_request_create' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    date: dateVal,
+                    target_employee_id: targetVal,
+                    reason: reasonVal
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btnSubmit.innerHTML = '<i class="bi bi-send"></i> Enviar Solicitação';
+                btnSubmit.disabled = false;
+                
+                if(data.success) {
+                    alertBox.className = 'alert alert-success';
+                    alertBox.innerHTML = '<i class="bi bi-check-circle"></i> ' + data.message;
+                    alertBox.classList.remove('d-none');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    alertBox.className = 'alert alert-danger';
+                    alertBox.innerHTML = '<i class="bi bi-x-circle"></i> ' + data.message;
+                    alertBox.classList.remove('d-none');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                btnSubmit.innerHTML = '<i class="bi bi-send"></i> Enviar Solicitação';
+                btnSubmit.disabled = false;
+                alertBox.className = 'alert alert-danger';
+                alertBox.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Ocorreu um erro ao enviar a solicitação.';
+                alertBox.classList.remove('d-none');
+            });
+        });
+    }
+});
+</script>

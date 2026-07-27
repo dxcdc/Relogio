@@ -1,0 +1,1252 @@
+{% extends "base.html" %}
+{% load recruitment_tags %}
+{% block title %}Pipeline de Recrutamento{% endblock %}
+{% block breadcrumb %}<span style="color:var(--text-secondary);font-size:13px;">Recrutamento / Pipeline</span>{% endblock %}
+
+{% block content %}
+<style>
+/* ============================================================
+   PIPELINE – Identidade Visual Premium (Glassmorphism & Gradients)
+   ============================================================ */
+
+/* Hero banner no topo */
+.pipeline-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #064e3b 100%);
+    border-radius: 20px;
+    padding: 20px 28px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.25);
+    flex-shrink: 0;
+}
+.pipeline-hero::before {
+    content:'';
+    position:absolute; inset:0;
+    background: radial-gradient(ellipse at 80% 50%, rgba(16,185,129,0.2) 0%, transparent 65%);
+    pointer-events:none;
+}
+.pipeline-hero::after {
+    content:'';
+    position:absolute;
+    top:-60px; right:-60px;
+    width:280px; height:280px;
+    border-radius:50%;
+    background: rgba(16,185,129,0.1);
+    pointer-events:none;
+    filter: blur(20px);
+}
+
+/* Stats row */
+.stat-chip {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 16px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    min-width: 120px;
+    transition: all 0.3s ease;
+}
+.stat-chip:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+.stat-chip-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+}
+.stat-chip-val   { font-size: 22px; font-weight: 900; color: #fff; line-height: 1; }
+.stat-chip-label { font-size: 11px; color: rgba(255,255,255,0.7); font-weight: 600; margin-top: 2px; }
+
+/* Actions row (filter + buttons) */
+.pipeline-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+.pipe-select {
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.8);
+    border-radius: 12px;
+    font-size: 13.5px; font-weight: 600;
+    padding: 10px 16px;
+    color: #0f172a;
+    min-width: 240px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    transition: all 0.2s ease;
+}
+.pipe-select:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 4px rgba(16,185,129,0.15); }
+
+.btn-vagas {
+    background: #202a44;
+    border: none;
+    border-radius: 12px;
+    font-size: 13.5px; font-weight: 700;
+    padding: 10px 20px; color: #fff;
+    display: flex; align-items: center; gap: 8px;
+    text-decoration: none;
+    box-shadow: 0 6px 16px rgba(32,42,68,0.3);
+    transition: all 0.2s ease;
+}
+.btn-vagas:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(32,42,68,0.4); color: #fff; background: #2d3a5e; }
+
+.btn-novo {
+    background: #202a44;
+    border: none;
+    border-radius: 12px;
+    font-size: 13.5px; font-weight: 800;
+    padding: 11px 24px; color: #fff;
+    display: flex; align-items: center; gap: 8px;
+    text-decoration: none;
+    box-shadow: 0 6px 16px rgba(32,42,68,0.3);
+    transition: all 0.2s ease;
+}
+.btn-novo:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(32,42,68,0.4); color: #fff; background: #2d3a5e; }
+
+/* ---- LAYOUT FULL-HEIGHT para o Pipeline ---- */
+/* BLOQUEIA o scroll vertical da página — o board preenche toda a tela */
+html, body {
+    height: 100vh !important;
+    overflow: hidden !important;
+}
+.app-wrapper {
+    height: 100vh !important;
+    overflow: hidden !important;
+}
+.main-content {
+    height: 100vh !important;
+    overflow: hidden !important;
+}
+.page-content {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 16px 16px 0 !important;
+}
+
+/* Hero e actions: tamanho natural sem shrink */
+.pipeline-hero    { flex-shrink: 0; }
+.pipeline-actions { flex-shrink: 0; }
+
+/* Board ocupa todo o espaço restante */
+.board-outer {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+.board-inner {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    padding: 4px 0;
+    height: 100%;
+    align-items: stretch;
+}
+
+
+/* Stage column — flex para caber todas as 7 na tela */
+.stage-col  { flex: 1 1 0; min-width: 120px; height: 100%; }
+.stage-box  {
+    border-radius: 16px;
+    height: 100%;
+    display: flex; flex-direction: column;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05);
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Glassmorphism subtle tints for columns */
+.s-screening        { background: linear-gradient(160deg, rgba(241,245,249,0.5) 0%, rgba(226,232,240,0.4) 100%); }
+.s-interview        { background: linear-gradient(160deg, rgba(236,253,245,0.5) 0%, rgba(209,250,229,0.4) 100%); }
+.s-psych_test       { background: linear-gradient(160deg, rgba(239,246,255,0.5) 0%, rgba(219,234,254,0.4) 100%); }
+.s-practical_test   { background: linear-gradient(160deg, rgba(220,252,231,0.5) 0%, rgba(187,247,208,0.4) 100%); }
+.s-probation_45     { background: linear-gradient(160deg, rgba(254,252,232,0.5) 0%, rgba(254,240,138,0.4) 100%); }
+.s-probation_90     { background: linear-gradient(160deg, rgba(255,237,213,0.5) 0%, rgba(253,186,116,0.4) 100%); }
+.s-hired            { background: linear-gradient(160deg, rgba(226,232,240,0.5) 0%, rgba(203,213,225,0.4) 100%); }
+
+/* Column header — compacto */
+.stage-header {
+    padding: 12px 12px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.3);
+}
+.stage-icon {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0; color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.s-screening         .stage-icon { background: linear-gradient(135deg,#334155,#0f172a); }
+.s-interview         .stage-icon { background: linear-gradient(135deg,#10b981,#059669); }
+.s-psych_test        .stage-icon { background: linear-gradient(135deg,#3b82f6,#1d4ed8); }
+.s-practical_test    .stage-icon { background: linear-gradient(135deg,#059669,#047857); }
+.s-probation_45      .stage-icon { background: linear-gradient(135deg,#f59e0b,#b45309); }
+.s-probation_90      .stage-icon { background: linear-gradient(135deg,#ea580c,#c2410c); }
+.s-hired             .stage-icon { background: linear-gradient(135deg,#0f172a,#020617); }
+
+.stage-name  { font-weight: 800; color: #0f172a; font-size: 12px; line-height: 1.2; }
+.stage-sub   { font-size: 10px; color: #64748b; margin-top: 1px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stage-count {
+    min-width: 24px; height: 24px; border-radius: 8px;
+    font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(255,255,255,0.8);
+    background: rgba(255,255,255,0.5);
+    color: #0f172a;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    flex-shrink: 0;
+}
+
+/* Cards list */
+.cards-list {
+    padding: 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148,163,184,0.4) transparent;
+}
+.cards-list::-webkit-scrollbar { width: 4px; }
+.cards-list::-webkit-scrollbar-track { background: transparent; }
+.cards-list::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.4); border-radius: 4px; }
+
+/* Candidate card */
+.cand-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    padding: 16px;
+    cursor: grab;
+    user-select: none;
+    box-shadow: 0 4px 16px rgba(31, 38, 135, 0.04);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+    position: relative;
+}
+.cand-card:hover, .cand-card:focus-within {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 32px rgba(15,23,42,0.12);
+    border-color: #10b981;
+    z-index: 50;
+}
+.cand-card.dragging {
+    opacity: 0.6; cursor: grabbing;
+    transform: rotate(2deg) scale(0.95);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+/* Left accent bar on card */
+.cand-card::before {
+    content:'';
+    position: absolute;
+    left: -1px; top: 12px; bottom: 12px;
+    width: 4px; border-radius: 0 4px 4px 0;
+    background: linear-gradient(to bottom, #10b981, #059669);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.cand-card:hover::before { opacity: 1; }
+
+/* Avatar */
+.cand-avatar {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+/* Navy shades for avatars based on letter */
+.av-A,.av-B { background: linear-gradient(135deg,#1e293b,#0f172a); }
+.av-C,.av-D { background: linear-gradient(135deg,#10b981,#059669); }
+.av-E,.av-F { background: linear-gradient(135deg,#3b82f6,#1d4ed8); }
+.av-G,.av-H { background: linear-gradient(135deg,#059669,#047857); }
+.av-I,.av-J { background: linear-gradient(135deg,#0f172a,#020617); }
+.av-K,.av-L { background: linear-gradient(135deg,#2563eb,#1d4ed8); }
+.av-M,.av-N { background: linear-gradient(135deg,#10b981,#059669); }
+.av-O,.av-P { background: linear-gradient(135deg,#1e293b,#0f172a); }
+.av-Q,.av-R { background: linear-gradient(135deg,#3b82f6,#10b981); }
+.av-S,.av-T { background: linear-gradient(135deg,#0f172a,#059669); }
+.av-U,.av-V { background: linear-gradient(135deg,#0ea5e9,#0284c7); }
+.av-W,.av-X { background: linear-gradient(135deg,#64748b,#475569); }
+.av-Y,.av-Z { background: linear-gradient(135deg,#10b981,#0f172a); }
+
+/* Meta badges */
+.meta-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10.5px; font-weight: 700;
+    padding: 4px 10px; border-radius: 8px;
+    background: #f1f5f9; color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+.meta-badge.iv { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
+
+/* Status pills */
+.spill {
+    font-size: 10px; font-weight: 800;
+    padding: 3px 10px; border-radius: 20px;
+    letter-spacing: 0.5px; text-transform: uppercase;
+}
+.spill-ok  { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+.spill-no  { background: #fee2e2; color: #b91c1c; border: 1px solid #fecdd3; }
+.spill-in  { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
+
+/* Drop highlight */
+.stage-box.drag-over {
+    background: rgba(255, 255, 255, 0.7) !important;
+    box-shadow: 0 0 0 4px rgba(16,185,129,0.3), 0 12px 40px rgba(0,0,0,0.1) !important;
+    border-color: #10b981 !important;
+    transform: scale(1.01);
+}
+
+/* Empty slot */
+.empty-slot {
+    border: 2px dashed rgba(148, 163, 184, 0.4);
+    border-radius: 12px;
+    height: 90px;
+    display: flex; align-items: center; justify-content: center;
+    color: #94a3b8; font-size: 13px; font-weight: 600;
+    background: rgba(255,255,255,0.2);
+}
+</style>
+
+<!-- ===== HERO BANNER ===== -->
+<div class="pipeline-hero">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <!-- Title -->
+        <div class="d-flex align-items-center gap-3" style="position:relative;z-index:1;">
+            <div style="width:52px;height:52px;background:linear-gradient(135deg,#0dc02a,#0a9b21);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;box-shadow:0 6px 20px rgba(13,192,42,0.4);">
+                <i class="bi bi-kanban-fill"></i>
+            </div>
+            <div>
+                <h1 style="font-size:22px;font-weight:800;color:#fff;margin:0;letter-spacing:-0.3px;">Pipeline de Recrutamento</h1>
+                <p style="color:rgba(255,255,255,0.55);font-size:12.5px;margin:0;margin-top:2px;">Arraste os candidatos entre as etapas do processo seletivo</p>
+            </div>
+        </div>
+
+        <!-- Stats chips -->
+        <div class="d-flex gap-2 flex-wrap" style="position:relative;z-index:1;">
+            <div class="stat-chip">
+                <div class="stat-chip-icon" style="background: linear-gradient(135deg, #0dc02a, #0a9b21); color: #fff; box-shadow: 0 4px 10px rgba(13,192,42,0.3);"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <div class="stat-chip-val">{{ total_candidates }}</div>
+                    <div class="stat-chip-label">Total</div>
+                </div>
+            </div>
+            {% for stage_key, stage_name in stages %}{% with cnt=pipeline|get_item:stage_key|length %}{% if cnt > 0 %}
+            <div class="stat-chip">
+                <div class="stat-chip-icon" style="
+                    {% if stage_key == 'screening' %}background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; box-shadow: 0 4px 10px rgba(99,102,241,0.3);
+                    {% elif stage_key == 'interview' %}background: linear-gradient(135deg, #10b981, #059669); color: #fff; box-shadow: 0 4px 10px rgba(16,185,129,0.3);
+                    {% elif stage_key == 'psych_test' %}background: linear-gradient(135deg, #0ea5e9, #0284c7); color: #fff; box-shadow: 0 4px 10px rgba(14,165,233,0.3);
+                    {% elif stage_key == 'practical_test' %}background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: #fff; box-shadow: 0 4px 10px rgba(139,92,246,0.3);
+                    {% elif stage_key == 'probation_45' %}background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: 0 4px 10px rgba(245,158,11,0.3);
+                    {% elif stage_key == 'probation_90' %}background: linear-gradient(135deg, #f97316, #ea580c); color: #fff; box-shadow: 0 4px 10px rgba(249,115,22,0.3);
+                    {% elif stage_key == 'hired' %}background: linear-gradient(135deg, #ec4899, #db2777); color: #fff; box-shadow: 0 4px 10px rgba(236,72,153,0.3);{% endif %}">
+                    <i class="bi bi-{% if stage_key == 'screening' %}funnel-fill{% elif stage_key == 'interview' %}chat-quote-fill{% elif stage_key == 'psych_test' %}puzzle-fill{% elif stage_key == 'practical_test' %}tools{% elif stage_key == 'probation_45' %}clock-history{% elif stage_key == 'probation_90' %}stopwatch-fill{% elif stage_key == 'hired' %}patch-check-fill{% endif %}"></i>
+                </div>
+                <div>
+                    <div class="stat-chip-val">{{ cnt }}</div>
+                    <div class="stat-chip-label" style="max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ stage_name }}</div>
+                </div>
+            </div>
+            {% endif %}{% endwith %}{% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- ===== ACTIONS BAR ===== -->
+<div class="pipeline-actions">
+    <form method="GET" style="margin:0;">
+        <select name="job_opening" class="pipe-select" onchange="this.form.submit()">
+            <option value="">🗂️ Todas as Vagas</option>
+            {% for job in jobs %}
+            <option value="{{ job.id }}" {% if current_job_id == job.id %}selected{% endif %}>{{ job.title }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <a href="javascript:void(0)" onclick="openModalIframe('{% url 'job_list' %}?is_modal=1')" class="btn-vagas">
+        <i class="bi bi-briefcase"></i> Gerenciar Vagas
+    </a>
+
+    {% if request.user.is_admin or request.user.is_hr %}
+    <a href="javascript:void(0)" onclick="openModalIframe('{% url 'candidate_create' %}')" class="btn-novo">
+        <i class="bi bi-person-plus-fill"></i> Novo Candidato
+    </a>
+    {% endif %}
+</div>
+
+<!-- ===== KANBAN BOARD ===== -->
+<div class="board-outer">
+    <div class="board-inner">
+        {% for stage_key, stage_name in stages %}
+        <div class="stage-col">
+            <div class="stage-box s-{{ stage_key }}"
+                 data-stage="{{ stage_key }}"
+                 ondragover="allowDrop(event)"
+                 ondragenter="dragEnter(event)"
+                 ondragleave="dragLeave(event)"
+                 ondrop="drop(event,'{{ stage_key }}')">
+
+                <!-- Column Header -->
+                <div class="stage-header d-flex align-items-center gap-3">
+                    <div class="stage-icon">
+                        <i class="bi bi-{% if stage_key == 'screening' %}funnel-fill{% elif stage_key == 'interview' %}chat-quote-fill{% elif stage_key == 'psych_test' %}puzzle-fill{% elif stage_key == 'practical_test' %}tools{% elif stage_key == 'probation_45' %}clock-history{% elif stage_key == 'probation_90' %}stopwatch-fill{% elif stage_key == 'hired' %}patch-check-fill{% endif %}"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stage-name">{{ stage_name }}</div>
+                        <div class="stage-sub">
+                            {% if stage_key == 'screening' %}Triagem inicial
+                            {% elif stage_key == 'interview' %}Entrevistas
+                            {% elif stage_key == 'psych_test' %}Avaliação psicológica
+                            {% elif stage_key == 'practical_test' %}Avaliação técnica / prática
+                            {% elif stage_key == 'probation_45' %}Experiência inicial
+                            {% elif stage_key == 'probation_90' %}Experiência final
+                            {% elif stage_key == 'hired' %}Contratado efetivo{% endif %}
+                        </div>
+                    </div>
+                    <div class="stage-count">{{ pipeline|get_item:stage_key|length }}</div>
+                </div>
+
+                <!-- Cards -->
+                <div class="cards-list">
+                    {% for candidate in pipeline|get_item:stage_key %}
+                    <div class="cand-card"
+                         draggable="true"
+                         ondragstart="dragStart(event,'{{ candidate.id }}')"
+                         data-candidate-id="{{ candidate.id }}"
+                         data-candidate-name="{{ candidate.name|title }}"
+                         data-candidate-phone="{{ candidate.phone|default:'' }}"
+                         data-candidate-email="{{ candidate.email|default:''|escapejs }}"
+                         data-candidate-job="{{ candidate.job_opening.title|escapejs }}"
+                         data-candidate-stage="{{ stage_key }}">
+
+                        <!-- Avatar + Name + Menu -->
+                        <div class="d-flex align-items-start gap-2 mb-3">
+                            <div class="cand-avatar av-{{ candidate.name|slice:':1'|upper }}">
+                                {{ candidate.name|slice:":1"|upper }}
+                            </div>
+                            <div class="flex-grow-1" style="min-width:0;">
+                                <a href="{% url 'candidate_profile' candidate.pk %}"
+                                   style="display:block;font-weight:700;color:#1e293b;font-size:13.5px;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;"
+                                   title="{{ candidate.name }}">{{ candidate.name }}</a>
+                                <div style="font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                    <i class="bi bi-briefcase me-1" style="font-size:10px;"></i>{{ candidate.job_opening.title }}
+                                </div>
+                            </div>
+
+                            <!-- Actions dropdown -->
+                            <div class="dropdown flex-shrink-0">
+                                <button class="btn p-0" type="button" data-bs-toggle="dropdown"
+                                        style="border:none;background:transparent;color:#94a3b8;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:all 0.15s;"
+                                        onmouseover="this.style.background='#f1f5f9';this.style.color='#202a44'"
+                                        onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                                    <i class="bi bi-three-dots-vertical" style="font-size:13px;"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow" style="border-radius:12px;border:1px solid #e2e8f0;padding:6px;font-size:12px;min-width:158px;">
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="{% url 'candidate_profile' candidate.pk %}" style="border-radius:6px;">
+                                            <i class="bi bi-person-lines-fill" style="color:#202a44;"></i> Ver Perfil
+                                        </a>
+                                    </li>
+                                    {% if request.user.is_admin or request.user.is_hr %}
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="javascript:void(0)" onclick="openModalIframe('{% url 'candidate_edit' candidate.pk %}')" style="border-radius:6px;">
+                                            <i class="bi bi-pencil-square" style="color:#1e7abf;"></i> Editar
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider my-1"></li>
+                                    <li>
+                                        {% if stage_key == 'screening' %}
+                                            <button class="dropdown-item d-flex align-items-center gap-2 py-2" onclick="openInterviewModal('{{ candidate.id }}', '{{ candidate.name|escapejs }}', '{{ candidate.phone|default:''|escapejs }}', '{{ candidate.email|default:''|escapejs }}', 'screening', '{{ candidate.job_opening.title|escapejs }}', 'interview')" style="border-radius:6px;color:#0a7e19;">
+                                                <i class="bi bi-arrow-right-circle-fill"></i> Prosseguir Processo
+                                            </button>
+                                        {% elif stage_key == 'interview' %}
+                                            <button class="dropdown-item d-flex align-items-center gap-2 py-2" onclick="openInterviewModal('{{ candidate.id }}', '{{ candidate.name|escapejs }}', '{{ candidate.phone|default:''|escapejs }}', '{{ candidate.email|default:''|escapejs }}', 'interview', '{{ candidate.job_opening.title|escapejs }}', 'psych_test')" style="border-radius:6px;color:#0a7e19;">
+                                                <i class="bi bi-arrow-right-circle-fill"></i> Prosseguir Processo
+                                            </button>
+                                        {% elif stage_key == 'psych_test' %}
+                                            <button class="dropdown-item d-flex align-items-center gap-2 py-2" onclick="openInterviewModal('{{ candidate.id }}', '{{ candidate.name|escapejs }}', '{{ candidate.phone|default:''|escapejs }}', '{{ candidate.email|default:''|escapejs }}', 'psych_test', '{{ candidate.job_opening.title|escapejs }}', 'practical_test')" style="border-radius:6px;color:#0a7e19;">
+                                                <i class="bi bi-arrow-right-circle-fill"></i> Prosseguir Processo
+                                            </button>
+                                        {% elif stage_key == 'practical_test' %}
+                                            <button class="dropdown-item d-flex align-items-center gap-2 py-2" onclick="updateStatus('{{ candidate.id }}','probation_45','IN_PROGRESS')" style="border-radius:6px;color:#0a7e19;">
+                                                <i class="bi bi-arrow-right-circle-fill"></i> Prosseguir Processo
+                                            </button>
+                                        {% elif stage_key == 'probation_45' %}
+                                            <button class="dropdown-item d-flex align-items-center gap-2 py-2" onclick="updateStatus('{{ candidate.id }}','probation_90','IN_PROGRESS')" style="border-radius:6px;color:#0a7e19;">
+                                                <i class="bi bi-arrow-right-circle-fill"></i> Prosseguir Processo
+                                            </button>
+                                        {% elif stage_key == 'probation_90' %}
+                                            <button class="dropdown-item d-flex align-items-center gap-2 py-2" onclick="updateStatus('{{ candidate.id }}','hired','HIRED')" style="border-radius:6px;color:#0a7e19;">
+                                                <i class="bi bi-person-check-fill"></i> Contratar
+                                            </button>
+                                        {% endif %}
+                                    </li>
+                                    <li>
+                                        <button class="dropdown-item d-flex align-items-center gap-2 py-2" onclick="openRejectModal('{{ candidate.id }}','{{ stage_key }}')" style="border-radius:6px;color:#dc2626;">
+                                            <i class="bi bi-person-x-fill"></i> Reprovar
+                                        </button>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Badges + Status -->
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-1 flex-wrap">
+                                {% if candidate.interviews.exists %}
+                                <span class="meta-badge iv"><i class="bi bi-calendar-event"></i> {{ candidate.interviews.count }}</span>
+                                {% endif %}
+                                {% if candidate.resume %}
+                                <span class="meta-badge"><i class="bi bi-file-earmark-text"></i> CV</span>
+                                {% endif %}
+                                {% if stage_key == 'probation_45' or stage_key == 'probation_90' %}
+                                {% with days=candidate.stage_updated_at|days_since %}
+                                <span class="meta-badge"
+                                      style="background:{% if stage_key == 'probation_45' %}rgba(245,158,11,0.15);color:#b45309;border:1px solid rgba(245,158,11,0.3){% else %}rgba(239,68,68,0.15);color:#b91c1c;border:1px solid rgba(239,68,68,0.3){% endif %};font-weight:700;font-size:10px;">
+                                    <i class="bi bi-hourglass-split"></i>
+                                    Dia {{ days }}{% if stage_key == 'probation_45' %}/45{% else %}/90{% endif %}
+                                </span>
+                                {% endwith %}
+                                {% endif %}
+                            </div>
+                            <span class="spill {% if candidate.status == 'HIRED' %}spill-ok{% elif candidate.status == 'REJECTED' %}spill-no{% else %}spill-in{% endif %}">
+                                {% if candidate.status == 'HIRED' %}✓ Contratado{% elif candidate.status == 'REJECTED' %}✗ Reprovado{% else %}Em andamento{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-slot">
+                        <i class="bi bi-inbox" style="font-size:22px;opacity:0.35;display:block;margin-bottom:6px;"></i>
+                        Nenhum candidato
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+(function() {
+    function forceBoardHeight() {
+        var board = document.querySelector('.board-outer');
+        var pc   = document.querySelector('.page-content');
+        if (!board) return;
+
+        // Garante que page-content não tem padding-bottom mesmo que CSS !important falhe
+        if (pc) {
+            pc.style.setProperty('padding-bottom', '0', 'important');
+            pc.style.setProperty('overflow', 'hidden', 'important');
+            pc.style.setProperty('display', 'flex', 'important');
+            pc.style.setProperty('flex-direction', 'column', 'important');
+        }
+
+        // Reseta height para o browser calcular o flex
+        board.style.height = '';
+
+        // Espera o browser fazer o layout completo (150ms > 2 frames)
+        setTimeout(function() {
+            var rect = board.getBoundingClientRect();
+            var h = window.innerHeight - rect.top;
+            if (h > 100) board.style.height = h + 'px';
+        }, 150);
+    }
+
+    document.addEventListener('DOMContentLoaded', forceBoardHeight);
+    window.addEventListener('load', forceBoardHeight);
+    window.addEventListener('resize', function() { setTimeout(forceBoardHeight, 50); });
+    document.addEventListener('sidebarToggled', function() { setTimeout(forceBoardHeight, 310); });
+})();
+</script>
+
+<!-- ===== MODAL DE CONTATO - ENTREVISTA ===== -->
+<div class="modal fade" id="interviewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:20px;border:none;">
+
+      <!-- Header -->
+      <div class="modal-header" style="background:linear-gradient(135deg,#202a44,#0a2418);border:none;padding:24px 28px;border-top-left-radius:20px;border-top-right-radius:20px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:4px;">Candidato aprovado para</div>
+          <h5 class="modal-title" id="ivModalTitle" style="font-weight:800;color:#fff;font-size:18px;margin:0;">Entrevista</h5>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- Candidate info -->
+      <div style="padding:20px 28px 0;border-bottom:1px solid #f1f5f9;">
+        <div class="d-flex align-items-center gap-3 pb-16" style="padding-bottom:18px;">
+          <div id="ivModalAvatar" style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#0dc02a,#0a9b21);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0;"></div>
+          <div>
+            <div id="ivModalName" style="font-size:15px;font-weight:700;color:#1e293b;"></div>
+            <div id="ivModalPhone" style="font-size:12px;color:#94a3b8;margin-top:2px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="padding:20px 28px;">
+        <p style="font-size:12.5px;color:#64748b;margin-bottom:16px;">O que você gostaria de fazer agora?</p>
+
+        <!-- WhatsApp -->
+        <div style="margin-bottom:12px;">
+          <a id="ivWhatsappBtn" href="#" target="_blank"
+             style="display:flex;align-items:center;gap:12px;background:#25d366;color:#fff;border-radius:12px;padding:14px 18px;text-decoration:none;font-weight:700;font-size:13.5px;transition:all 0.2s;"
+             onmouseover="this.style.background='#1ebe5c';this.style.transform='translateY(-1px)';"
+             onmouseout="this.style.background='#25d366';this.style.transform='translateY(0)';"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Chamar no WhatsApp
+            <span id="ivNoPhone" style="display:none;font-size:11px;opacity:0.8;">(sem telefone)</span>
+          </a>
+        </div>
+
+        <!-- Agendar entrevista -->
+        <div style="background:#f8fafc;border-radius:14px;padding:16px;border:1.5px solid #e2e8f0;">
+          <div style="font-size:12px;font-weight:700;color:#202a44;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+            <i class="bi bi-calendar-plus" style="color:#0dc02a;"></i> Agendar evento na Agenda
+          </div>
+          <div class="d-flex gap-2 mb-3">
+            <div style="flex:1;">
+              <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px;">Data</label>
+              <input type="date" id="ivDate" class="form-control" style="border-radius:8px;font-size:13px;border:1.5px solid #dde3ef;">
+            </div>
+            <div style="flex:1;">
+              <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px;">Horário</label>
+              <input type="time" id="ivTime" class="form-control" style="border-radius:8px;font-size:13px;border:1.5px solid #dde3ef;" value="09:00">
+            </div>
+          </div>
+          <div class="d-flex gap-2 mb-3">
+            <div style="flex:1;">
+              <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px;">Localização Física / Espaço</label>
+              <select id="ivLocation" class="form-control" style="border-radius:8px;font-size:13px;border:1.5px solid #dde3ef;" onchange="toggleIvMeetingLink()">
+                <option value="">Selecione uma opção...</option>
+                {% for loc in locations %}
+                <option value="{{ loc.id }}" data-name="{{ loc.name|lower }}">{{ loc.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div style="flex:1;">
+              <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px;">Cidade</label>
+              <select id="ivCity" class="form-control" style="border-radius:8px;font-size:13px;border:1.5px solid #dde3ef;">
+                <option value="">Selecione uma opção...</option>
+                {% for city in cities %}
+                <option value="{{ city.id }}">{{ city.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div id="ivLinkContainer" style="display:none; margin-bottom:12px;">
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px;">Link da Reunião (URL)</label>
+            <input type="url" id="ivMeetingLink" class="form-control" placeholder="Ex: https://meet.google.com/..." style="border-radius:8px;font-size:13px;border:1.5px solid #dde3ef;">
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#1e293b;cursor:pointer;">
+              <input type="checkbox" id="ivSendEmail" checked style="width:16px;height:16px;accent-color:#0dc02a;">
+              Enviar convite por e-mail para o candidato
+            </label>
+          </div>
+          <button onclick="submitScheduleInterview()" id="ivScheduleBtn"
+                  style="width:100%;background:linear-gradient(135deg,#202a44,#0a2418);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;"
+                  onmouseover="this.style.background='linear-gradient(135deg,#0dc02a,#0a9b21)'"
+                  onmouseout="this.style.background='linear-gradient(135deg,#202a44,#0a2418)'">
+            <i class="bi bi-calendar-check me-2"></i>Confirmar e Agendar
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer" style="border-top:1px solid #f1f5f9;padding:14px 28px;">
+        <button type="button" id="ivJustProceedBtn" onclick="justProceedInterview()"
+                style="background:none;border:none;color:#94a3b8;font-size:12.5px;font-weight:600;cursor:pointer;padding:6px 12px;border-radius:8px;transition:color 0.2s;"
+                onmouseover="this.style.color='#475569'" onmouseout="this.style.color='#94a3b8'">
+          Apenas prosseguir sem contato →
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Reprovação -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius: 16px; border: none;">
+      <div class="modal-header" style="border-bottom: 1px solid #e2e8f0;">
+        <h5 class="modal-title" id="rejectModalLabel" style="font-weight: 700; color: #1e293b;">Motivo da Reprovação</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: #64748b;">Este motivo será registrado no histórico do candidato e enviado por e-mail automaticamente.</p>
+        <textarea id="rejectReason" class="form-control" rows="4" placeholder="Escreva aqui o feedback/motivo da reprovação..." style="border-radius: 10px; font-size: 13.5px;"></textarea>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid #e2e8f0;">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px; font-weight: 600;">Cancelar</button>
+        <button type="button" class="btn btn-danger" onclick="submitRejection(event)" style="border-radius: 10px; font-weight: 600;">Reprovar e Enviar E-mail</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL DE ONBOARDING - EFETIVAÇÃO ===== -->
+<div class="modal fade" id="onboardModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:480px;">
+    <div class="modal-content" style="border-radius:18px;border:none;box-shadow:0 25px 50px rgba(0,0,0,0.18);overflow:hidden;">
+
+      <!-- Header limpo sem emoji -->
+      <div style="background:#0f172a;padding:22px 24px 20px;display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#4ade80;margin-bottom:6px;">Efetivação de Colaborador</div>
+          <h5 id="obModalTitle" style="font-weight:800;color:#f8fafc;font-size:17px;margin:0;line-height:1.3;">Confirmar Efetivação?</h5>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" style="opacity:0.6;margin:0;padding:0;"></button>
+      </div>
+
+      <!-- FASE 1: Preview -->
+      <div id="onboardPreview" style="padding:24px;">
+
+        <!-- Card candidato -->
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 18px;background:#f8fafc;border-radius:14px;border:1px solid #e2e8f0;margin-bottom:18px;">
+          <div id="obPreviewAvatar" style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#16a34a,#0f766e);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;flex-shrink:0;"></div>
+          <div>
+            <div id="obPreviewName" style="font-size:14.5px;font-weight:700;color:#0f172a;margin-bottom:2px;"></div>
+            <div id="obPreviewJob" style="font-size:12px;color:#64748b;font-weight:500;"></div>
+          </div>
+          <div style="margin-left:auto;">
+            <span style="font-size:10.5px;font-weight:700;color:#16a34a;background:#dcfce7;padding:4px 10px;border-radius:20px;letter-spacing:0.5px;">CONTRATADO</span>
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div style="background:#fefce8;border:1px solid #fde68a;border-radius:12px;padding:14px 16px;margin-bottom:20px;display:flex;gap:10px;align-items:flex-start;">
+          <i class="bi bi-info-circle-fill" style="color:#d97706;font-size:15px;flex-shrink:0;margin-top:1px;"></i>
+          <p style="font-size:12.5px;color:#78350f;margin:0;line-height:1.6;">
+            Ao confirmar, o sistema criará automaticamente o <strong>cadastro de funcionário</strong> e um <strong>usuário de acesso</strong>. As credenciais serão enviadas ao colaborador por e-mail.
+          </p>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+          <button data-bs-dismiss="modal" style="flex:1;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:12px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+            Cancelar
+          </button>
+          <button id="obConfirmBtn" onclick="onboardConfirm()" style="flex:2;background:#16a34a;color:#fff;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
+            <i class="bi bi-person-check-fill"></i> Confirmar Efetivação
+          </button>
+        </div>
+      </div>
+
+      <!-- FASE 2: Loading -->
+      <div id="onboardLoading" style="display:none;padding:52px 24px;text-align:center;">
+        <div style="width:48px;height:48px;border:3px solid #dcfce7;border-top-color:#16a34a;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;"></div>
+        <p style="font-size:14px;font-weight:600;color:#0f172a;margin:0 0 4px;">Criando cadastro...</p>
+        <p style="font-size:12px;color:#94a3b8;margin:0;">Aguarde um instante</p>
+        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+      </div>
+
+      <!-- FASE 3: Sucesso -->
+      <div id="onboardSuccess" style="display:none;padding:24px;">
+
+        <!-- Cabeçalho sucesso -->
+        <div style="display:flex;align-items:center;gap:12px;padding:16px 18px;background:#f0fdf4;border-radius:14px;border:1px solid #bbf7d0;margin-bottom:20px;">
+          <div id="obAvatar" style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#16a34a,#0f766e);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;flex-shrink:0;"></div>
+          <div>
+            <div id="obName" style="font-size:14.5px;font-weight:700;color:#14532d;margin-bottom:2px;"></div>
+            <div style="font-size:11.5px;color:#16a34a;font-weight:600;display:flex;align-items:center;gap:5px;">
+              <i class="bi bi-check-circle-fill"></i> Cadastrado com sucesso
+            </div>
+          </div>
+        </div>
+
+        <!-- Credenciais -->
+        <div style="background:#0f172a;border-radius:14px;padding:18px 20px;margin-bottom:14px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#64748b;margin-bottom:14px;">Credenciais de Acesso</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <span style="font-size:11px;color:#94a3b8;font-weight:500;">Usuário</span>
+            <code id="obUsername" style="font-size:14px;font-weight:700;color:#f8fafc;background:#1e293b;padding:5px 12px;border-radius:8px;letter-spacing:0.3px;"></code>
+          </div>
+          <div style="height:1px;background:#1e293b;margin-bottom:12px;"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:11px;color:#94a3b8;font-weight:500;">Senha Provisória</span>
+            <code id="obPassword" style="font-size:14px;font-weight:700;color:#4ade80;background:#1e293b;padding:5px 12px;border-radius:8px;letter-spacing:0.5px;"></code>
+          </div>
+        </div>
+
+        <!-- Status email -->
+        <div id="obEmailStatus" style="display:none;align-items:center;gap:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12.5px;font-weight:600;color:#166534;">
+          <i class="bi bi-envelope-check-fill" style="font-size:14px;"></i>
+          E-mail enviado para <span id="obEmailAddr" style="font-style:italic;margin-left:3px;"></span>
+        </div>
+        <div id="obEmailFail" style="display:none;align-items:center;gap:8px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12.5px;font-weight:600;color:#9a3412;">
+          <i class="bi bi-envelope-x" style="font-size:14px;"></i> Não foi possível enviar o e-mail
+        </div>
+
+        <!-- Ações -->
+        <a id="obWhatsappBtn" href="#" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#25d366;color:#fff;border-radius:12px;padding:13px;text-decoration:none;font-weight:700;font-size:13.5px;margin-bottom:10px;transition:background 0.2s;" onmouseover="this.style.background='#1ebe5c'" onmouseout="this.style.background='#25d366'">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Enviar via WhatsApp
+        </a>
+        <button onclick="onboardClose()" style="width:100%;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:12px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+          Fechar
+        </button>
+      </div>
+
+      <!-- FASE 4: Erro -->
+      <div id="onboardError" style="display:none;padding:40px 24px;text-align:center;">
+        <div style="width:56px;height:56px;background:#fef2f2;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+          <i class="bi bi-exclamation-triangle-fill" style="font-size:26px;color:#ef4444;"></i>
+        </div>
+        <p style="font-size:14px;font-weight:700;color:#0f172a;margin:0 0 6px;">Ocorreu um erro</p>
+        <p id="onboardErrorMsg" style="font-size:13px;color:#64748b;margin:0 0 20px;"></p>
+        <button onclick="onboardClose()" class="btn btn-light" style="border-radius:10px;font-weight:600;padding:10px 24px;">Fechar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<script>
+let draggedId = null;
+let draggedStage = null;
+let currentRejectCandidateId = null;
+let currentRejectStage = null;
+let rejectModalInstance = null;
+let interviewModalInstance = null;
+let ivCurrentCandidateId = null;
+let ivCurrentName = null;
+let ivCurrentPhone = null;
+let ivCurrentEmail = null;
+let ivCurrentFromStage = null;
+let ivCurrentJobTitle = null;
+let ivCurrentTargetStage = null;
+
+let onboardModalInstance = null;
+let onboardCurrentCandidateId = null;
+let obCurrentUsername = null;
+let obCurrentPassword = null;
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Move modals to body to fix z-index stacking
+    ['rejectModal', 'interviewModal', 'onboardModal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) document.body.appendChild(el);
+    });
+    const rejectEl = document.getElementById('rejectModal');
+    if (rejectEl) rejectModalInstance = new bootstrap.Modal(rejectEl);
+    const ivEl = document.getElementById('interviewModal');
+    if (ivEl) interviewModalInstance = new bootstrap.Modal(ivEl);
+    const obEl = document.getElementById('onboardModal');
+    if (obEl) onboardModalInstance = new bootstrap.Modal(obEl, {backdrop:'static'});
+});
+
+function openInterviewModal(candidateId, name, phone, email, fromStage, jobTitle, targetStage) {
+    ivCurrentCandidateId = candidateId;
+    ivCurrentName = name;
+    ivCurrentPhone = phone;
+    ivCurrentEmail = email;
+    ivCurrentFromStage = fromStage;
+    ivCurrentJobTitle = jobTitle;
+    ivCurrentTargetStage = targetStage;
+
+    const stageNames = {
+        'interview': 'Entrevista',
+        'psych_test': 'Teste Psicológico',
+        'practical_test': 'Teste Prático'
+    };
+    document.getElementById('ivModalTitle').textContent = stageNames[targetStage] || 'Etapa';
+
+    // Populate modal
+    document.getElementById('ivModalAvatar').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('ivModalName').textContent = name;
+
+    // WhatsApp
+    const waBtn = document.getElementById('ivWhatsappBtn');
+    const noPhoneSpan = document.getElementById('ivNoPhone');
+    if (phone) {
+        const cleanPhone = phone.replace(/\D/g, '');
+        const fullPhone = cleanPhone.startsWith('55') ? cleanPhone : '55' + cleanPhone;
+        const stageNames = { 'interview': 'entrevista', 'psych_test': 'teste psicológico', 'practical_test': 'teste prático' };
+        const stageName = stageNames[targetStage] || 'entrevista';
+        const msg = encodeURIComponent(`Olá ${name}! Somos da equipe de RH da Netline Telecom. Gostaríamos de convidá-lo(a) para a etapa de ${stageName} referente à vaga que você se candidatou. Podemos conversar sobre os próximos passos?`);
+        waBtn.href = `https://wa.me/${fullPhone}?text=${msg}`;
+        document.getElementById('ivModalPhone').textContent = phone;
+        waBtn.style.opacity = '1';
+        waBtn.style.pointerEvents = 'auto';
+        noPhoneSpan.style.display = 'none';
+    } else {
+        waBtn.href = '#';
+        waBtn.onclick = e => e.preventDefault();
+        document.getElementById('ivModalPhone').textContent = 'Telefone não cadastrado';
+        waBtn.style.opacity = '0.5';
+        waBtn.style.pointerEvents = 'none';
+        noPhoneSpan.style.display = 'inline';
+    }
+
+    // Default date = today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('ivDate').value = today;
+
+    // First update the candidate stage, THEN show modal
+    const fd = new FormData();
+    fd.append('candidate_id', candidateId);
+    fd.append('stage', targetStage);
+    fd.append('status', 'IN_PROGRESS');
+    fetch("{% url 'update_candidate_stage_ajax' %}", {
+        method:'POST', body:fd,
+        headers:{'X-Requested-With':'XMLHttpRequest'}
+    }).then(r=>r.json()).then(d=>{
+        if (d.success) {
+            interviewModalInstance.show();
+        } else {
+            alert("Erro ao mover candidato: " + (d.message||"Acesso negado"));
+        }
+    }).catch(()=>{ alert('Erro de conexão.'); });
+}
+
+function justProceedInterview() {
+    interviewModalInstance.hide();
+    location.reload();
+}
+
+function toggleIvMeetingLink() {
+    const sel = document.getElementById('ivLocation');
+    const opt = sel.options[sel.selectedIndex];
+    const name = opt ? (opt.getAttribute('data-name') || '') : '';
+    if (name.includes('link') || name.includes('online') || name.includes('vídeo') || name.includes('video') || name.includes('meet') || name.includes('zoom') || name.includes('teams')) {
+        document.getElementById('ivLinkContainer').style.display = 'block';
+    } else {
+        document.getElementById('ivLinkContainer').style.display = 'none';
+        document.getElementById('ivMeetingLink').value = '';
+    }
+}
+
+function submitScheduleInterview() {
+    const date = document.getElementById('ivDate').value;
+    const time = document.getElementById('ivTime').value;
+    const locationId = document.getElementById('ivLocation').value;
+    const cityId = document.getElementById('ivCity').value;
+    const meetingLink = document.getElementById('ivMeetingLink').value.trim();
+    const sendEmail = document.getElementById('ivSendEmail').checked;
+
+    if (!date || !time) {
+        alert('Por favor, preencha a data e o horário da entrevista.');
+        return;
+    }
+    const startISO = `${date}T${time}:00`;
+    const endISO = `${date}T${(parseInt(time.split(':')[0])+1).toString().padStart(2,'0')}:${time.split(':')[1]}:00`;
+    const typeName = ivCurrentTargetStage === 'interview' ? 'Entrevista' : (ivCurrentTargetStage === 'psych_test' ? 'Teste Psicológico' : 'Teste Prático');
+    const title = `${typeName} – ${ivCurrentName}`;
+
+    const btn = document.getElementById('ivScheduleBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Agendando...';
+
+    fetch("{% url 'agenda_create_event' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({
+            title: title,
+            event_type: typeName,
+            start_date: startISO,
+            end_date: endISO,
+            notes: `${typeName} com candidato ${ivCurrentName}.\nVaga: ${ivCurrentJobTitle || 'Não especificada'}`,
+            status: 'agendado',
+            employees: [],
+            location: locationId || null,
+            city: cityId || null,
+            meeting_link: meetingLink,
+            external_participants: (sendEmail && ivCurrentEmail) ? ivCurrentEmail : ''
+        })
+    }).then(r=>r.json()).then(d=>{
+        if (d.status === 'success') {
+            interviewModalInstance.hide();
+            // Show success toast and reload
+            const toast = document.createElement('div');
+            toast.innerHTML = `<div style="position:fixed;bottom:24px;right:24px;background:#0dc02a;color:#fff;padding:14px 20px;border-radius:12px;font-weight:700;font-size:13px;z-index:99999;box-shadow:0 8px 24px rgba(13,192,42,0.35);display:flex;align-items:center;gap:8px;"><i class="bi bi-calendar-check-fill"></i> Entrevista agendada na Agenda!</div>`;
+            document.body.appendChild(toast);
+            setTimeout(()=>{ location.reload(); }, 1500);
+        } else {
+            alert('Erro ao agendar: ' + (d.message||'Tente novamente.'));
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-calendar-check me-2"></i>Confirmar e Agendar';
+        }
+    }).catch(()=>{
+        alert('Erro de conexão.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-calendar-check me-2"></i>Confirmar e Agendar';
+    });
+}
+
+function openRejectModal(candidateId, stage) {
+    currentRejectCandidateId = candidateId;
+    currentRejectStage = stage;
+    document.getElementById('rejectReason').value = '';
+    rejectModalInstance.show();
+}
+
+function submitRejection(event) {
+    const reason = document.getElementById('rejectReason').value.trim();
+    if (!reason) {
+        alert("Por favor, preencha o motivo da reprovação para que o e-mail possa ser enviado.");
+        return;
+    }
+    const fd = new FormData();
+    fd.append('candidate_id', currentRejectCandidateId);
+    fd.append('stage', currentRejectStage);
+    fd.append('status', 'REJECTED');
+    fd.append('rejection_reason', reason);
+    
+    event.target.disabled = true;
+    event.target.innerText = "Enviando e-mail...";
+
+    fetch("{% url 'update_candidate_stage_ajax' %}", {
+        method:'POST', body:fd,
+        headers:{'X-Requested-With':'XMLHttpRequest'}
+    }).then(r=>r.json()).then(d=>{ 
+        if(d.success) location.reload(); 
+        else { alert("Erro: "+(d.message||"Acesso negado")); location.reload(); } 
+    }).catch(e=>{ console.error(e); location.reload(); });
+}
+
+function dragStart(ev, id) {
+    // Capture the stage of the card being dragged
+    const card = ev.currentTarget;
+    draggedStage = card.dataset.candidateStage || null;
+    draggedId = id;
+    ev.dataTransfer.setData("text/plain", id);
+    setTimeout(() => ev.currentTarget.classList.add("dragging"), 0);
+}
+document.addEventListener('dragend', () => {
+    document.querySelectorAll('.cand-card.dragging').forEach(c => c.classList.remove('dragging'));
+});
+function allowDrop(ev) { ev.preventDefault(); }
+function dragEnter(ev) {
+    ev.preventDefault();
+    const box = ev.currentTarget.closest('.stage-box');
+    if (box) box.classList.add('drag-over');
+}
+function dragLeave(ev) {
+    const box = ev.currentTarget.closest('.stage-box');
+    if (box && !box.contains(ev.relatedTarget)) box.classList.remove('drag-over');
+}
+function drop(ev, stage) {
+    ev.preventDefault();
+    document.querySelectorAll('.stage-box').forEach(b => b.classList.remove('drag-over'));
+    document.querySelectorAll('.cand-card').forEach(c => c.classList.remove('dragging'));
+    const id = ev.dataTransfer.getData("text/plain") || draggedId;
+    if (!id) return;
+
+    if (stage === 'interview' || stage === 'psych_test' || stage === 'practical_test') {
+        const card = document.querySelector(`.cand-card[data-candidate-id='${id}']`);
+        const name  = card ? card.dataset.candidateName  : 'Candidato';
+        const phone = card ? card.dataset.candidatePhone : '';
+        const email = card ? card.dataset.candidateEmail : '';
+        const job = card ? card.dataset.candidateJob : '';
+        const from  = card ? card.dataset.candidateStage : '';
+        openInterviewModal(id, name, phone, email, from, job, stage);
+    } else if (stage === 'hired') {
+        // First move to hired, then show onboarding modal
+        const fd = new FormData();
+        fd.append('candidate_id', id);
+        fd.append('stage', 'hired');
+        fd.append('status', 'HIRED');
+        fetch("{% url 'update_candidate_stage_ajax' %}", {
+            method:'POST', body:fd, headers:{'X-Requested-With':'XMLHttpRequest'}
+        }).then(r=>r.json()).then(d=>{
+            if(d.success) {
+                openOnboardModal(id);
+            } else { alert("Erro: "+(d.message||"Acesso negado")); location.reload(); }
+        }).catch(()=>location.reload());
+    } else {
+        moveStage(id, stage);
+    }
+}
+
+function moveStage(candidateId, stage) {
+    const fd = new FormData();
+    fd.append('candidate_id', candidateId);
+    fd.append('stage', stage);
+    fetch("{% url 'update_candidate_stage_ajax' %}", {
+        method:'POST', body:fd,
+        headers:{'X-Requested-With':'XMLHttpRequest'}
+    }).then(r=>r.json()).then(d=>{ if(d.success) location.reload(); else { alert("Erro: "+(d.message||"Acesso negado")); location.reload(); } })
+      .catch(()=>location.reload());
+}
+
+function dragEnd(ev) {
+    draggedStage = null;
+}
+
+function updateStatus(candidateId, stage, status) {
+    // Intercept: when moving to hired, show onboarding modal
+    if (stage === 'hired' && status === 'HIRED') {
+        const fd = new FormData();
+        fd.append('candidate_id', candidateId);
+        fd.append('stage', stage);
+        fd.append('status', status);
+        fetch("{% url 'update_candidate_stage_ajax' %}", {
+            method:'POST', body:fd, headers:{'X-Requested-With':'XMLHttpRequest'}
+        }).then(r=>r.json()).then(d=>{
+            if(d.success) {
+                openOnboardModal(candidateId);
+            } else { alert("Erro: "+(d.message||"Acesso negado")); location.reload(); }
+        }).catch(e=>console.error(e));
+        return;
+    }
+    const fd = new FormData();
+    fd.append('candidate_id', candidateId);
+    fd.append('stage', stage);
+    fd.append('status', status);
+    fetch("{% url 'update_candidate_stage_ajax' %}", {
+        method:'POST', body:fd,
+        headers:{'X-Requested-With':'XMLHttpRequest'}
+    }).then(r=>r.json()).then(d=>{ if(d.success) location.reload(); else alert("Erro: "+(d.message||"Acesso negado")); })
+      .catch(e=>console.error(e));
+}
+
+function showJobClosedToast() {
+    const toast = document.createElement('div');
+    toast.innerHTML = `
+        <div style="
+            position:fixed;bottom:28px;right:28px;
+            background:linear-gradient(135deg,#0f172a,#1e293b);
+            color:#fff;padding:16px 20px;border-radius:16px;
+            font-size:13px;z-index:99999;
+            box-shadow:0 10px 30px rgba(0,0,0,0.35);
+            display:flex;align-items:center;gap:12px;
+            border-left:4px solid #f59e0b;
+            max-width:340px;
+            animation:slideInToast 0.35s ease;
+        ">
+            <i class="bi bi-briefcase-fill" style="font-size:18px;color:#f59e0b;flex-shrink:0;"></i>
+            <div>
+                <div style="font-weight:700;margin-bottom:2px;">Vaga encerrada automaticamente</div>
+                <div style="font-size:11.5px;color:#94a3b8;line-height:1.4;">Os demais candidatos em andamento foram movidos para <strong style="color:#fca5a5;">Reprovado</strong>.</div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 5000);
+}
+
+
+function openOnboardModal(candidateId) {
+    onboardCurrentCandidateId = candidateId;
+
+    // Populate preview from card DOM — NO backend call yet
+    const card = document.querySelector(`.cand-card[data-candidate-id='${candidateId}']`);
+    const name  = card ? card.dataset.candidateName  : 'Candidato';
+    const job   = card ? card.querySelector('.cand-job')?.textContent?.trim() : '';
+
+    document.getElementById('obPreviewAvatar').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('obPreviewName').textContent = name;
+    document.getElementById('obPreviewJob').textContent = job || 'Candidato a ser efetivado';
+
+    // Show only preview
+    document.getElementById('onboardPreview').style.display = 'block';
+    document.getElementById('onboardLoading').style.display = 'none';
+    document.getElementById('onboardSuccess').style.display = 'none';
+    document.getElementById('onboardError').style.display = 'none';
+
+    onboardModalInstance.show();
+}
+
+function onboardConfirm() {
+    // User clicked "Confirmar Efetivação" — NOW create employee+user+send email
+    document.getElementById('onboardPreview').style.display = 'none';
+    document.getElementById('onboardLoading').style.display = 'block';
+
+    fetch(`/recruitment/pipeline/onboard/${onboardCurrentCandidateId}/`, {
+        method: 'POST',
+        headers: {'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': '{{ csrf_token }}'}
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            if (data.job_closed) showJobClosedToast();
+            
+            obCurrentUsername = data.username;
+            obCurrentPassword = data.password;
+
+            document.getElementById('obAvatar').textContent = data.name.charAt(0).toUpperCase();
+            document.getElementById('obName').textContent = data.name;
+            document.getElementById('obUsername').textContent = data.username;
+            document.getElementById('obPassword').textContent = data.password;
+
+            // Build WhatsApp link
+            const card = document.querySelector(`.cand-card[data-candidate-id='${onboardCurrentCandidateId}']`);
+            const phone = card ? card.dataset.candidatePhone : '';
+            if (phone) {
+                const cleanPhone = phone.replace(/\D/g, '');
+                const fullPhone = cleanPhone.startsWith('55') ? cleanPhone : '55' + cleanPhone;
+                const msg = encodeURIComponent(`Olá ${data.name}! 🎉 Boas-vindas à equipe!\n\n👤 Usuário: ${data.username}\n🔑 Senha: ${data.password}\n\nAcesse: ${window.location.origin}/login`);
+                document.getElementById('obWhatsappBtn').href = `https://wa.me/${fullPhone}?text=${msg}`;
+                document.getElementById('obWhatsappBtn').style.display = 'flex';
+            } else {
+                document.getElementById('obWhatsappBtn').style.display = 'none';
+            }
+
+            // Now send email
+            const fd = new FormData();
+            fd.append('username', data.username);
+            fd.append('password', data.password);
+            fetch(`/recruitment/pipeline/onboard/${onboardCurrentCandidateId}/email/`, {
+                method: 'POST',
+                headers: {'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': '{{ csrf_token }}'},
+                body: fd
+            }).then(r => r.json()).then(emailResult => {
+                if (emailResult.success) {
+                    document.getElementById('obEmailAddr').textContent = data.email;
+                    document.getElementById('obEmailStatus').style.display = 'flex';
+                    document.getElementById('obEmailFail').style.display = 'none';
+                } else {
+                    document.getElementById('obEmailStatus').style.display = 'none';
+                    document.getElementById('obEmailFail').style.display = 'flex';
+                }
+            }).catch(() => {
+                document.getElementById('obEmailStatus').style.display = 'none';
+                document.getElementById('obEmailFail').style.display = 'flex';
+            }).finally(() => {
+                document.getElementById('onboardLoading').style.display = 'none';
+                document.getElementById('onboardSuccess').style.display = 'block';
+            });
+
+        } else {
+            document.getElementById('onboardLoading').style.display = 'none';
+            document.getElementById('onboardErrorMsg').textContent = data.message || 'Erro ao criar cadastro.';
+            document.getElementById('onboardError').style.display = 'block';
+        }
+    }).catch(() => {
+        document.getElementById('onboardLoading').style.display = 'none';
+        document.getElementById('onboardErrorMsg').textContent = 'Erro de conexão.';
+        document.getElementById('onboardError').style.display = 'block';
+    });
+}
+
+function onboardClose() {
+    onboardModalInstance.hide();
+    location.reload();
+}
+</script>
+{% endblock %}

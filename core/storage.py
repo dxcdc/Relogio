@@ -1,0 +1,2 @@
+"from cloudinary_storage.storage import MediaCloudinaryStorage, RawMediaCloudinaryStorage\nimport os\n\nclass SmartCloudinaryStorage(MediaCloudinaryStorage):\n    \"\"\"\n    Storage inteligente que direciona PDFs e documentos para RAW e o resto para IMAGE
+<truncated 1009 bytes>

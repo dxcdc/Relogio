@@ -1,0 +1,590 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Central de Suporte — NetlineRH{% endblock %}
+
+{% block extra_head %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+* { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+
+/* ── Stats ── */
+.stat-card {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--card-border, #e2e8f0);
+    border-radius: 16px;
+    padding: 20px 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.07); }
+.stat-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    border-radius: 16px 0 0 16px;
+}
+.stat-card.red::before   { background: #ef4444; }
+.stat-card.amber::before { background: #f59e0b; }
+.stat-card.green::before { background: #10b981; }
+.stat-card.slate::before { background: #94a3b8; }
+.stat-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+}
+.stat-num  { font-size: 30px; font-weight: 800; line-height: 1; }
+.stat-lbl  { font-size: 12px; color: var(--text-secondary, #64748b); font-weight: 500; margin-top: 2px; }
+
+/* ── Tabs ── */
+.tab-row {
+    display: flex; gap: 8px; margin-bottom: 24px;
+    border-bottom: 2px solid var(--card-border, #e2e8f0);
+    padding-bottom: 0;
+}
+.tab-btn {
+    padding: 10px 20px 12px;
+    border: none; background: transparent;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    color: var(--text-secondary, #64748b);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: all .2s; border-radius: 0;
+}
+.tab-btn:hover { color: var(--text-primary, #0f172a); }
+.tab-btn.active { color: #0AA423; border-bottom-color: #0AA423; }
+.tab-count-badge {
+    background: #ef4444; color: #fff;
+    border-radius: 20px; font-size: 10px; font-weight: 800;
+    padding: 2px 7px; line-height: 1.4;
+}
+.tab-btn.active .tab-count-badge { background: #0AA423; }
+
+/* ── Filtros ── */
+.filter-wrap { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+.filter-lbl  { font-size: 11px; font-weight: 700; color: var(--text-secondary,#64748b); text-transform: uppercase; letter-spacing: .05em; }
+.fpill {
+    padding: 5px 13px; border-radius: 20px;
+    border: 1px solid var(--card-border, #e2e8f0);
+    background: var(--card-bg, #fff);
+    font-size: 12px; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    color: var(--text-secondary, #64748b);
+    transition: all .2s; white-space: nowrap;
+}
+.fpill:hover  { border-color: #0AA423; color: #0AA423; text-decoration: none; }
+.fpill.active { background: #0AA423; color: #fff; border-color: #0AA423; text-decoration: none; }
+
+/* ── Item Cards ── */
+.item-card {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--card-border, #e2e8f0);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all .22s;
+    display: flex; align-items: center; gap: 16px;
+}
+.item-card:hover {
+    border-color: #0AA423;
+    box-shadow: 0 4px 20px rgba(10,164,35,.10);
+    transform: translateY(-1px);
+}
+.item-icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; flex-shrink: 0;
+}
+.item-body   { flex: 1; min-width: 0; }
+.item-title  { font-size: 14px; font-weight: 700; color: var(--text-primary, #0f172a); margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-desc   { font-size: 12.5px; color: var(--text-secondary, #64748b); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 7px; }
+.item-meta   { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.item-meta span { font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 4px; }
+.item-arrow  { color: #cbd5e1; flex-shrink: 0; font-size: 14px; transition: all .2s; }
+.item-card:hover .item-arrow { color: #0AA423; transform: translateX(3px); }
+
+/* ── Badges ── */
+.sbadge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 10.5px; font-weight: 700; }
+.sbadge-open      { background: #fef2f2; color: #ef4444; }
+.sbadge-analyzing { background: #fffbeb; color: #d97706; }
+.sbadge-resolved  { background: #f0fdf4; color: #10b981; }
+.sbadge-wontfix   { background: #f8fafc; color: #94a3b8; }
+.sbadge-pending   { background: #fef2f2; color: #ef4444; }
+.sbadge-reviewing { background: #fffbeb; color: #d97706; }
+.sbadge-dismissed { background: #f8fafc; color: #94a3b8; }
+.tbadge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+.tbadge-bug     { background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; }
+.tbadge-post    { background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; }
+.tbadge-comment { background: #f5f3ff; color: #8b5cf6; border: 1px solid #ddd6fe; }
+.pbadge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+.pbadge-low      { background: #f8fafc; color: #64748b; }
+.pbadge-medium   { background: #eff6ff; color: #3b82f6; }
+.pbadge-high     { background: #fffbeb; color: #d97706; }
+.pbadge-critical { background: #fef2f2; color: #ef4444; }
+
+/* ── Empty state ── */
+.empty-state {
+    text-align: center; padding: 60px 20px;
+    background: var(--card-bg, #fff);
+    border: 1.5px dashed var(--card-border, #e2e8f0);
+    border-radius: 20px;
+}
+.empty-state i  { font-size: 48px; opacity: .2; display: block; margin-bottom: 14px; }
+.empty-state h5 { font-weight: 700; margin-bottom: 6px; }
+.empty-state p  { font-size: 14px; color: var(--text-secondary, #64748b); }
+
+/* ── Modal ── */
+.modal { z-index: 105000 !important; }
+.modal-backdrop { z-index: 104000 !important; }
+.dl { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary,#64748b); margin-bottom: 6px; }
+.db { margin-bottom: 18px; }
+.action-btn { padding: 10px 20px; border-radius: 12px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s; }
+.btn-r  { background: #f0fdf4; color: #10b981; }
+.btn-r:hover  { background: #10b981; color: #fff; }
+.btn-d  { background: #f8fafc; color: #64748b; }
+.btn-d:hover  { background: #64748b; color: #fff; }
+.btn-a  { background: #fffbeb; color: #d97706; }
+.btn-a:hover  { background: #d97706; color: #fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header mt-1 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title mb-1">
+            <i class="bi bi-headset" style="color: #0AA423;"></i> Central de Suporte
+        </h1>
+        <p class="text-secondary mb-0" style="font-size: 13px;">Gerencie bugs do sistema e denúncias do Netgram em um único lugar</p>
+    </div>
+    <div class="d-flex gap-3">
+        {% if bug_counts.open > 0 %}
+        <div style="text-align:center; padding: 10px 18px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px;">
+            <div style="font-size: 22px; font-weight: 800; color: #ef4444; line-height:1;">{{ bug_counts.open }}</div>
+            <div style="font-size: 11px; color: #ef4444; font-weight: 600; margin-top: 2px;">Bugs abertos</div>
+        </div>
+        {% endif %}
+        {% if rep_counts.pending > 0 %}
+        <div style="text-align:center; padding: 10px 18px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px;">
+            <div style="font-size: 22px; font-weight: 800; color: #d97706; line-height:1;">{{ rep_counts.pending }}</div>
+            <div style="font-size: 11px; color: #d97706; font-weight: 600; margin-top: 2px;">Denúncias</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card {% if active_tab == 'bugs' %}red{% else %}red{% endif %}">
+            <div class="stat-icon" style="background:#fef2f2;">
+                <i class="bi bi-exclamation-circle-fill" style="color:#ef4444;"></i>
+            </div>
+            <div>
+                <div class="stat-num" style="color:#ef4444;">{% if active_tab == 'denuncias' %}{{ rep_counts.pending }}{% else %}{{ bug_counts.open }}{% endif %}</div>
+                <div class="stat-lbl">{% if active_tab == 'denuncias' %}Pendentes{% else %}Abertos{% endif %}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card amber">
+            <div class="stat-icon" style="background:#fffbeb;">
+                <i class="bi bi-hourglass-split" style="color:#f59e0b;"></i>
+            </div>
+            <div>
+                <div class="stat-num" style="color:#f59e0b;">{% if active_tab == 'denuncias' %}{{ rep_counts.reviewing }}{% else %}{{ bug_counts.analyzing }}{% endif %}</div>
+                <div class="stat-lbl">Em análise</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card green">
+            <div class="stat-icon" style="background:#f0fdf4;">
+                <i class="bi bi-check-circle-fill" style="color:#10b981;"></i>
+            </div>
+            <div>
+                <div class="stat-num" style="color:#10b981;">{% if active_tab == 'denuncias' %}{{ rep_counts.resolved }}{% else %}{{ bug_counts.resolved }}{% endif %}</div>
+                <div class="stat-lbl">Resolvidos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card slate">
+            <div class="stat-icon" style="background:#f8fafc;">
+                <i class="bi bi-archive-fill" style="color:#94a3b8;"></i>
+            </div>
+            <div>
+                <div class="stat-num" style="color:#94a3b8;">{% if active_tab == 'denuncias' %}{{ rep_counts.dismissed }}{% else %}{{ bug_counts.wontfix }}{% endif %}</div>
+                <div class="stat-lbl">{% if active_tab == 'denuncias' %}Arquivadas{% else %}Não corrigir{% endif %}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tab-row">
+    <button class="tab-btn {% if active_tab == 'bugs' %}active{% endif %}" onclick="switchTab('bugs')">
+        <i class="bi bi-bug-fill"></i> Bugs do Sistema
+        {% if bug_counts.open > 0 %}<span class="tab-count-badge">{{ bug_counts.open }}</span>{% endif %}
+    </button>
+    <button class="tab-btn {% if active_tab == 'denuncias' %}active{% endif %}" onclick="switchTab('denuncias')">
+        <i class="bi bi-flag-fill"></i> Denúncias do Netgram
+        {% if rep_counts.pending > 0 %}<span class="tab-count-badge">{{ rep_counts.pending }}</span>{% endif %}
+    </button>
+</div>
+
+<!-- PAINEL: BUGS -->
+<div id="panel-bugs" style="display:{% if active_tab == 'bugs' %}block{% else %}none{% endif %};">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+        <div class="filter-wrap mb-0">
+            <span class="filter-lbl me-1">Filtrar:</span>
+            <a href="?tab=bugs" class="fpill {% if not bug_status %}active{% endif %}"><i class="bi bi-grid-fill me-1"></i>Todos</a>
+            <a href="?tab=bugs&bug_status=OPEN"      class="fpill {% if bug_status == 'OPEN' %}active{% endif %}"><i class="bi bi-exclamation-circle me-1"></i>Abertos</a>
+            <a href="?tab=bugs&bug_status=ANALYZING" class="fpill {% if bug_status == 'ANALYZING' %}active{% endif %}"><i class="bi bi-hourglass-split me-1"></i>Em análise</a>
+            <a href="?tab=bugs&bug_status=RESOLVED"  class="fpill {% if bug_status == 'RESOLVED' %}active{% endif %}"><i class="bi bi-check-circle me-1"></i>Resolvidos</a>
+            <a href="?tab=bugs&bug_status=WONTFIX"   class="fpill {% if bug_status == 'WONTFIX' %}active{% endif %}"><i class="bi bi-slash-circle me-1"></i>Não corrigir</a>
+        </div>
+        <div style="position: relative; width: 100%; max-width: 320px;">
+            <i class="bi bi-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 13px;"></i>
+            <input type="text" id="bugSearchInput" placeholder="Pesquisar ID, título, autor..." 
+                   style="width:100%; padding: 8px 14px 8px 38px; border-radius: 20px; border: 1px solid var(--card-border, #e2e8f0); background: var(--card-bg, #fff); color: var(--text-primary, #0f172a); font-size: 13px; outline: none; transition: all 0.2s;"
+                   onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16,185,129,0.1)';"
+                   onblur="this.style.borderColor='var(--card-border, #e2e8f0)'; this.style.boxShadow='none';"
+                   onkeyup="filterBugs()">
+        </div>
+    </div>
+
+    {% if bugs %}
+        {% for bug in bugs %}
+        <div class="item-card" onclick="window.location='/buzz/bugs/{{ bug.pk }}/'">
+            <div class="item-icon" style="background:#fef2f2;">
+                <i class="bi bi-bug-fill" style="color:#ef4444;"></i>
+            </div>
+            <div class="item-body">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+                    <span class="tbadge tbadge-bug"><i class="bi bi-bug" style="font-size:9px;"></i> Bug</span>
+                    <span class="sbadge sbadge-{{ bug.status|lower }}">{{ bug.get_status_display }}</span>
+                    <span class="pbadge pbadge-{{ bug.priority|lower }}">{{ bug.get_priority_display }}</span>
+                </div>
+                <div class="item-title">{{ bug.title }}</div>
+                <div class="item-desc">{{ bug.description }}</div>
+                <div class="item-meta">
+                    <span><i class="bi bi-person-fill"></i>{{ bug.reported_by.get_full_name|default:bug.reported_by.username }}</span>
+                    <span><i class="bi bi-clock"></i>{{ bug.created_at|date:"d/m/Y H:i" }}</span>
+                    {% if bug.assigned_to %}<span><i class="bi bi-person-check-fill"></i>{{ bug.assigned_to.get_full_name }}</span>{% endif %}
+                </div>
+            </div>
+            <i class="bi bi-chevron-right item-arrow"></i>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-bug" style="color:#ef4444;"></i>
+            <h5>Nenhum bug encontrado</h5>
+            <p>{% if bug_status %}Nenhum reporte com esse filtro.{% else %}Ótimo! Nenhum bug no momento.{% endif %}</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- PAINEL: DENÚNCIAS -->
+<div id="panel-denuncias" style="display:{% if active_tab == 'denuncias' %}block{% else %}none{% endif %};">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+        <div class="filter-wrap mb-0">
+            <span class="filter-lbl me-1">Filtrar:</span>
+            <a href="?tab=denuncias" class="fpill {% if not rep_status and not rep_type %}active{% endif %}"><i class="bi bi-grid-fill me-1"></i>Todas</a>
+            <a href="?tab=denuncias&rep_status=PENDING"   class="fpill {% if rep_status == 'PENDING' %}active{% endif %}"><i class="bi bi-exclamation-circle me-1"></i>Pendentes</a>
+            <a href="?tab=denuncias&rep_status=REVIEWING" class="fpill {% if rep_status == 'REVIEWING' %}active{% endif %}"><i class="bi bi-hourglass-split me-1"></i>Em análise</a>
+            <a href="?tab=denuncias&rep_status=RESOLVED"  class="fpill {% if rep_status == 'RESOLVED' %}active{% endif %}"><i class="bi bi-check-circle me-1"></i>Resolvidas</a>
+            <a href="?tab=denuncias&rep_type=post"        class="fpill {% if rep_type == 'post' %}active{% endif %}"><i class="bi bi-file-post me-1"></i>Posts</a>
+            <a href="?tab=denuncias&rep_type=comment"     class="fpill {% if rep_type == 'comment' %}active{% endif %}"><i class="bi bi-chat me-1"></i>Comentários</a>
+        </div>
+        <div style="position: relative; width: 100%; max-width: 320px;">
+            <i class="bi bi-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 13px;"></i>
+            <input type="text" id="repSearchInput" placeholder="Pesquisar ID, autor, motivo..." 
+                   style="width:100%; padding: 8px 14px 8px 38px; border-radius: 20px; border: 1px solid var(--card-border, #e2e8f0); background: var(--card-bg, #fff); color: var(--text-primary, #0f172a); font-size: 13px; outline: none; transition: all 0.2s;"
+                   onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16,185,129,0.1)';"
+                   onblur="this.style.borderColor='var(--card-border, #e2e8f0)'; this.style.boxShadow='none';"
+                   onkeyup="filterDenuncias()">
+        </div>
+    </div>
+
+    {% if reports %}
+        {% for r in reports %}
+        <div class="item-card" onclick="openRepModal({{ r.id }})">
+            <div class="item-icon" style="{% if r.status == 'PENDING' %}background:#fef2f2;{% elif r.status == 'REVIEWING' %}background:#fffbeb;{% elif r.status == 'RESOLVED' %}background:#f0fdf4;{% else %}background:#f8fafc;{% endif %}">
+                <i class="bi bi-flag-fill" style="{% if r.status == 'PENDING' %}color:#ef4444;{% elif r.status == 'REVIEWING' %}color:#f59e0b;{% elif r.status == 'RESOLVED' %}color:#10b981;{% else %}color:#94a3b8;{% endif %}"></i>
+            </div>
+            <div class="item-body">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+                    {% if r.content_type == 'post' %}
+                        <span class="tbadge tbadge-post"><i class="bi bi-file-post" style="font-size:9px;"></i> Post</span>
+                    {% else %}
+                        <span class="tbadge tbadge-comment"><i class="bi bi-chat" style="font-size:9px;"></i> Comentário</span>
+                    {% endif %}
+                    <span class="sbadge sbadge-{{ r.status|lower }}">{{ r.get_status_display }}</span>
+                    <span style="font-size:10px;color:#94a3b8;font-weight:600;">#{{ r.id }}</span>
+                </div>
+                <div class="item-title">{{ r.reason }}</div>
+                <div class="item-meta">
+                    <span><i class="bi bi-person-fill"></i>{{ r.reported_by.first_name }} {{ r.reported_by.last_name }}</span>
+                    <span><i class="bi bi-clock"></i>{{ r.created_at|date:"d/m/Y H:i" }}</span>
+                </div>
+            </div>
+            <i class="bi bi-chevron-right item-arrow"></i>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-shield-check" style="color:#10b981;"></i>
+            <h5>Nenhuma denúncia encontrada</h5>
+            <p>{% if rep_status or rep_type %}Nenhuma com esse filtro.{% else %}Tudo limpo! Nenhuma denúncia pendente.{% endif %}</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Dados ocultos para o modal -->
+{% for r in reports_with_content %}
+<span id="rd-{{ r.id }}" style="display:none;"
+  data-id="{{ r.id }}"
+  data-content-type="{{ r.content_type }}"
+  data-content-id="{{ r.content_id }}"
+  data-reason="{{ r.reason|escapejs }}"
+  data-reporter="{{ r.reporter|escapejs }}"
+  data-reporter-email="{{ r.reporter_email }}"
+  data-status="{{ r.status }}"
+  data-note="{{ r.note|escapejs }}"
+  data-created-at="{{ r.created_at }}"
+  data-resolved-at="{{ r.resolved_at }}"
+  data-content-text="{{ r.content_text|escapejs }}"
+  data-content-author="{{ r.content_author|default:''|escapejs }}"
+  data-content-date="{{ r.content_date|default:'' }}"
+  data-content-deleted="{{ r.content_deleted|yesno:'true,false' }}"
+></span>
+{% endfor %}
+
+<!-- Modal de Denúncia -->
+<div class="modal fade" id="repModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 560px;">
+    <div class="modal-content" style="border-radius: 24px; border: none; box-shadow: 0 25px 60px rgba(0,0,0,0.2); background: var(--card-bg, #fff); position: relative; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
+      <button type="button" class="btn-close position-absolute top-0 end-0 mt-4 me-4" data-bs-dismiss="modal" aria-label="Close" style="opacity: 0.5; z-index: 10;"></button>
+      <div class="modal-body p-4" id="repModalContent" style="overflow-y: auto; flex: 1;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+    document.getElementById('panel-bugs').style.display      = tab==='bugs'      ? 'block':'none';
+    document.getElementById('panel-denuncias').style.display = tab==='denuncias' ? 'block':'none';
+    document.querySelectorAll('.tab-btn').forEach((el,i) =>
+        el.classList.toggle('active', (i===0&&tab==='bugs')||(i===1&&tab==='denuncias'))
+    );
+    history.replaceState(null,'','?tab='+tab);
+}
+
+const SC = { PENDING:'#ef4444', REVIEWING:'#d97706', RESOLVED:'#10b981', DISMISSED:'#94a3b8' };
+const SL = { PENDING:'Pendente', REVIEWING:'Em análise', RESOLVED:'Resolvido', DISMISSED:'Arquivado' };
+
+function openRepModal(id) {
+    const el = document.getElementById('rd-'+id);
+    if (!el) return;
+    const r = {
+        id:             el.dataset.id,
+        content_type:   el.dataset.contentType,
+        content_id:     el.dataset.contentId,
+        reason:         el.dataset.reason,
+        reporter:       el.dataset.reporter,
+        reporter_email: el.dataset.reporterEmail,
+        status:         el.dataset.status,
+        note:           el.dataset.note,
+        created_at:     el.dataset.createdAt,
+        resolved_at:    el.dataset.resolvedAt,
+        content_text:   el.dataset.contentText,
+        content_author: el.dataset.contentAuthor,
+        content_date:   el.dataset.contentDate,
+        content_deleted:el.dataset.contentDeleted==='true',
+    };
+    const sc = SC[r.status]||'#94a3b8';
+    const sl = SL[r.status]||r.status;
+
+    const steps = [
+        {key:'PENDING',   label:'Recebida',  icon:'bi-inbox'},
+        {key:'REVIEWING', label:'Em Análise', icon:'bi-hourglass-split'},
+        {key:'RESOLVED',  label:'Resolvida',  icon:'bi-check-circle-fill'},
+        {key:'DISMISSED', label:'Arquivada',  icon:'bi-archive-fill'},
+    ];
+    const ord = {PENDING:0,REVIEWING:1,RESOLVED:2,DISMISSED:2};
+    const cur = ord[r.status]??0;
+
+    const stepper = `<div style="display:flex;align-items:center;gap:0;margin-bottom:14px;padding:10px 14px;background:var(--hover-bg,#f8fafc);border-radius:12px;">
+    ${steps.map((s,i)=>{
+        if(s.key==='DISMISSED'&&r.status!=='DISMISSED') return '';
+        if(s.key==='RESOLVED' &&r.status==='DISMISSED') return '';
+        const done   = i < cur;
+        const active = r.status===s.key;
+        const c = active?sc:done?'#10b981':'#cbd5e1';
+        const bg= active?sc+'22':done?'#f0fdf4':'var(--card-bg,#fff)';
+        const isLast=(r.status!=='DISMISSED'&&s.key==='RESOLVED')||(r.status==='DISMISSED'&&s.key==='DISMISSED');
+        return `<div style="display:flex;align-items:center;flex:1;min-width:0;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;">
+            <div style="width:28px;height:28px;border-radius:50%;background:${bg};border:2px solid ${c};display:flex;align-items:center;justify-content:center;">
+              <i class="bi ${s.icon}" style="color:${c};font-size:11px;"></i>
+            </div>
+            <span style="font-size:9px;font-weight:700;color:${active?sc:done?'#10b981':'#94a3b8'};white-space:nowrap;">${s.label}</span>
+          </div>
+          ${!isLast?`<div style="flex:1;height:2px;background:${done||active?'#10b981':'#e2e8f0'};margin:0 4px;margin-bottom:12px;"></div>`:''} 
+        </div>`;
+    }).join('')}
+    </div>`;
+
+    const preview = r.content_deleted
+        ? `<div style="background:#fef2f2;border-radius:10px;padding:10px;font-size:13px;color:#ef4444;display:flex;align-items:center;gap:8px;"><i class="bi bi-trash3-fill"></i>Conteúdo já removido.</div>`
+        : `<div style="background:var(--hover-bg,#f8fafc);border-radius:10px;padding:10px 14px;border-left:3px solid ${sc};">
+             <div style="font-size:13px;color:var(--text-primary,#0f172a);line-height:1.5;margin-bottom:6px;">${r.content_text||'<em style="color:#94a3b8;">Sem texto</em>'}</div>
+             <div style="font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:10px;">
+               <span><i class="bi bi-person-fill me-1"></i>${r.content_author||'-'}</span>
+               ${r.content_date?`<span><i class="bi bi-clock me-1"></i>${r.content_date}</span>`:''}
+             </div>
+           </div>
+           <a href="/buzz/" target="_blank" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#0AA423;text-decoration:none;font-weight:700;margin-top:6px;padding:4px 10px;background:#f0fdf4;border-radius:20px;border:1px solid #bbf7d0;">
+             <i class="bi bi-box-arrow-up-right"></i> Ver no Netgram
+           </a>`;
+
+    const typeHtml = r.content_type==='post'
+        ? `<span class="tbadge tbadge-post"><i class="bi bi-file-post" style="font-size:9px;"></i> Publicação</span>`
+        : `<span class="tbadge tbadge-comment"><i class="bi bi-chat" style="font-size:9px;"></i> Comentário</span>`;
+
+    document.getElementById('repModalContent').innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <div style="width:36px;height:36px;background:${sc}18;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="bi bi-flag-fill" style="color:${sc};font-size:16px;"></i>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:800;color:var(--text-primary,#0f172a);">Denúncia #${r.id}</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:1px;"><i class="bi bi-clock me-1"></i>Recebida em ${r.created_at}</div>
+        </div>
+        <div style="margin-left:auto;"><span class="sbadge sbadge-${r.status.toLowerCase()}">${sl}</span></div>
+      </div>
+      ${stepper}
+      <div class="db">
+        <div class="dl">Conteúdo Denunciado</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">${typeHtml} <strong style="font-size:12px;">#${r.content_id}</strong></div>
+        ${preview}
+      </div>
+      <div class="db">
+        <div class="dl">Motivo da Denúncia</div>
+        <div style="background:var(--hover-bg,#f8fafc);padding:10px 12px;border-radius:10px;font-size:13px;line-height:1.5;">${r.reason}</div>
+      </div>
+      <div class="db">
+        <div class="dl">Denunciado por</div>
+        <div style="font-size:13px;color:var(--text-primary,#0f172a);display:flex;align-items:center;gap:6px;">
+          <i class="bi bi-person-fill" style="color:#10b981;"></i> <strong>${r.reporter}</strong> <span style="color:#94a3b8;font-size:12px;">(${r.reporter_email})</span>
+        </div>
+      </div>
+      <form method="post" action="/buzz/denuncias/${r.id}/atualizar/">
+        <input type="hidden" name="csrfmiddlewaretoken" value="${getcsrf()}">
+        <div class="db">
+          <div class="dl">Nota do Moderador</div>
+          <textarea name="moderator_note" rows="2" placeholder="Descreva a ação tomada..."
+            style="border:1px solid var(--card-border,#e2e8f0);border-radius:10px;padding:10px;font-size:13.5px;width:100%;background:var(--card-bg,#fff);color:var(--text-primary,#0f172a);resize:vertical;font-family:inherit;"
+          >${r.note}</textarea>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--card-border,#e2e8f0);">
+          <button type="submit" name="new_status" value="REVIEWING" class="action-btn btn-a" style="padding: 8px 16px; font-size:12.5px;"><i class="bi bi-hourglass-split me-1"></i>Em Análise</button>
+          <button type="submit" name="new_status" value="RESOLVED"  class="action-btn btn-r" style="padding: 8px 16px; font-size:12.5px;"><i class="bi bi-check-circle me-1"></i>Resolvido</button>
+          <button type="submit" name="new_status" value="DISMISSED" class="action-btn btn-d" style="padding: 8px 16px; font-size:12.5px;"><i class="bi bi-archive me-1"></i>Arquivar</button>
+        </div>
+      </form>`;
+
+    const modalEl = document.getElementById('repModal');
+    if (modalEl && modalEl.parentNode !== document.body) {
+        document.body.appendChild(modalEl);
+    }
+    let modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (!modalInstance) {
+        modalInstance = new bootstrap.Modal(modalEl);
+    }
+    modalInstance.show();
+}
+
+function closeRepModal(){
+    const modalEl = document.getElementById('repModal');
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) {
+        modalInstance.hide();
+    }
+}
+function getcsrf(){
+    const v=document.cookie.match('(^|;) ?csrftoken=([^;]*)(;|$)');
+    return v?v[2]:'';
+}
+
+function filterBugs() {
+    const query = document.getElementById('bugSearchInput').value.toLowerCase().trim();
+    const panel = document.getElementById('panel-bugs');
+    const cards = panel.querySelectorAll('.item-card');
+    
+    cards.forEach(card => {
+        if (card.querySelector('.empty-state')) return;
+        
+        const title = card.querySelector('.item-title')?.textContent.toLowerCase() || '';
+        const desc = card.querySelector('.item-desc')?.textContent.toLowerCase() || '';
+        const meta = card.querySelector('.item-meta')?.textContent.toLowerCase() || '';
+        const badges = Array.from(card.querySelectorAll('.tbadge, .sbadge, .pbadge')).map(el => el.textContent.toLowerCase()).join(' ');
+        
+        const matches = title.includes(query) || desc.includes(query) || meta.includes(query) || badges.includes(query);
+        
+        if (matches) {
+            card.style.setProperty('display', 'flex', 'important');
+        } else {
+            card.style.setProperty('display', 'none', 'important');
+        }
+    });
+}
+
+function filterDenuncias() {
+    const query = document.getElementById('repSearchInput').value.toLowerCase().trim();
+    const panel = document.getElementById('panel-denuncias');
+    const cards = panel.querySelectorAll('.item-card');
+    
+    cards.forEach(card => {
+        if (card.querySelector('.empty-state')) return;
+        
+        const title = card.querySelector('.item-title')?.textContent.toLowerCase() || '';
+        const meta = card.querySelector('.item-meta')?.textContent.toLowerCase() || '';
+        const badges = Array.from(card.querySelectorAll('.tbadge, .sbadge')).map(el => el.textContent.toLowerCase()).join(' ');
+        
+        const cardText = card.textContent.toLowerCase();
+        
+        // Find card ID inside the card text or structures
+        const cardIdMatch = cardText.match(/(?:post|comentário)\s*#(\d+)/i) || cardText.match(/#(\d+)/);
+        const cardId = cardIdMatch ? cardIdMatch[1] : '';
+        
+        let extraText = '';
+        if (cardId) {
+            const hiddenEl = document.getElementById('rd-' + cardId);
+            if (hiddenEl) {
+                extraText += ' ' + (hiddenEl.dataset.reason || '').toLowerCase();
+                extraText += ' ' + (hiddenEl.dataset.reporter || '').toLowerCase();
+                extraText += ' ' + (hiddenEl.dataset.reporterEmail || '').toLowerCase();
+                extraText += ' ' + (hiddenEl.dataset.contentText || '').toLowerCase();
+                extraText += ' ' + (hiddenEl.dataset.contentAuthor || '').toLowerCase();
+            }
+        }
+        
+        const searchPool = title + ' ' + meta + ' ' + badges + ' ' + cardText + ' ' + extraText;
+        
+        if (searchPool.includes(query)) {
+            card.style.setProperty('display', 'flex', 'important');
+        } else {
+            card.style.setProperty('display', 'none', 'important');
+        }
+    });
+}
+</script>
+{% endblock %}

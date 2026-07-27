@@ -1,0 +1,503 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<style>
+/* ── Page header ─────────────────────────────────────────────── */
+.int-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+}
+.int-page-icon {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, #4f46e5, #3b82f6);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 24px;
+    box-shadow: 0 4px 14px rgba(79,70,229,.35);
+    flex-shrink: 0;
+}
+
+/* ── App Grid ───────────────────────────────────────────────── */
+.app-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+/* ── App Card ───────────────────────────────────────────────── */
+.app-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+.app-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(0,0,0,.08);
+    border-color: #cbd5e1;
+}
+.app-card.active-card {
+    border: 1px solid #34d399;
+    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15);
+    background: linear-gradient(145deg, #ffffff, #f0fdf4);
+}
+
+.app-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.app-icon {
+    width: 60px; height: 60px;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+}
+.icon-sesame { background: #dcfce7; color: #059669; } 
+.icon-factorial { background: #ffe4e6; color: #e11d48; } 
+.icon-google { background: #fee2e2; color: #dc2626; } 
+.icon-zapier { background: #ffedd5; color: #ea580c; }
+.icon-cloudinary { background: #e0e7ff; color: #4338ca; }
+.icon-aws { background: #fef3c7; color: #d97706; }
+.icon-whatsapp { background: #dcfce7; color: #16a34a; }
+
+.app-status {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.status-connected { background: #d1fae5; color: #059669; }
+.status-disconnected { background: #f1f5f9; color: #64748b; }
+.status-beta { background: #fef08a; color: #a16207; }
+
+.app-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+.app-desc {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.5;
+    margin-bottom: 24px;
+    flex-grow: 1;
+}
+
+.app-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+}
+.btn-app {
+    flex: 1;
+    height: 42px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all .2s;
+}
+.btn-connect {
+    background: #0f172a; color: #fff;
+}
+.btn-connect:hover { background: #1e293b; }
+.btn-settings {
+    background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;
+}
+.btn-settings:hover { background: #f1f5f9; color: #0f172a; }
+
+/* ── Webhooks & API Keys Section ────────────────────────────── */
+.dev-section {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 24px;
+}
+.dev-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.api-key-box {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.api-key-text {
+    font-family: monospace;
+    font-size: 14px;
+    color: #475569;
+    letter-spacing: 1px;
+}
+
+/* Modal Styling */
+.modal-content {
+    border-radius: 20px; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,.25);
+}
+.modal-header { border-bottom: 1px solid #f1f5f9; padding: 20px 24px; }
+.modal-body { padding: 24px; }
+.form-label { font-size: 11px !important; font-weight: 700 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px !important; }
+.form-control { border-radius: 50px !important; min-height: 44px; padding-left: 16px; }
+</style>
+
+
+<div class="int-page-header">
+    <div class="d-flex align-items-center gap-3">
+        <div class="int-page-icon"><i class="bi bi-plug-fill"></i></div>
+        <div>
+            <h1 style="font-weight: 800; color: #0f172a; font-size: 24px; margin: 0;">Central de Integrações</h1>
+            <p style="color: #64748b; font-size: 14px; margin: 0;">Conecte o NetlineHR com as suas ferramentas favoritas.</p>
+        </div>
+    </div>
+</div>
+
+
+<h3 style="font-size: 16px; font-weight: 800; color: #334155; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;">Recursos Humanos & Sincronização</h3>
+
+<div class="app-grid">
+    
+    <div class="app-card active-card">
+        <div class="app-card-header">
+            <div class="app-icon icon-sesame"><i class="bi bi-stopwatch"></i></div>
+            <span class="app-status status-connected"><i class="bi bi-check-circle-fill me-1"></i> Conectado</span>
+        </div>
+        <div class="app-title">Sesame HR</div>
+        <div class="app-desc">Sincronize automaticamente o calendário de faltas, férias e registros de ponto do Sesame HR para o NetlineHR.</div>
+        <div class="app-actions">
+            <button class="btn-app btn-settings" data-bs-toggle="modal" data-bs-target="#sesameModal">
+                <i class="bi bi-gear-fill"></i> Configurar Sincronização
+            </button>
+        </div>
+    </div>
+
+    
+    <div class="app-card">
+        <div class="app-card-header">
+            <div class="app-icon icon-factorial"><i class="bi bi-box"></i></div>
+            <span class="app-status status-disconnected">Desconectado</span>
+        </div>
+        <div class="app-title">Factorial HR</div>
+        <div class="app-desc">Importe dados de colaboradores e estrutura organizacional diretamente do Factorial.</div>
+        <div class="app-actions">
+            <button class="btn-app btn-connect" onclick="alert('Esta conexão será habilitada na próxima atualização!')"><i class="bi bi-link-45deg"></i> Conectar</button>
+        </div>
+    </div>
+</div>
+
+
+<h3 style="font-size: 16px; font-weight: 800; color: #334155; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;">Produtividade & Automação</h3>
+
+<div class="app-grid">
+    
+    <div class="app-card">
+        <div class="app-card-header">
+            <div class="app-icon icon-google"><i class="bi bi-calendar-event"></i></div>
+            <span class="app-status status-disconnected">Desconectado</span>
+        </div>
+        <div class="app-title">Google Calendar</div>
+        <div class="app-desc">Exporte as férias e escalas aprovadas diretamente para as agendas do Google dos colaboradores.</div>
+        <div class="app-actions">
+            <button class="btn-app btn-connect" onclick="alert('Esta conexão será habilitada na próxima atualização!')"><i class="bi bi-link-45deg"></i> Conectar</button>
+        </div>
+    </div>
+
+    
+    <div class="app-card">
+        <div class="app-card-header">
+            <div class="app-icon icon-zapier"><i class="bi bi-lightning-charge-fill"></i></div>
+            <span class="app-status status-beta">Em Breve</span>
+        </div>
+        <div class="app-title">Zapier</div>
+        <div class="app-desc">Crie fluxos automatizados conectando o NetlineHR a mais de 5.000 aplicativos diferentes.</div>
+        <div class="app-actions">
+            <button class="btn-app btn-settings" disabled><i class="bi bi-lock-fill"></i> Aguarde</button>
+        </div>
+    </div>
+    
+    <!-- Novo card do Cloudinary -->
+    <div class="app-card {% if cloudinary_configured %}active-card{% endif %}">
+        <div class="app-card-header">
+            <div class="app-icon icon-cloudinary"><i class="bi bi-cloud-arrow-up-fill"></i></div>
+            {% if cloudinary_configured %}
+                <span class="app-status status-connected"><i class="bi bi-check-circle-fill me-1"></i> Conectado</span>
+            {% else %}
+                <span class="app-status status-disconnected">Desconectado</span>
+            {% endif %}
+        </div>
+        <div class="app-title">Cloudinary</div>
+        <div class="app-desc">Armazene fotos de perfil, comprovantes e holerites na nuvem com alta performance e segurança.</div>
+        <div class="app-actions">
+            {% if cloudinary_configured %}
+                <button class="btn-app btn-settings" data-bs-toggle="modal" data-bs-target="#cloudinaryModal">
+                    <i class="bi bi-gear-fill"></i> Configurar
+                </button>
+            {% else %}
+                <button class="btn-app btn-connect" data-bs-toggle="modal" data-bs-target="#cloudinaryModal">
+                    <i class="bi bi-link-45deg"></i> Conectar
+                </button>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Novo card do AWS S3 -->
+    <div class="app-card {% if active_cloud == 'S3' %}active-card{% endif %}">
+        <div class="app-card-header">
+            <div class="app-icon icon-aws"><i class="bi bi-amazon"></i></div>
+            {% if active_cloud == 'S3' %}
+                <span class="app-status status-connected"><i class="bi bi-check-circle-fill me-1"></i> Ativo</span>
+            {% else %}
+                <span class="app-status status-disconnected">Inativo</span>
+            {% endif %}
+        </div>
+        <div class="app-title">Amazon S3</div>
+        <div class="app-desc">O padrão da indústria para armazenamento em massa. Hospede os arquivos da NetlineHR na nuvem da AWS.</div>
+        <div class="app-actions">
+            {% if s3_configured %}
+                <button class="btn-app btn-settings" data-bs-toggle="modal" data-bs-target="#s3Modal">
+                    <i class="bi bi-gear-fill"></i> Configurar
+                </button>
+            {% else %}
+                <button class="btn-app btn-connect" data-bs-toggle="modal" data-bs-target="#s3Modal">
+                    <i class="bi bi-link-45deg"></i> Conectar
+                </button>
+            {% endif %}
+        </div>
+    </div>
+    </div>
+</div>
+
+<h3 style="font-size: 16px; font-weight: 800; color: #334155; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;">Comunicação & Mensageria</h3>
+
+<div class="app-grid">
+    <!-- Card do WhatsApp -->
+    <div class="app-card">
+        <div class="app-card-header">
+            <div class="app-icon icon-whatsapp"><i class="bi bi-whatsapp"></i></div>
+            <span class="app-status status-disconnected">Desconectado</span>
+        </div>
+        <div class="app-title">WhatsApp API</div>
+        <div class="app-desc">Envie holerites, alertas de ponto e avisos do mural direto para o WhatsApp dos colaboradores.</div>
+        <div class="app-actions">
+            <button class="btn-app btn-connect" onclick="alert('Módulo de WhatsApp em desenvolvimento! Em breve você poderá parear o número do RH via QR Code.')">
+                <i class="bi bi-qr-code-scan"></i> Conectar Aparelho
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="dev-section mt-5">
+    <div class="dev-header d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <h3 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 4px;">Chaves de API (Desenvolvedor)</h3>
+            <p style="color: #64748b; font-size: 13px; margin: 0;">Use essas chaves para autenticar aplicações próprias (TokenAuthentication).</p>
+        </div>
+        <button class="btn-app btn-connect flex-grow-0" style="width: auto; padding: 0 24px; min-width: max-content;" onclick="alert('Chave gerada com sucesso! (Apenas demonstração visível)')">
+            <i class="bi bi-plus-lg"></i> Gerar Nova Chave
+        </button>
+    </div>
+    
+    <div class="api-key-box">
+        <div>
+            <div style="font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">Token Principal de Produção</div>
+            <div class="api-key-text">Token 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b</div>
+        </div>
+        <button class="btn btn-light rounded-pill" onclick="alert('Copiado para a área de transferência!')"><i class="bi bi-clipboard"></i> Copiar</button>
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="sesameModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" style="font-weight: 800; color: #0f172a;"><i class="bi bi-stopwatch text-success me-2"></i> Configurar Sesame HR</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="alert alert-success d-flex align-items-center" style="border-radius: 12px; font-size: 13px;">
+            <i class="bi bi-check-circle-fill me-2 fs-4"></i>
+            <div>A sincronização com o Sesame HR está ativa. Seus dados estão sendo atualizados a cada 1 hora.</div>
+        </div>
+
+        <form>
+            <div class="mb-3">
+                <label class="form-label">Chave de API do Sesame (Bearer Token) <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" value="sesame_prod_89x12nf83jf02jf..." placeholder="Cole o token fornecido pelo Sesame">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Company ID <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" value="company_991823" placeholder="ID da empresa no Sesame">
+            </div>
+
+            <hr class="my-4">
+            
+            <h6 style="font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 12px; text-transform: uppercase;">Módulos Sincronizados</h6>
+            
+            <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" id="syncPunches" checked>
+                <label class="form-check-label fw-600" for="syncPunches">Importar Registros de Ponto (Batidas)</label>
+            </div>
+            <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" id="syncLeaves" checked>
+                <label class="form-check-label fw-600" for="syncLeaves">Importar Férias e Ausências (Calendário)</label>
+            </div>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="syncEmployees">
+                <label class="form-check-label fw-600" for="syncEmployees">Criar novos funcionários automaticamente</label>
+            </div>
+
+        </form>
+      </div>
+      <div class="modal-footer" style="border-top: none; padding: 0 24px 24px;">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-dismiss="modal" style="font-weight: 600;">Salvar Integração</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal do Cloudinary -->
+<div class="modal fade" id="cloudinaryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" style="font-weight: 800; color: #0f172a;"><i class="bi bi-cloud-arrow-up-fill text-primary me-2"></i> Armazenamento na Nuvem</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="{% url 'save_cloudinary_integration' %}">
+          {% csrf_token %}
+          <div class="modal-body">
+            
+            {% if cloudinary_configured %}
+            <div class="alert alert-success d-flex align-items-center" style="border-radius: 12px; font-size: 13px;">
+                <i class="bi bi-check-circle-fill me-2 fs-4"></i>
+                <div>O envio de mídias para a nuvem está <b>ativo</b>. Os arquivos não estão mais ocupando espaço local!</div>
+            </div>
+            {% else %}
+            <div class="alert alert-secondary d-flex align-items-center" style="border-radius: 12px; font-size: 13px;">
+                <i class="bi bi-info-circle-fill me-2 fs-4"></i>
+                <div>Conecte sua conta do Cloudinary para parar de usar o HD do servidor e acelerar o carregamento das fotos.</div>
+            </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label class="form-label">Cloud Name <span class="text-danger">*</span></label>
+                <input type="text" name="cloud_name" class="form-control" value="{{ cloudinary_cloud_name }}" placeholder="Ex: netline-app" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">API Key <span class="text-danger">*</span></label>
+                <input type="text" name="api_key" class="form-control" value="{{ cloudinary_api_key }}" placeholder="Ex: 87123981273" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">API Secret <span class="text-danger">*</span></label>
+                <input type="password" name="api_secret" class="form-control" placeholder="Cole sua API Secret aqui" required>
+                <div class="form-text" style="font-size: 11px;">A Secret atual não é exibida por motivos de segurança. Ao salvar, uma nova será definida.</div>
+            </div>
+
+          </div>
+          <div class="modal-footer" style="border-top: none; padding: 0 24px 24px;">
+            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary rounded-pill px-4" style="font-weight: 600;">Salvar Integração</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal do AWS S3 -->
+<div class="modal fade" id="s3Modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" style="font-weight: 800; color: #0f172a;"><i class="bi bi-amazon text-warning me-2"></i> Amazon Web Services S3</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="{% url 'save_s3_integration' %}">
+          {% csrf_token %}
+          <div class="modal-body">
+            
+            {% if active_cloud == 'S3' %}
+            <div class="alert alert-success d-flex align-items-center" style="border-radius: 12px; font-size: 13px;">
+                <i class="bi bi-check-circle-fill me-2 fs-4"></i>
+                <div>O AWS S3 é o seu <b>provedor principal</b>. Todo novo arquivo será salvo neste bucket.</div>
+            </div>
+            {% else %}
+            <div class="alert alert-secondary d-flex align-items-center" style="border-radius: 12px; font-size: 13px;">
+                <i class="bi bi-info-circle-fill me-2 fs-4"></i>
+                <div>Configure as chaves do IAM para habilitar a integração S3 e usá-la como motor de arquivos.</div>
+            </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label class="form-label">Bucket Name <span class="text-danger">*</span></label>
+                <input type="text" name="aws_bucket_name" class="form-control" value="{{ aws_bucket_name }}" placeholder="Ex: netline-storage-prod" required>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Região AWS</label>
+                    <input type="text" name="aws_region" class="form-control" value="{{ aws_region|default:'us-east-1' }}" placeholder="Ex: us-east-1">
+                </div>
+            </div>
+
+            <hr class="my-4">
+            
+            <div class="mb-3">
+                <label class="form-label">Access Key ID <span class="text-danger">*</span></label>
+                <input type="text" name="aws_access_key" class="form-control" value="{{ aws_access_key }}" placeholder="AKIA..." required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Secret Access Key <span class="text-danger">*</span></label>
+                <input type="password" name="aws_secret_key" class="form-control" placeholder="Cole sua Secret Key" required>
+                <div class="form-text" style="font-size: 11px;">Ocultado por segurança. Salve para substituir.</div>
+            </div>
+            
+            <div class="form-check form-switch mt-4">
+                <input class="form-check-input" type="checkbox" name="set_active" id="setActiveS3" value="true" {% if active_cloud == 'S3' %}checked{% endif %}>
+                <label class="form-check-label fw-bold text-dark" for="setActiveS3">Definir AWS S3 como Provedor Principal</label>
+                <div class="form-text" style="font-size: 11.5px;">Se ativado, o sistema usará o S3 em vez do Cloudinary ou Local.</div>
+            </div>
+
+          </div>
+          <div class="modal-footer" style="border-top: none; padding: 0 24px 24px;">
+            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary rounded-pill px-4" style="font-weight: 600;">Salvar Integração</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+// Correção do Bug do Bootstrap Modal (Evita ficar atrás do Backdrop)
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.modal').forEach(m => document.body.appendChild(m));
+});
+</script>
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}Holerite - {{ payslip.employee.full_name }}{% endblock %}
+
+{% block content %}
+<style>
+    .signature-box {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .signature-hash {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 11px;
+        color: #64748b;
+        word-break: break-all;
+        margin-top: 15px;
+        background: #f1f5f9;
+        padding: 10px;
+        border-radius: 6px;
+    }
+    .pdf-container {
+        height: 70vh;
+        min-height: 500px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #cbd5e1;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4" style="max-width: 1000px; margin: 0 auto;">
+    <a href="{% url 'payroll_dashboard' %}?month={{ payslip.reference_month }}&year={{ payslip.reference_year }}" class="btn btn-light" style="border-radius: 8px; font-weight: 600;">
+        <i class="bi bi-arrow-left me-2"></i> Voltar
+    </a>
+    
+    <div>
+        {% if payslip.document %}
+        <a href="{{ payslip.document.url }}" download="Holerite_{{ payslip.employee.first_name }}.pdf" target="_blank" class="btn btn-outline-dark" style="border-radius: 8px; font-weight: 600;">
+            <i class="bi bi-download me-2"></i> Baixar Arquivo
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row" style="max-width: 1000px; margin: 0 auto;">
+    
+    <div class="col-lg-8 mb-4">
+        {% if payslip.document %}
+            <div class="pdf-container">
+                <embed src="{{ payslip.document.url }}#toolbar=0&navpanes=0&scrollbar=0" type="application/pdf" width="100%" height="100%" style="border: none;" />
+            </div>
+        {% else %}
+            <div class="pdf-container d-flex flex-column align-items-center justify-content-center bg-light">
+                <i class="bi bi-file-earmark-x text-muted" style="font-size: 48px;"></i>
+                <h5 class="mt-3 text-muted">Nenhum arquivo anexado</h5>
+            </div>
+        {% endif %}
+    </div>
+    
+    
+    <div class="col-lg-4">
+        {% if payslip.status == 'signed' %}
+        <div class="signature-box" style="border-color: #10b981; background: #ecfdf5;">
+            <i class="bi bi-shield-check" style="font-size: 42px; color: #10b981;"></i>
+            <h5 style="color: #047857; font-weight: 800; margin-top: 15px; text-transform: uppercase;">Assinado Eletronicamente</h5>
+            <p style="margin-bottom: 5px; font-size: 15px; color: #064e3b;">Por <strong>{{ payslip.employee.full_name }}</strong></p>
+            <p style="margin-bottom: 15px; font-size: 13px; color: #064e3b;">
+                <i class="bi bi-calendar-check me-1"></i> {{ payslip.signed_at|date:"d/m/Y às H:i" }}<br>
+                <i class="bi bi-geo-alt me-1"></i> IP: {{ payslip.signed_ip }}
+            </p>
+            <div class="signature-hash">
+                <strong>Hash de Autenticidade (SHA-256):</strong><br>
+                {{ payslip.signature_hash }}
+            </div>
+        </div>
+        
+        {% elif payslip.status == 'pending' and user.employee_id == payslip.employee.id or user.is_superuser %}
+        <div class="signature-box">
+            <div style="width: 50px; height: 50px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
+                <i class="bi bi-pen" style="font-size: 24px; color: #0f172a;"></i>
+            </div>
+            <h5 style="color: #0f172a; font-weight: 800;">Assinatura Digital</h5>
+            <p style="color: #64748b; font-size: 13px; margin-bottom: 20px;">
+                Revise o documento ao lado. Para confirmar o recebimento e assinar legalmente este holerite, digite sua senha de acesso.
+            </p>
+            
+            <form method="POST" action="{% url 'payslip_sign' payslip.pk %}" id="signatureForm">
+                {% csrf_token %}
+                
+                <input type="hidden" name="signature_image" id="signature_image">
+                
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight: 700; color: #475569; font-size: 12px;">DESENHE SUA ASSINATURA</label>
+                    <div style="border: 2px dashed #cbd5e1; border-radius: 8px; background: #fff; overflow: hidden; touch-action: none;">
+                        <canvas id="signatureCanvas" style="width: 100%; height: 120px; display: block;"></canvas>
+                    </div>
+                    <div class="d-flex justify-content-end mt-1 mb-3">
+                        <button type="button" class="btn btn-sm text-secondary" id="clearSignature" style="font-weight: 600; font-size: 11px;">Limpar Rabisco</button>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight: 700; color: #475569; font-size: 12px;">SENHA DE VALIDAÇÃO</label>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required style="border-radius: 8px; text-align: center; padding: 12px; font-size: 18px; letter-spacing: 2px;">
+                </div>
+                <button type="submit" class="btn btn-dark w-100" style="border-radius: 8px; font-weight: 700; background: #10b981; border: none; padding: 12px; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);">
+                    Confirmar Assinatura
+                </button>
+            </form>
+            
+            <p style="font-size: 11px; color: #94a3b8; margin-top: 15px; line-height: 1.4;">
+                Ao clicar em confirmar, será gerado um selo criptográfico atrelado ao seu endereço IP, validando este aceite eletrônico de acordo com a legislação vigente.
+            </p>
+        </div>
+        
+        {% elif payslip.status == 'pending' %}
+        <div class="signature-box">
+            <i class="bi bi-hourglass-split" style="font-size: 42px; color: #f59e0b;"></i>
+            <h5 style="color: #d97706; font-weight: 800; margin-top: 15px;">Aguardando Assinatura</h5>
+            <p style="color: #b45309; font-size: 14px;">O funcionário ainda não acessou o sistema para assinar este documento.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const canvas = document.getElementById('signatureCanvas');
+        if (canvas) {
+            // Setup canvas context correctly
+            function resizeCanvas() {
+                var ratio =  Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext("2d").scale(ratio, ratio);
+            }
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
+
+            const signaturePad = new SignaturePad(canvas, {
+                penColor: "rgb(15, 23, 42)" // #0f172a
+            });
+
+            document.getElementById('clearSignature').addEventListener('click', function () {
+                signaturePad.clear();
+            });
+
+            document.getElementById('signatureForm').addEventListener('submit', function(e) {
+                if (signaturePad.isEmpty()) {
+                    e.preventDefault();
+                    alert("Por favor, desenhe sua assinatura antes de confirmar.");
+                    return false;
+                }
+                
+                // Get transparent PNG base64
+                const dataUrl = signaturePad.toDataURL("image/png");
+                document.getElementById('signature_image').value = dataUrl;
+            });
+        }
+    });
+</script>
+{% endblock %}

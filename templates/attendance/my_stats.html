@@ -1,0 +1,831 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Meus Registros{% endblock %}
+{% block content %}
+<style>
+    /* ── TIMESHEET HEADER ── */
+    .timesheet-header {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        margin-bottom: 28px;
+        gap: 16px;
+    }
+    .ts-left { display: flex; flex-direction: column; gap: 2px; }
+    .ts-subtitle { font-size: 12px; color: var(--text-secondary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .ts-title {
+        font-size: 26px;
+        font-weight: 800;
+        color: var(--text-primary);
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .ts-title-sub {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-secondary);
+    }
+    .ts-link {
+        font-size: 13px;
+        color: #6366f1;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: 0.2s;
+    }
+    .ts-link:hover { color: #4f46e5; text-decoration: underline; }
+
+    .ts-center { display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .ts-right  { display: flex; justify-content: flex-end; }
+    .ts-month-picker {
+        display: flex;
+        align-items: center;
+        background: var(--card-bg);
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+    .ts-month-picker > a {
+        padding: 10px 14px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: 0.2s;
+        background: var(--card-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .ts-month-picker > a:hover { background: var(--hover-bg); color: var(--text-primary); }
+    .ts-month-display {
+        padding: 10px 22px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-primary);
+        background: var(--card-bg);
+        border-left: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
+        min-width: 130px;
+        text-align: center;
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+    }
+
+    /* ── GANTT TABLE ── */
+    .gantt-container {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        overflow-x: auto;
+        box-shadow: var(--shadow-sm);
+    }
+    .gantt-table {
+        width: 100%;
+        border-collapse: collapse;
+        /* 10 time columns from 8h to 18h */
+        min-width: 700px;
+    }
+    /* Header */
+    .gantt-table thead tr {
+        border-bottom: 1px solid var(--border-color);
+    }
+    .gantt-table th {
+        font-size: 11px;
+        color: var(--text-secondary);
+        font-weight: 600;
+        padding: 12px 8px;
+        text-align: left;
+        white-space: nowrap;
+        background: var(--table-header-bg);
+    }
+    .gantt-table th.col-date { padding-left: 24px; width: 140px; }
+    .gantt-table th.col-horas { width: 110px; }
+    .gantt-table th.col-time { text-align: center; }
+    /* the timeline header takes the remaining space */
+    .gantt-table th.col-timeline { width: auto; padding: 12px 0; }
+
+    /* Rows */
+    .gantt-row {
+        border-bottom: 1px solid var(--border-color);
+        transition: background 0.15s;
+        cursor: pointer;
+    }
+    .gantt-row:last-child { border-bottom: 0; }
+    .gantt-row:hover { background: var(--hover-bg); }
+    .gantt-row.is-today { background: rgba(99, 102, 241, 0.04); }
+    .gantt-row.has-hours td.gantt-cell:first-child { color: var(--text-primary); font-weight: 700; }
+    .gantt-row.is-leave { background: rgba(167, 139, 250, 0.05); }
+    .gantt-row.is-holiday { background: rgba(239, 68, 68, 0.04); }
+    .gantt-row.is-rest { opacity: 0.7; }
+
+    .gantt-cell {
+        padding: 14px 8px;
+        font-size: 13px;
+        vertical-align: middle;
+        white-space: nowrap;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+    .gantt-cell.col-date { padding-left: 24px; }
+    .gantt-cell-horas {
+        color: var(--text-primary);
+        font-weight: 700;
+        font-size: 13px;
+    }
+    .gantt-cell-horas .slash { color: var(--text-secondary); font-weight: 400; font-size: 12px; }
+
+    /* ── INLINE TIMELINE (single cell w/ relative positioned bars) ── */
+    .timeline-cell { padding: 14px 0; min-width: 0; }
+    .timeline-inner {
+        position: relative;
+        height: 12px;
+        /* The inner div covers 8h-18h = 10h window */
+    }
+    /* Vertical hour lines inside the timeline */
+    .tl-guideline {
+        position: absolute;
+        top: -6px;
+        bottom: -6px;
+        width: 1px;
+        background: var(--border-color);
+        opacity: 0.6;
+    }
+    /* The actual work bar */
+    .tl-bar {
+        position: absolute;
+        height: 100%;
+        background: linear-gradient(90deg, #0dc02a, #00cc55);
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(13, 192, 42, 0.35);
+        transition: height 0.15s, top 0.15s;
+        top: 0;
+        z-index: 2;
+    }
+    .gantt-row:hover .tl-bar { height: 140%; top: -20%; }
+    /* Leave bar */
+    .tl-bar-leave {
+        background: linear-gradient(90deg, #a78bfa, #8b5cf6);
+        box-shadow: 0 1px 3px rgba(139, 92, 246, 0.3);
+    }
+    /* Leave full-width label */
+    .tl-leave-label {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: #7c3aed;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 3;
+    }
+
+    /* ── HOUR RULER HEADER ── */
+    .tl-ruler {
+        position: relative;
+        height: 36px;
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 12px;
+    }
+    .tl-ruler-label {
+        position: absolute;
+        font-size: 10px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        transform: translateX(-50%);
+        white-space: nowrap;
+    }
+
+    /* ── DETAIL ACCORDION ROW ── */
+    .detail-row td {
+        background: var(--hover-bg) !important;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .punch-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    .chip-in  { background: rgba(13, 192, 42, 0.12); color: #059669; border: 1px solid rgba(13, 192, 42, 0.25); }
+    .chip-out { background: rgba(32, 42, 68, 0.08); color: var(--text-primary); border: 1px solid var(--border-color); }
+    .chip-lunch { background: rgba(245, 158, 11, 0.12); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.25); }
+
+    /* Status badge pills */
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+    .pill-leave    { background: rgba(167, 139, 250, 0.15); color: #7c3aed; }
+    .pill-holiday  { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
+    .pill-rest     { background: var(--hover-bg); color: var(--text-secondary); }
+    .pill-absence  { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+
+    /* ── MONTH PICKER DROPDOWN ── */
+    #monthPickerMenu {
+        display: none;
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1050;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        box-shadow: var(--shadow-lg);
+        padding: 16px;
+        min-width: 220px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 767px) {
+
+        /* --- Header: stack into 2 rows --- */
+        .timesheet-header {
+            grid-template-columns: 1fr;
+            justify-items: start;
+            gap: 12px;
+        }
+        .ts-left { width: 100%; }
+        .ts-center {
+            width: 100%;
+            justify-content: center;
+        }
+        .ts-right { display: none; }
+        .ts-title { font-size: 22px; }
+        .ts-title-sub { font-size: 13px; }
+
+        /* --- Table: hide timeline column entirely --- */
+        .gantt-table { min-width: 0; width: 100%; }
+        .gantt-table .col-timeline,
+        .gantt-table .timeline-cell { display: none !important; }
+
+        /* --- Make rows more compact and touch-friendly --- */
+        .gantt-cell { padding: 12px 10px; font-size: 12px; }
+        .gantt-cell.col-date { padding-left: 14px; font-size: 12px; }
+        .gantt-table th.col-date { padding-left: 14px; }
+        .gantt-table th { padding: 10px 10px; font-size: 10px; }
+
+        /* --- Hours column: full width to fill space --- */
+        .gantt-table th.col-horas,
+        .gantt-cell.gantt-cell-horas { font-size: 12px; }
+
+        /* Show a colored left-border indicator on special rows instead of invisible timeline */
+        .gantt-row.is-leave   { border-left: 3px solid #8b5cf6; }
+        .gantt-row.is-holiday { border-left: 3px solid #ef4444; }
+        .gantt-row.is-rest    { border-left: 3px solid var(--border-color); }
+        .gantt-row.has-hours  { border-left: 3px solid #0dc02a; }
+        .gantt-row.is-today   { border-left: 3px solid #6366f1; }
+
+        /* --- Accordion detail chips: wrap nicely, less padding --- */
+        .detail-row td { padding: 12px 14px !important; }
+        .punch-chip { font-size: 11px; padding: 3px 10px; }
+        .detail-row .ms-auto {
+            margin-left: 0 !important;
+            width: 100%;
+            justify-content: flex-end;
+        }
+
+        /* --- Month picker dropdown: center align on mobile --- */
+        #monthPickerMenu { left: 50%; transform: translateX(-50%); min-width: 200px; }
+    }
+
+    /* ── CUSTOM TIMELINE TOOLTIP ── */
+    .tl-tooltip {
+        position: fixed;
+        z-index: 9999;
+        pointer-events: none;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        color: #f8fafc;
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        white-space: nowrap;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.06);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        opacity: 0;
+        transform: translateY(4px);
+        transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    .tl-tooltip.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .tl-tooltip .tl-tt-icon {
+        font-size: 12px;
+        opacity: 0.7;
+    }
+    .tl-tooltip .tl-tt-arrow {
+        color: #10b981;
+        font-size: 11px;
+        opacity: 0.9;
+    }
+    .tl-tooltip .tl-tt-time {
+        color: #f1f5f9;
+        letter-spacing: 0.3px;
+    }
+    .tl-tooltip .tl-tt-dur {
+        font-size: 11px;
+        font-weight: 500;
+        color: #94a3b8;
+        margin-left: 2px;
+    }
+</style>
+
+
+<div class="timesheet-header">
+    <div class="ts-left">
+        <div class="ts-subtitle">Este mês</div>
+        <div class="ts-title">
+            {{ total_worked }}
+            <span class="ts-title-sub">/ {{ month_theoretical }} teóricos</span>
+        </div>
+        <a href="javascript:void(0);" onclick="openTimeBank('{{ date_from.year }}', '{{ date_from.month }}')" class="ts-link mt-1">
+            <i class="bi bi-piggy-bank"></i> Ver banco de horas
+        </a>
+    </div>
+
+    <div class="ts-center">
+        <div class="ts-month-picker" style="position: relative;">
+            <a href="?date_from={{ prev_from }}&date_to={{ prev_to }}"><i class="bi bi-chevron-left"></i></a>
+
+            <div class="ts-month-display" onclick="toggleMonthPicker(event)">
+                {% if date_from.month == 1 %}Janeiro
+                {% elif date_from.month == 2 %}Fevereiro
+                {% elif date_from.month == 3 %}Março
+                {% elif date_from.month == 4 %}Abril
+                {% elif date_from.month == 5 %}Maio
+                {% elif date_from.month == 6 %}Junho
+                {% elif date_from.month == 7 %}Julho
+                {% elif date_from.month == 8 %}Agosto
+                {% elif date_from.month == 9 %}Setembro
+                {% elif date_from.month == 10 %}Outubro
+                {% elif date_from.month == 11 %}Novembro
+                {% elif date_from.month == 12 %}Dezembro
+                {% endif %} {{ date_from.year }}
+
+                <div id="monthPickerMenu">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <a href="javascript:void(0)" onclick="event.stopPropagation(); window.changePickerYear(-1)" class="text-decoration-none" style="color: var(--text-secondary);"><i class="bi bi-chevron-left"></i></a>
+                        <span id="picker-year-display" style="font-weight: 700; color: var(--text-primary);">{{ date_from.year }}</span>
+                        <a href="javascript:void(0)" onclick="event.stopPropagation(); window.changePickerYear(1)" class="text-decoration-none" style="color: var(--text-secondary);"><i class="bi bi-chevron-right"></i></a>
+                    </div>
+                    <div class="row g-1 text-center" id="month-grid"></div>
+                </div>
+            </div>
+
+            {% if allow_next_month %}
+            <a href="?date_from={{ next_from }}&date_to={{ next_to }}"><i class="bi bi-chevron-right"></i></a>
+            {% else %}
+            <div style="padding: 10px 14px; color: var(--border-color); cursor: not-allowed;" title="Você só pode visualizar os registros até o mês atual">
+                <i class="bi bi-chevron-right"></i>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="ts-right"></div>
+</div>
+
+
+
+<div class="gantt-container">
+    <table class="gantt-table">
+        <thead>
+            <tr>
+                <th class="col-date">Data</th>
+                <th class="col-horas">Horas</th>
+                <th class="col-timeline" style="padding: 0; padding-right: 24px;">
+                    
+                    <div class="tl-ruler" id="tl-ruler">
+                        
+                    </div>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in daily_rows %}
+            {% with has_h=row.worked_fmt|default:"" %}
+
+            
+            {% if row.source == 'leave' %}
+                {% with row_cls="is-leave" %}
+                <tr class="gantt-row {{ row_cls }} {% if row.date == today %}is-today{% endif %}"
+                    onclick="toggleDetails('{{ row.date|date:"Y-m-d" }}')" style="cursor:pointer;">
+                    <td class="gantt-cell col-date">
+                        {{ row.date|date:"l, d"|title }}
+                    </td>
+                    <td class="gantt-cell">
+                        <span class="status-pill pill-leave"><i class="bi bi-suitcase-fill"></i> {{ row.leave_label }}</span>
+                    </td>
+                    <td class="timeline-cell" style="padding-right: 24px;" data-bars='[]' data-source="leave">
+                        <div class="timeline-inner"></div>
+                    </td>
+                </tr>
+                {% endwith %}
+
+            {% elif row.source == 'holiday' %}
+                <tr class="gantt-row is-holiday {% if row.date == today %}is-today{% endif %}"
+                    onclick="toggleDetails('{{ row.date|date:"Y-m-d" }}')" style="cursor:pointer;">
+                    <td class="gantt-cell col-date">{{ row.date|date:"l, d"|title }}</td>
+                    <td class="gantt-cell">
+                        <span class="status-pill pill-holiday"><i class="bi bi-calendar-event-fill"></i> {{ row.leave_label|default:"Feriado" }}</span>
+                    </td>
+                    <td class="timeline-cell" style="padding-right: 24px;" data-bars='[]' data-source="holiday">
+                        <div class="timeline-inner"></div>
+                    </td>
+                </tr>
+
+            {% elif row.theo_fmt == "0h 00m" or not row.theo_fmt %}
+                
+                <tr class="gantt-row is-rest {% if row.date == today %}is-today{% endif %}"
+                    onclick="toggleDetails('{{ row.date|date:"Y-m-d" }}')" style="cursor:pointer;">
+                    <td class="gantt-cell col-date">{{ row.date|date:"l, d"|title }}</td>
+                    <td class="gantt-cell">
+                        <span class="status-pill pill-rest"><i class="bi bi-moon-stars-fill"></i> Folga</span>
+                    </td>
+                    <td class="timeline-cell" style="padding-right: 24px;" data-bars='[]' data-source="rest">
+                        <div class="timeline-inner"></div>
+                    </td>
+                </tr>
+
+            {% else %}
+                
+                <tr class="gantt-row {% if row.worked_fmt and row.worked_fmt != '0h 00m' %}has-hours{% endif %} {% if row.is_absence %}is-absence{% endif %} {% if row.date == today %}is-today{% endif %}"
+                    onclick="toggleDetails('{{ row.date|date:"Y-m-d" }}')" style="cursor:pointer;">
+                    <td class="gantt-cell col-date">{{ row.date|date:"l, d"|title }}</td>
+                    <td class="gantt-cell gantt-cell-horas">
+                        {% if row.is_absence %}
+                            <span class="status-pill pill-absence"><i class="bi bi-exclamation-circle-fill"></i> Falta</span>
+                        {% else %}
+                            {{ row.worked_fmt|default:"0h 00m" }}
+                            <span class="slash">/ {{ row.theo_fmt|default:"0h 00m" }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="timeline-cell" style="padding-right: 24px;"
+                        data-bars='[{% for bar in row.bars %}{"l":{{ bar.left }},"w":{{ bar.width }}}{% if not forloop.last %},{% endif %}{% endfor %}]'
+                        data-source="work">
+                        <div class="timeline-inner">
+                            
+                        </div>
+                    </td>
+                </tr>
+            {% endif %}
+            {% endwith %}
+
+            
+            <tr id="detail-{{ row.date|date:"Y-m-d" }}" class="detail-row" style="display:none;">
+                <td colspan="3" class="px-5 py-3">
+                    {% if row.shifts %}
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        {% for s in row.shifts %}
+                        <span class="punch-chip chip-in"><i class="bi bi-box-arrow-in-right"></i> {{ s.start_full }}</span>
+                        <span class="punch-chip chip-out"><i class="bi bi-box-arrow-right"></i> {{ s.end_full }}</span>
+                        {% endfor %}
+
+                        <div class="ms-auto d-flex gap-2">
+                            <a href="{% url 'adjustment_create' %}?date={{ row.date|date:"Y-m-d" }}"
+                               onclick="openAdjustmentModal(event, this.href)"
+                               class="btn btn-sm btn-light border rounded-pill d-flex align-items-center gap-1"
+                               style="font-size:12px;">
+                                <i class="bi bi-pencil"></i> Ajuste
+                            </a>
+                            {% if row.record_id %}
+                            <a href="{% url 'attendance_record_delete' row.record_id %}"
+                               onclick="return confirm('Excluir registro deste dia?')"
+                               class="btn btn-sm btn-light border rounded-pill d-flex align-items-center gap-1 text-danger"
+                               style="font-size:12px;">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-between gap-3" style="font-size:13px; color: var(--text-secondary);">
+                        <span>Nenhum registro encontrado neste dia.</span>
+                        <a href="{% url 'adjustment_create' %}?date={{ row.date|date:"Y-m-d" }}"
+                           onclick="openAdjustmentModal(event, this.href)"
+                           class="btn btn-sm btn-light border rounded-pill d-flex align-items-center gap-1"
+                           style="font-size:12px;">
+                            <i class="bi bi-plus-lg"></i> Solicitar
+                        </a>
+                    </div>
+                    {% endif %}
+                </td>
+            </tr>
+
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center py-5" style="color: var(--text-secondary);">Nenhum registro encontrado neste período.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<div class="modal fade" id="adjustmentModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+      <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+        <h5 class="modal-title fw-bold" id="adjustmentModalLabel">Solicitar Ajuste</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4" id="adjustmentModalBody"></div>
+    </div>
+  </div>
+</div>
+<div id="timeBankModalContainer"></div>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+/* ════════════════════════════════════════════════
+   TIMELINE RENDERING
+   Window: 8h (480 min) to 18h (1080 min) = 600 min
+   Bars from backend are in % of 24h (0-100).
+   We re-map them to the 8-18h window.
+════════════════════════════════════════════════ */
+const TL_START = 8 * 60;   // 480 min
+const TL_END   = 18 * 60;  // 1080 min
+const TL_SPAN  = TL_END - TL_START; // 600 min
+
+// Render ruler labels
+(function buildRuler() {
+    const ruler = document.getElementById('tl-ruler');
+    if (!ruler) return;
+    for (let h = 8; h <= 18; h++) {
+        const frac = (h - 8) / 10; // 0 to 1
+        const label = document.createElement('span');
+        label.className = 'tl-ruler-label';
+        label.style.left = (frac * 100) + '%';
+        label.textContent = h + ':00';
+        ruler.appendChild(label);
+    }
+})();
+
+// Render guidelines and bars on all timeline cells
+document.querySelectorAll('.timeline-cell').forEach(function(td) {
+    const inner = td.querySelector('.timeline-inner');
+    if (!inner) return;
+
+    const source = td.dataset.source;
+
+    // Add guidelines at each hour mark 8-18
+    for (let h = 8; h <= 18; h++) {
+        const frac = (h - 8) / 10;
+        const g = document.createElement('div');
+        g.className = 'tl-guideline';
+        g.style.left = (frac * 100) + '%';
+        inner.appendChild(g);
+    }
+
+    if (source !== 'work') return; // leave/holiday/rest – no bars to draw
+
+    let bars = [];
+    try { bars = JSON.parse(td.dataset.bars || '[]'); } catch(e) {}
+
+    bars.forEach(function(b) {
+        // b.l and b.w are percentage of 24h
+        // Convert to minutes
+        const startMin = b.l / 100 * 24 * 60;
+        const endMin   = (b.l + b.w) / 100 * 24 * 60;
+
+        // Clip to window
+        const clipStart = Math.max(startMin, TL_START);
+        const clipEnd   = Math.min(endMin, TL_END);
+        if (clipEnd <= clipStart) return;
+
+        const leftPct  = (clipStart - TL_START) / TL_SPAN * 100;
+        const widthPct = (clipEnd - clipStart)   / TL_SPAN * 100;
+
+        const bar = document.createElement('div');
+        bar.className = 'tl-bar';
+        bar.style.left  = leftPct + '%';
+        bar.style.width = widthPct + '%';
+
+        const startH = Math.floor(clipStart / 60).toString().padStart(2,'0');
+        const startM = (clipStart % 60).toString().padStart(2,'0');
+        const endH   = Math.floor(clipEnd / 60).toString().padStart(2,'0');
+        const endM   = (clipEnd % 60).toString().padStart(2,'0');
+        bar.dataset.startMin = clipStart;
+        bar.dataset.endMin = clipEnd;
+
+        inner.appendChild(bar);
+    });
+});
+
+// ── Custom Floating Tooltip ──────────────────────────────────────────────────
+(function setupTimelineTooltip() {
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tl-tooltip';
+    tooltip.innerHTML = '<i class="bi bi-clock tl-tt-icon"></i><span class="tl-tt-time"></span><span class="tl-tt-arrow">→</span><span class="tl-tt-time tl-tt-end"></span><span class="tl-tt-dur"></span>';
+    document.body.appendChild(tooltip);
+
+    function fmtMin(min) {
+        return Math.floor(min/60).toString().padStart(2,'0') + ':' + (Math.round(min)%60).toString().padStart(2,'0');
+    }
+    function fmtDur(startMin, endMin) {
+        const total = Math.round(endMin - startMin);
+        const h = Math.floor(total/60);
+        const m = total % 60;
+        return h > 0 ? h + 'h ' + (m > 0 ? m + 'min' : '') : m + 'min';
+    }
+
+    document.addEventListener('mousemove', function(e) {
+        const bar = e.target.closest ? e.target.closest('.tl-bar') : null;
+        if (bar && bar.dataset.startMin) {
+            const s = parseFloat(bar.dataset.startMin);
+            const en = parseFloat(bar.dataset.endMin);
+            tooltip.querySelector('.tl-tt-time').textContent = fmtMin(s);
+            tooltip.querySelector('.tl-tt-end').textContent = fmtMin(en);
+            tooltip.querySelector('.tl-tt-dur').textContent = '(' + fmtDur(s, en) + ')';
+            tooltip.style.left = (e.clientX + 14) + 'px';
+            tooltip.style.top  = (e.clientY - 38) + 'px';
+            tooltip.classList.add('visible');
+        } else {
+            tooltip.classList.remove('visible');
+        }
+    });
+})();
+
+/* ═════════════════ ACCORDION ═════════════════ */
+function toggleDetails(dateStr) {
+    const row = document.getElementById('detail-' + dateStr);
+    if (!row) return;
+    row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+}
+
+/* ═════════════════ MONTH PICKER ═════════════════ */
+let currentYear = parseInt("{{ date_from.year }}");
+const currentMonth = parseInt("{{ date_from.month }}");
+const monthNames = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+
+function renderMonths() {
+    const grid = document.getElementById('month-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    monthNames.forEach(function(name, idx) {
+        const mNum  = idx + 1;
+        const mStr  = mNum < 10 ? '0' + mNum : mNum;
+        const isAct = (currentYear === parseInt("{{ date_from.year }}") && mNum === currentMonth);
+        const col   = document.createElement('div');
+        col.className = 'col-4';
+        const a = document.createElement('a');
+        a.href = '?date_from=' + currentYear + '-' + mStr + '-01';
+        a.className = 'text-decoration-none d-block py-2 rounded text-center';
+        a.style.cssText = 'font-size:13px;font-weight:' + (isAct?'700':'500') + ';color:' + (isAct?'#10b981':'var(--text-secondary)') + ';background:' + (isAct?'rgba(16,185,129,0.1)':'transparent') + ';transition:.2s;';
+        a.onmouseover = function() { if(!isAct) this.style.background='var(--hover-bg)'; };
+        a.onmouseout  = function() { if(!isAct) this.style.background='transparent'; };
+        a.textContent = name;
+        col.appendChild(a);
+        grid.appendChild(col);
+    });
+}
+window.changePickerYear = function(offset) {
+    currentYear += offset;
+    const d = document.getElementById('picker-year-display');
+    if (d) d.textContent = currentYear;
+    renderMonths();
+};
+window.toggleMonthPicker = function(e) {
+    if (e) e.stopPropagation();
+    const m = document.getElementById('monthPickerMenu');
+    if (m) m.style.display = m.style.display === 'block' ? 'none' : 'block';
+};
+document.addEventListener('click', function(e) {
+    const m = document.getElementById('monthPickerMenu');
+    if (m && m.style.display === 'block' && !m.contains(e.target)) m.style.display = 'none';
+});
+document.addEventListener('DOMContentLoaded', renderMonths);
+
+/* ═════════════════ ADJUSTMENT MODAL ═════════════════ */
+let currentModal = null;
+function openAdjustmentModal(event, url) {
+    event.preventDefault();
+    const modalEl = document.getElementById('adjustmentModal');
+    if (!currentModal) {
+        document.body.appendChild(modalEl);
+        currentModal = new bootstrap.Modal(modalEl);
+    }
+    const body  = document.getElementById('adjustmentModalBody');
+    const label = document.getElementById('adjustmentModalLabel');
+    body.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>';
+    label.innerText = 'Carregando...';
+    currentModal.show();
+    fetch(url).then(r => r.text()).then(function(html) {
+        const doc  = new DOMParser().parseFromString(html, 'text/html');
+        const form = doc.querySelector('.card-body form');
+        const hdr  = doc.querySelector('.card-header');
+        let descHTML = '';
+        if (hdr) {
+            const t = hdr.querySelector('.card-title');
+            const d = hdr.querySelector('p');
+            if (t) label.innerHTML = t.innerHTML;
+            if (d) descHTML = '<p class="text-muted mb-4" style="font-size:13px;">' + d.innerHTML + '</p>';
+        }
+        if (form) { body.innerHTML = descHTML; body.appendChild(form); setupModalForm(body, url); }
+        else body.innerHTML = '<div class="alert alert-danger">Erro ao carregar o formulário.</div>';
+    }).catch(function() { body.innerHTML = '<div class="alert alert-danger">Erro de rede.</div>'; });
+}
+function setupModalForm(body, url) {
+    const cancelBtn = body.querySelector('.btn-outline-secondary');
+    if (cancelBtn) { cancelBtn.removeAttribute('href'); cancelBtn.setAttribute('data-bs-dismiss','modal'); }
+    const form = body.querySelector('form');
+    if (!form) return;
+    window.punches = [];
+    const rawVal = document.getElementById('id_requested_punches');
+    if (rawVal && rawVal.value && rawVal.value !== 'None' && rawVal.value !== '') {
+        try { window.punches = JSON.parse(rawVal.value.replace(/'/g,'"')); } catch(e) {}
+    }
+    if (typeof window.renderPunches === 'function') window.renderPunches();
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = form.querySelector('button[type="submit"]');
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enviando...';
+        fetch(url, { method:'POST', body: new FormData(form) })
+            .then(r => r.redirected ? (currentModal.hide(), window.location.reload()) : r.text())
+            .then(function(html) {
+                if (!html) return;
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const f2  = doc.querySelector('.card-body form');
+                if (f2) { const d = body.querySelector('p.text-muted'); body.innerHTML = d ? d.outerHTML : ''; body.appendChild(f2); setupModalForm(body, url); }
+            })
+            .catch(function() { btn.disabled=false; btn.innerHTML=orig; alert('Erro ao enviar.'); });
+    });
+}
+
+/* ═════════════════ TIME BANK MODAL ═════════════════ */
+window.openTimeBank = function(year, month) {
+    let url = "{% url 'time_bank_modal' %}";
+    if (year && month) url += '?year=' + year + '&month=' + month;
+    const container = document.getElementById('timeBankModalContainer');
+    container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div></div>';
+    fetch(url).then(r => r.text()).then(function(html) {
+        container.innerHTML = html;
+        const el = document.getElementById('timeBankModal');
+        document.body.appendChild(el);
+        const modal = new bootstrap.Modal(el);
+        el.addEventListener('hidden.bs.modal', () => el.remove());
+        modal.show();
+    }).catch(function() { alert('Erro ao carregar banco de horas.'); });
+};
+
+/* ═════════════════ PUNCH LOGIC (modal) ═════════════════ */
+window.punches = [];
+window.renderPunches = function() {
+    const c = document.getElementById('punches-container');
+    if (!c) return;
+    c.innerHTML = '';
+    if (!window.punches.length) {
+        c.innerHTML = '<div class="text-muted d-flex align-items-center justify-content-center" style="font-size:13px;font-style:italic;"><i class="bi bi-clock-history me-2"></i>Aguardando inserção de horários...</div>';
+    } else {
+        window.punches.sort().forEach(function(time, i) {
+            c.innerHTML += '<div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:20px;font-weight:700;font-size:14px;">'
+                + '<i class="bi bi-clock-fill" style="opacity:.8;"></i><span>' + time + '</span>'
+                + '<i class="bi bi-x-circle-fill text-danger ms-1" style="cursor:pointer;font-size:16px;" onclick="window.removePunch(' + i + ')"></i></div>';
+        });
+    }
+    const f = document.getElementById('id_requested_punches');
+    if (f) f.value = JSON.stringify(window.punches);
+};
+window.addPunch = function(e) {
+    if (e) e.preventDefault();
+    const inp = document.getElementById('new-punch-time');
+    if (!inp) return;
+    const v = inp.value;
+    if (v && !window.punches.includes(v)) { window.punches.push(v); inp.value = ''; window.renderPunches(); }
+};
+window.removePunch = function(i) { window.punches.splice(i,1); window.renderPunches(); };
+
+// Init tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+            new bootstrap.Tooltip(el);
+        });
+    } catch(e) {}
+});
+</script>
+{% endblock %}

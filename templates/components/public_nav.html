@@ -1,0 +1,94 @@
+{% load static %}
+<style>
+.public-site-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 28px 60px;
+  background: transparent;
+  transition: background .6s, padding .5s, border-bottom .5s, backdrop-filter .5s;
+}
+.public-site-nav.sc, body:not(.is-landing) .public-site-nav {
+  background: rgba(240,240,240,.88);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border-bottom: 1px solid var(--ink3, rgba(0,0,0,0.07));
+  padding: 16px 60px;
+}
+.public-nav-brand {
+  font-size: 15px; font-weight: 700; letter-spacing: -.3px;
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; color: #000;
+}
+.public-nav-brand img { width: 36px; height: 36px; object-fit: contain; }
+.public-nav-links {
+  display: flex; gap: 40px;
+  font-size: 12px; font-weight: 400; letter-spacing: .5px;
+  color: var(--ink2, #4b5563);
+}
+.public-nav-links a { 
+  display: flex; align-items: center; gap: 8px;
+  transition: color 0.2s ease; 
+  position: relative;
+  padding-bottom: 4px;
+  text-decoration: none;
+  color: inherit;
+}
+.public-nav-links a::after {
+  content: ''; position: absolute; left: 0; bottom: 0;
+  width: 0%; height: 2px;
+  background-color: var(--green, #0dc02a);
+  transition: width 0.3s ease; border-radius: 2px;
+}
+.public-nav-links a i { font-size: 14px; opacity: 0.8; transition: transform .3s; }
+.public-nav-links a:hover { color: var(--green, #0dc02a); }
+.public-nav-links a:hover::after { width: 100%; }
+.public-nav-links a:hover i { transform: scale(1.15); }
+
+.public-nav-cta {
+  font-size: 12px; font-weight: 600; letter-spacing: .5px;
+  padding: 12px 28px; border-radius: 100px;
+  background: var(--navy, #101624); color: #fff;
+  display: flex; align-items: center; gap: 7px;
+  text-decoration: none;
+  transition: background .3s, transform .3s;
+}
+.public-nav-cta:hover { background: var(--green, #0dc02a); color: #fff; transform: translateY(-1px); }
+
+@media(max-width:1024px) {
+  .public-site-nav { padding: 20px 32px; }
+  .public-site-nav.sc, body:not(.is-landing) .public-site-nav { padding: 14px 32px; }
+  .public-nav-links { display: none; }
+}
+</style>
+
+<nav id="nav" class="public-site-nav">
+  <a href="/" class="public-nav-brand">
+    <img src="{% static 'img/netline_icon.png' %}" alt="Netline">
+    Netline <span style="font-weight:300;opacity:.5;margin-left:3px">RH</span>
+  </a>
+  <div class="public-nav-links">
+    {% if vagas_page %}
+      <a href="/"><i class="bi bi-house-fill"></i> Início</a>
+    {% else %}
+      <a href="/#features"><i class="bi bi-grid"></i> Módulos</a>
+      <a href="/#product"><i class="bi bi-box"></i> Produto</a>
+      <a href="/#metrics"><i class="bi bi-bar-chart"></i> Números</a>
+      <a href="{% url 'public_job_list' %}"><i class="bi bi-briefcase"></i> Vagas</a>
+    {% endif %}
+  </div>
+  <a href="/login/" class="public-nav-cta">
+    <i class="bi bi-box-arrow-in-right"></i>
+    Login
+  </a>
+</nav>
+
+<script>
+// Header scroll logic
+window.addEventListener('scroll', () => {
+    const nav = document.getElementById('nav');
+    if (nav) {
+        if (window.scrollY > 50) nav.classList.add('sc');
+        else nav.classList.remove('sc');
+    }
+});
+</script>

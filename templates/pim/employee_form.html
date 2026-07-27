@@ -1,0 +1,221 @@
+{% extends "modal_base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<style>
+    body { background: #fff !important; }
+    .main-content, .container-fluid { padding: 0 !important; margin: 0 !important; }
+    
+    .form-control, .form-select {
+        border-radius: 50px;
+        border: 1px solid #e2e8f0;
+        padding: 10px 16px;
+        box-shadow: none;
+        color: #0f172a;
+        font-size: 13px;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79,70,229,.15);
+        outline: none;
+    }
+    
+    .modal-wrapper {
+        background: #fff;
+        min-height: 100vh;
+    }
+    
+    .modal-header-custom {
+        padding: 32px 32px 0 32px;
+    }
+    
+    .icon-wrapper {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        font-size: 20px;
+    }
+    
+    .icon-employee {
+        background: #eff6ff;
+        color: #3b82f6;
+    }
+    
+    .icon-new {
+        background: #ecfdf5;
+        color: #10b981;
+    }
+    
+    .modal-title-text {
+        color: #0f172a;
+        font-size: 20px;
+        margin: 0;
+    }
+    
+    .badge-info {
+        font-size: 13px;
+        color: #64748b;
+        font-weight: 500;
+    }
+    
+    .initials-badge {
+        background: #f0fdf4;
+        color: #166534;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-weight: 700;
+        margin-right: 4px;
+    }
+    
+    .modal-body-custom {
+        padding: 24px 32px;
+        overflow-y: auto;
+    }
+    
+    .checkbox-wrapper {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .checkbox-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #475569;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        cursor: pointer;
+        line-height: 1.4;
+    }
+    
+    .error-text {
+        color: #ef4444;
+        font-size: 11px;
+        margin-top: 4px;
+        font-weight: 600;
+    }
+    
+    .field-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+    
+    .modal-footer-custom {
+        padding: 24px 32px;
+        background: #fff;
+        border-top: 1px solid #f1f5f9;
+    }
+    
+    .btn-cancel {
+        border-radius: 10px;
+        font-weight: 600;
+        color: #475569;
+        background: #f1f5f9;
+        border: none;
+    }
+    
+    .btn-submit {
+        border-radius: 50px;
+        font-weight: 600;
+        background: #0f172a;
+        border: none;
+        color: #fff;
+    }
+</style>
+
+<div class="d-flex flex-column h-100 w-100 modal-wrapper">
+    <div class="modal-header border-0 pb-0 modal-header-custom">
+        <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center justify-content-center icon-wrapper {% if employee %}icon-employee{% else %}icon-new{% endif %}">
+                <i class="bi {% if employee %}bi-pencil-square{% else %}bi-person-plus-fill{% endif %}"></i>
+            </div>
+            <div>
+                <h5 class="modal-title fw-bold modal-title-text">{{ title }}</h5>
+                {% if employee %}
+                <div class="badge-info">
+                    <span class="initials-badge">{{ employee.first_name|first }}{{ employee.last_name|first }}</span>
+                    Editando Informações do Perfil
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="d-flex flex-column flex-grow-1">
+        {% csrf_token %}
+        <div class="modal-body modal-body-custom">
+            <div class="row g-4">
+                {% for field in form %}
+                    {% if field.field.widget.input_type == 'checkbox' %}
+                    <div class="col-md-6 mt-3">
+                        <div class="d-flex align-items-center p-3 rounded-4 checkbox-wrapper">
+                            <div class="form-check form-switch m-0 p-0 ps-5 d-flex align-items-center">
+                                {{ field }}
+                                <label class="form-check-label ms-2 mt-1 checkbox-label" for="{{ field.id_for_label }}">
+                                    {{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                                </label>
+                            </div>
+                        </div>
+                        {% if field.errors %}
+                            <div class="error-text">
+                                {% for e in field.errors %}{{ e }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="col-md-{% if field.html_name == 'description' or field.html_name == 'note' %}12{% else %}6{% endif %}">
+                        <label class="form-label field-label">
+                            {{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="error-text">
+                                {% for e in field.errors %}{{ e }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="modal-footer border-0 d-flex justify-content-end gap-2 mt-auto modal-footer-custom">
+            <button type="button" class="btn btn-light px-4 btn-cancel" onclick="closeModal()">Cancelar</button>
+            <button type="submit" class="btn btn-{% if employee %}primary{% else %}success{% endif %} px-4 d-flex align-items-center gap-2 btn-submit">
+                <i class="bi bi-check-circle"></i> Confirmar
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_head %}{% endblock %}
+
+{% block extra_js %}
+<script>
+    function closeModal() {
+        if (window.parent && window.parent.bootstrap) {
+            const modalElement = window.parent.document.querySelector('.modal.show');
+            if (modalElement) {
+                const modalInstance = window.parent.bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const selectOptions = document.querySelectorAll('select.form-select option');
+        
+        selectOptions.forEach(option => {
+            if (option.textContent.trim() === '---------') {
+                option.textContent = 'Selecione uma opção...';
+            }
+        });
+    });
+</script>
+{% endblock %}

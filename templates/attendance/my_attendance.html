@@ -1,0 +1,538 @@
+{% extends "base.html" %}
+{% block title %}Meu Ponto{% endblock %}
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;">Attendance / Meu Ponto</span>{% endblock %}
+{% block content %}
+<div class="page-header mt-1 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title mb-0"><i class="bi bi-clock-history text-orange"></i> Meu Ponto</h1>
+    </div>
+    <div class="d-flex align-items-center flex-wrap gap-3">
+        {% if schedule %}
+        <div class="px-3 py-2"
+            style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); border-radius: 8px;">
+            <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">
+                Escala Atual</div>
+            <div style="font-size: 13px; font-weight: 700; color: #10b981;">
+                {{ schedule.name }} ({{ schedule.entry_time|time:"H:i" }} - {{ schedule.exit_time|time:"H:i" }})
+            </div>
+            {% if schedule.lunch_start %}
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
+                Almoço: {{ schedule.lunch_start|time:"H:i" }} às {{ schedule.lunch_end|time:"H:i" }}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-5 col-lg-4">
+        <div class="punch-card">
+            <div style="font-size: 14px; opacity: 0.7; font-weight: 500;">{{ request.user.employee.full_name|default:"Hoje" }}</div>
+            <div class="punch-time" id="clock">--:--</div>
+            <div style="opacity: 0.7; font-size: 13px; margin-bottom: 20px;">Horário Atual</div>
+
+            {% if work_info and work_info.source == 'leave' and not work_info.is_work_day %}
+            <div
+                style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; padding: 16px; margin-bottom: 20px; text-align: center;">
+                <i class="bi bi-shield-lock text-danger" style="font-size: 24px; mb-2 d-block"></i>
+                <div style="font-weight: 600; color: #ef4444; font-size: 14px;">Ação Bloqueada</div>
+                <div style="font-size: 13px; opacity: 0.8; margin-top: 4px;">Você está de licença integral hoje e não pode registrar ponto.</div>
+            </div>
+            {% else %}
+            <form id="punchForm" method="post" action="{% url 'punch_action' %}">
+                {% csrf_token %}
+                <input type="hidden" name="lat" id="latInput" value="">
+                <input type="hidden" name="lng" id="lngInput" value="">
+                <input type="hidden" name="punch_action_type" id="punchActionTypeInput" value="">
+                <input type="hidden" name="photo_base64" id="photoBase64Input" value="">
+                
+                <style>
+                    #punchNote::placeholder {
+                        color: rgba(255, 255, 255, .6)
+                    }
+                    /* Estilo do Popover de Informação Dark Premium */
+                    .sync-info-trigger-wrapper {
+                        position: relative;
+                        display: inline-flex;
+                        align-items: center;
+                        margin-left: 6px;
+                    }
+                    .sync-info-icon {
+                        color: #94a3b8 !important;
+                        font-size: 14px;
+                        cursor: pointer;
+                        transition: all 0.25s ease;
+                        vertical-align: middle;
+                        animation: infoIconPulse 3s infinite ease-in-out;
+                    }
+                    .sync-info-icon:hover {
+                        color: #38bdf8 !important;
+                        transform: scale(1.2);
+                        animation: none;
+                    }
+                    @keyframes infoIconPulse {
+                        0% { transform: scale(1); opacity: 0.8; }
+                        50% { transform: scale(1.1); opacity: 1; color: #38bdf8 !important; }
+                        100% { transform: scale(1); opacity: 0.8; }
+                    }
+                    .sync-info-popover {
+                        visibility: hidden;
+                        opacity: 0;
+                        position: absolute;
+                        top: 140%;
+                        bottom: auto;
+                        left: 50%;
+                        transform: translateX(-50%) translateY(-10px);
+                        width: 290px;
+                        background: #0f172a;
+                        border: 1px solid #1e293b;
+                        border-radius: 14px;
+                        padding: 14px 18px;
+                        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 8px 10px rgba(0, 0, 0, 0.2);
+                        z-index: 9999;
+                        color: #ffffff !important;
+                        text-align: left;
+                        pointer-events: none;
+                        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    }
+                    .sync-info-popover::after {
+                        content: "";
+                        position: absolute;
+                        bottom: 100%;
+                        top: auto;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        border-width: 6px;
+                        border-style: solid;
+                        border-color: transparent transparent #0f172a transparent;
+                        transition: all 0.25s ease;
+                    }
+                    .sync-info-trigger-wrapper:hover .sync-info-popover {
+                        visibility: visible;
+                        opacity: 1;
+                        transform: translateX(-50%) translateY(0);
+                        pointer-events: auto;
+                    }
+                    .sync-info-popover-title {
+                        color: #38bdf8 !important;
+                        font-weight: 700;
+                        font-size: 12.5px;
+                        margin-top: 0;
+                        margin-bottom: 8px;
+                        letter-spacing: -0.1px;
+                    }
+                    .sync-info-popover-text {
+                        font-size: 11px;
+                        color: #cbd5e1 !important;
+                        line-height: 1.4;
+                        margin-bottom: 10px;
+                    }
+                    .sync-info-popover-list {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 6px;
+                    }
+                    .sync-info-popover-item {
+                        font-size: 10.5px;
+                        color: #f1f5f9 !important;
+                        display: flex;
+                        align-items: flex-start;
+                        gap: 6px;
+                        line-height: 1.35;
+                    }
+                    .sync-info-popover-check {
+                        color: #10b981 !important;
+                        font-weight: bold;
+                        font-size: 12px;
+                        flex-shrink: 0;
+                        line-height: 1;
+                    }
+                    @media (max-width: 576px) {
+                        .sync-info-popover {
+                            width: 250px;
+                            left: auto;
+                            right: -60px;
+                            transform: translateY(-10px);
+                        }
+                        .sync-info-popover::after {
+                            left: auto;
+                            right: 64px;
+                            transform: none;
+                        }
+                        .sync-info-trigger-wrapper:hover .sync-info-popover {
+                            transform: translateY(0);
+                        }
+                    }
+                </style>
+                <div style="position:relative;margin-bottom:16px">
+                    <i class="bi bi-chat-left-text"
+                        style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.45);pointer-events:none"></i>
+                    <input id="punchNote" type="text" name="note" placeholder="Observação (opcional)"
+                        style="width:100%;border:1px solid rgba(255,255,255,.2);border-radius:50px;background:rgba(255,255,255,.1);color:#fff;font-size:13px;padding:10px 18px 10px 40px;outline:none;transition:.2s"
+                        onfocus="this.style.borderColor='rgba(13,192,42,.6)';this.style.boxShadow='0 0 0 3px rgba(13,192,42,.12)'"
+                        onblur="this.style.borderColor='rgba(255,255,255,.2)';this.style.boxShadow='none'">
+                </div>
+
+                {% if not record_today or record_today.current_state == 'OUT' %}
+                <button type="button" class="punch-btn punch-btn-in w-100" onclick="submitPunch(this, 'IN')">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>
+                    {% if not record_today %}Registrar Entrada{% else %}Retorno / Entrada{% endif %}
+                    <span id="gpsSpinnerIn" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+                </button>
+                {% else %}
+                <button type="button" onclick="submitPunch(this, 'OUT')" class="punch-btn punch-btn-out w-100">
+                    <i class="bi bi-box-arrow-right me-2"></i> Pausa / Saída
+                    <span id="gpsSpinnerOut" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+                </button>
+                {% endif %}
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- Sincronização com Agenda -->
+        <div class="card mt-4 border-0 shadow-sm" style="border-radius: 16px; border: 1px solid var(--border-color); background: var(--card-bg);">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2" style="font-size: 15px; color: var(--text-primary);">
+                    <i class="bi bi-calendar2-week text-orange" style="font-size: 17px;"></i>
+                    Sincronizar Agenda
+                    <span class="sync-info-trigger-wrapper">
+                        <i class="bi bi-info-circle-fill sync-info-icon"></i>
+                        <div class="sync-info-popover">
+                            <h6 class="sync-info-popover-title">
+                                <i class="bi bi-info-circle-fill" style="color: #38bdf8 !important; margin-right: 6px;"></i>
+                                Dica de Sincronização
+                            </h6>
+                            <p class="sync-info-popover-text">
+                                Escolha a melhor opção para manter seus horários de escala sempre atualizados em sua agenda pessoal:
+                            </p>
+                            <div class="sync-info-popover-list">
+                                <div class="sync-info-popover-item">
+                                    <span class="sync-info-popover-check">✓</span>
+                                    <span><strong>Opção 1 (Google OAuth):</strong> Em tempo real (atualiza instantaneamente). Sincronização automática e segura.</span>
+                                </div>
+                                <div class="sync-info-popover-item">
+                                    <span class="sync-info-popover-check">✓</span>
+                                    <span><strong>Opção 2 (Inscrição iCal):</strong> Atualizada pelo próprio Google ou Outlook periodicamente (pode levar algumas horas para sincronizar novas alterações).</span>
+                                </div>
+                            </div>
+                        </div>
+                    </span>
+                </h5>
+                <p class="text-secondary mb-4" style="font-size: 12.5px; line-height: 1.5;">
+                    Acompanhe sua escala de trabalho personalizada e suas folgas diretamente do Google Agenda, Outlook ou iCal do seu celular de forma automática.
+                </p>
+                
+                <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px; margin-bottom: 8px;">
+                    Link de Integração iCal
+                </div>
+                <div class="input-group mb-3 shadow-sm" style="border-radius: 10px; overflow: hidden;">
+                    <input type="text" id="calendarFeedUrl" class="form-control" style="font-size: 12px; height: 42px; border: 1.5px solid var(--border-strong); border-right: none; background: var(--input-bg); color: var(--text-primary); padding-left: 14px;" value="{{ feed_url }}" readonly>
+                    <button class="btn btn-outline-secondary" type="button" id="btnCopyFeedUrl" onclick="copyFeedUrl()" style="border: 1.5px solid var(--border-strong); border-left: none; transition: all 0.2s; min-width: 46px; background: var(--table-header-bg); color: var(--text-secondary);">
+                        <i class="bi bi-copy"></i>
+                    </button>
+                </div>
+                
+                <a href="https://calendar.google.com/calendar/r?cid={{ feed_url|urlencode }}" target="_blank" class="btn btn-outline-orange w-100 d-flex align-items-center justify-content-center gap-2 py-2 fw-semibold" style="font-size: 13px; height: 42px; border-radius: 10px; transition: all 0.2s;">
+                    <i class="bi bi-google"></i>
+                    Sincronizar com Google Agenda
+                </a>
+                
+                <div class="text-center mt-3">
+                    <small class="text-secondary" style="font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="bi bi-info-circle text-orange"></i> As atualizações na escala sincronizam sozinhas.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7 col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title">Histórico de Ponto</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0 text-center">
+                    <thead>
+                        <tr>
+                            <th class="text-start">Data</th>
+                            <th>Entrada 1</th>
+                            <th>Saída Almoço</th>
+                            <th>Ret. Almoço</th>
+                            <th>Saída</th>
+                            <th>Trabalhado</th>
+                            <th>Auditoria</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rec in records %}
+                        <tr>
+                            <td class="align-middle fw-medium text-start">
+                                {{ rec.date|date:"d/m/Y" }}
+                                {% if rec.is_late %}
+                                <span title="Atraso" class="ms-1 text-danger" style="font-size: 10px;"><i
+                                        class="bi bi-exclamation-circle-fill"></i></span>
+                                {% endif %}
+                            </td>
+                            <td class="align-middle">
+                                {{ rec.punch_in_user_time|time:"H:i"|default:"—" }}
+                                {% if rec.punch_in_photo %}
+                                <a href="{{ rec.punch_in_photo.url }}" target="_blank" class="text-secondary ms-1" title="Ver Foto (Entrada)"><i class="bi bi-image"></i></a>
+                                {% endif %}
+                            </td>
+                            <td class="align-middle text-warning">{{ rec.punch_lunch_out_user_time|time:"H:i"|default:"—" }}</td>
+                            <td class="align-middle text-primary">{{ rec.punch_lunch_in_user_time|time:"H:i"|default:"—" }}</td>
+                            <td class="align-middle">
+                                {{ rec.punch_out_user_time|time:"H:i"|default:"—" }}
+                                {% if rec.punch_out_photo %}
+                                <a href="{{ rec.punch_out_photo.url }}" target="_blank" class="text-secondary ms-1" title="Ver Foto (Saída)"><i class="bi bi-image"></i></a>
+                                {% endif %}
+                            </td>
+                            <td class="align-middle fw-bold text-success">{{ rec.net_hours_worked }}</td>
+                            <td class="align-middle">
+                                {% if rec.is_flagged_location %}
+                                <span class="badge bg-danger" title="{{ rec.fraud_reason }}">
+                                    <i class="bi bi-exclamation-triangle-fill"></i> Fraude GPS/IP
+                                </span>
+                                {% else %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Válido</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7" class="text-center py-4" style="color:var(--text-secondary);">Sem registros</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-transparent border-top text-muted" style="font-size: 11px;">
+                <i class="bi bi-info-circle me-1"></i> O tempo total reflete os horários reais batidos, sem descontos
+                artificiais de escala.
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="cameraModal" class="d-none" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:99999;flex-direction:column;align-items:center;justify-content:center;">
+    <div class="camera-overlay-box">
+        <h4 class="text-white fw-bold mb-2 tracking-tight">
+            <i class="bi bi-person-bounding-box text-success me-2"></i> Validação Facial
+        </h4>
+        <p class="text-white-50 mb-4" style="font-size:14.5px; line-height: 1.5;">
+            Posicione seu rosto no centro do leitor para registrar a sua batida de forma segura.
+        </p>
+        
+        <div class="camera-wrapper">
+            <video id="cameraFeed" autoplay playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
+            
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);width: 80%;height: 80%;border: 2px dashed rgba(255,255,255,0.25);border-radius:50%;pointer-events:none;"></div>
+        </div>
+        
+        <canvas id="cameraCanvas" style="display:none;"></canvas>
+        
+        <div class="d-flex flex-column gap-3 mt-2">
+            <button type="button" class="btn btn-success py-3 fw-bold rounded-pill shadow" onclick="takePhotoAndSubmit()" id="btnTakePhoto" style="font-size: 1.05rem; letter-spacing: 0.5px;">
+                <i class="bi bi-camera-fill me-2"></i> Capturar e Validar
+            </button>
+            <button type="button" class="btn btn-dark py-2 rounded-pill text-white-50 border-0 bg-transparent hover-white" onclick="closeCameraModal()" style="font-size: 0.95rem; text-decoration: none;">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+    function updateClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        document.getElementById('clock').textContent = timeString;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    let currentGlobalActionType = '';
+    let currentBtnEvent = null;
+    let currentBtn = null;
+    let localStream = null;
+
+    const requirePhotoAllPunches = {{ require_photo_all_punches|yesno:"true,false" }};
+
+    function openCameraModal() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.error("Camera API not available. Usually an HTTP issue.");
+            alert("Sua conexão não é segura (HTTP) ou seu navegador não suporta câmera. O ponto prosseguirá sem foto.");
+            proceedWithGPSAndSubmit();
+            return;
+        }
+
+        const modal = document.getElementById('cameraModal');
+        modal.classList.remove('d-none');
+        modal.style.display = 'flex';
+        
+        // Reset the button state
+        document.getElementById('btnTakePhoto').innerHTML = '<i class="bi bi-camera-fill me-2"></i> Tirar Foto e Validar';
+        document.getElementById('btnTakePhoto').disabled = false;
+        
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+            .then(function(stream) {
+                localStream = stream;
+                const video = document.getElementById('cameraFeed');
+                video.srcObject = stream;
+            })
+            .catch(function(err) {
+                console.error("Camera access denied or missing:", err);
+                alert("Não foi possível acessar a câmera do dispositivo. O ponto prosseguirá sem foto desta vez.");
+                closeCameraModal();
+                proceedWithGPSAndSubmit();
+            });
+    }
+
+    function closeCameraModal() {
+        const modal = document.getElementById('cameraModal');
+        modal.classList.add('d-none');
+        modal.style.display = 'none';
+        
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            localStream = null;
+        }
+        
+        if(currentBtn) {
+            let spinner = currentBtn.querySelector('.spinner-border');
+            if(spinner) spinner.classList.add('d-none');
+            currentBtn.disabled = false;
+        }
+    }
+
+    function takePhotoAndSubmit() {
+        document.getElementById('btnTakePhoto').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Processando...';
+        document.getElementById('btnTakePhoto').disabled = true;
+
+        const video = document.getElementById('cameraFeed');
+        const canvas = document.getElementById('cameraCanvas');
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const imageDataURL = canvas.toDataURL('image/jpeg', 0.8);
+        document.getElementById('photoBase64Input').value = imageDataURL;
+        
+        closeCameraModal();
+        proceedWithGPSAndSubmit();
+    }
+
+    function submitPunch(btnEl, actionType) {
+        currentBtn = btnEl;
+        currentGlobalActionType = actionType;
+        
+        if(actionType != null) {
+            document.getElementById('punchActionTypeInput').value = actionType;
+        }
+        
+        let spinner = currentBtn.querySelector('.spinner-border');
+        if(spinner) spinner.classList.remove('d-none');
+        currentBtn.disabled = true;
+
+        if (requirePhotoAllPunches || actionType === '') {
+            openCameraModal();
+        } else {
+            proceedWithGPSAndSubmit();
+        }
+    }
+
+    function proceedWithGPSAndSubmit() {
+        let btn = currentBtn;
+        let spinner = btn ? btn.querySelector('.spinner-border') : null;
+        if (spinner) spinner.classList.remove('d-none');
+        if (btn) btn.disabled = true;
+        
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                document.getElementById('latInput').value = position.coords.latitude;
+                document.getElementById('lngInput').value = position.coords.longitude;
+                document.getElementById('punchForm').submit();
+            }, function(error) {
+                console.warn("GPS failed", error);
+                if (confirm("Não foi possível acessar a localização. Marcar este ponto implicará na geração de uma flag de auditoria. Deseja prosseguir de qualquer forma?")) {
+                    document.getElementById('punchForm').submit();
+                } else {
+                    if(spinner) spinner.classList.add('d-none');
+                    if(btn) btn.disabled = false;
+                    document.getElementById('photoBase64Input').value = ''; // Clean photo if cancelled
+                }
+            }, {
+                enableHighAccuracy: false,
+                timeout: 8000,
+                maximumAge: 30000
+            });
+        } else {
+            alert("A geolocalização não é suportada por este navegador. O ponto ficará sujeito à auditoria do RH.");
+            document.getElementById('punchForm').submit();
+        }
+    }
+
+    function copyFeedUrl() {
+        const copyText = document.getElementById("calendarFeedUrl");
+        navigator.clipboard.writeText(copyText.value).then(() => {
+            const btn = document.getElementById("btnCopyFeedUrl");
+            const icon = btn.querySelector("i");
+            
+            // Alterar o visual do botão para indicar sucesso
+            icon.className = "bi bi-check-lg text-success";
+            btn.style.borderColor = "#10b981";
+            btn.style.backgroundColor = "rgba(16, 185, 129, 0.05)";
+            
+            setTimeout(() => {
+                icon.className = "bi bi-copy";
+                btn.style.borderColor = "";
+                btn.style.backgroundColor = "";
+            }, 2000);
+        }).catch(err => {
+            console.error('Falha ao copiar: ', err);
+            // Fallback caso a API da Clipboard falhe ou não tenha suporte (ex: HTTP inseguro em testes locais)
+            copyText.select();
+            document.execCommand("copy");
+            const btn = document.getElementById("btnCopyFeedUrl");
+            const icon = btn.querySelector("i");
+            icon.className = "bi bi-check-lg text-success";
+            setTimeout(() => {
+                icon.className = "bi bi-copy";
+            }, 2000);
+        });
+    }
+
+    // ── Polling: sincroniza o site com batidas feitas pelo app mobile ────────
+    // Verifica a cada 30s se o estado do ponto mudou. Se mudou, recarrega a
+    // página para refletir o novo estado sem o usuário precisar dar F5.
+    (function startPunchPolling() {
+        const STATUS_URL = "{% url 'punch_status_json' %}";
+
+        // Estado inicial — vem do Django no momento do carregamento da página
+        let knownPunches = {{ record_today.punches.count|default:0 }};
+
+        async function checkPunchStatus() {
+            try {
+                const resp = await fetch(STATUS_URL, { credentials: 'same-origin' });
+                if (!resp.ok) return;
+                const data = await resp.json();
+
+                // Se o número de batidas mudou (alguém bateu pelo app), recarrega
+                if (data.total_punches !== knownPunches) {
+                    window.location.reload();
+                }
+            } catch (e) {
+                // silencia erros de rede — tenta de novo no próximo ciclo
+            }
+        }
+
+        setInterval(checkPunchStatus, 2000); // a cada 2 segundos
+    })();
+</script>
+{% endblock %}

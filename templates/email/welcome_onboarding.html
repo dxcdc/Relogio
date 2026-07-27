@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bem-vindo(a) ao NetlineRH</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; color: #334155; margin: 0; padding: 0; }
+        .wrapper { width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; border: 1px solid #e2e8f0; }
+        .header { background: linear-gradient(135deg, #1e3a8a, #0d9488); color: #ffffff; padding: 40px 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+        .header p { margin: 10px 0 0; font-size: 16px; opacity: 0.9; }
+        .content { padding: 30px 24px; line-height: 1.6; }
+        .welcome-text { font-size: 16px; color: #334155; }
+        .credentials-card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 25px 0; text-align: center; }
+        .credential-item { margin: 10px 0; font-size: 15px; }
+        .credential-label { color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px; display: block; margin-bottom: 4px; }
+        .credential-value { font-size: 18px; font-weight: 700; color: #0f172a; font-family: monospace; letter-spacing: 0.5px; }
+        .steps { margin: 25px 0; padding-left: 20px; }
+        .steps li { margin-bottom: 10px; font-size: 15px; color: #475569; }
+        .btn-container { text-align: center; margin: 30px 0; }
+        .btn { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #0d9488, #1e3a8a); color: #ffffff !important; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 6px rgba(13, 148, 136, 0.2); }
+        .footer { background-color: #f1f5f9; padding: 24px; text-align: center; font-size: 13px; color: #64748b; border-top: 1px solid #e2e8f0; }
+        .footer p { margin: 0 0 10px; }
+        .app-links a { color: #0d9488; text-decoration: none; font-weight: 600; margin: 0 10px; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="header">
+            <h1>Seja bem-vindo(a) ao NetlineRH!</h1>
+            <p>Sua jornada digital corporativa começa aqui</p>
+        </div>
+        <div class="content">
+            <p class="welcome-text">Olá, <strong>{{ first_name }}</strong>!</p>
+            <p class="welcome-text">
+                Estamos muito felizes em ter você conosco no nosso time de provedores. A partir de agora, a sua jornada de ponto, benefícios e comunicação interna será gerenciada pelo NetlineRH!
+            </p>
+            
+            <div class="credentials-card">
+                <div class="credential-item">
+                    <span class="credential-label">Usuário de Acesso</span>
+                    <span class="credential-value">{{ username }}</span>
+                </div>
+                <div class="credential-item" style="margin-top: 15px;">
+                    <span class="credential-label">Senha Temporária</span>
+                    <span class="credential-value">{{ temp_password }}</span>
+                </div>
+            </div>
+
+            <p style="font-weight: 600; margin-bottom: 10px;">Instruções de Acesso:</p>
+            <ol class="steps">
+                <li>Clique no botão abaixo para acessar o nosso Portal Web ou faça o download do aplicativo mobile nas lojas.</li>
+                <li>Utilize o seu <strong>Usuário de Acesso</strong> e <strong>Senha Temporária</strong> indicados acima.</li>
+                <li>No seu primeiro acesso, o sistema solicitará que você defina a sua senha pessoal definitiva.</li>
+            </ol>
+
+            <div class="btn-container">
+                <a href="https://poeirao.netlineplay.com.br/login/" class="btn">Acessar o Painel RH</a>
+            </div>
+        </div>
+        <div class="footer">
+            <p>Abraços,<br><strong>Equipe de Recursos Humanos da Netline Telecom.</strong></p>
+            <div class="app-links" style="margin-top: 15px;">
+                <a href="#">Google Play</a> | <a href="#">App Store</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

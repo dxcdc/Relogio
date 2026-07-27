@@ -1,0 +1,1082 @@
+{% extends "base.html" %}
+{% load l10n %}
+{% block title %}Resultados: {{ survey.title }}{% endblock %}
+
+{% block content %}
+<!-- ApexCharts CDN -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+<style>
+    .result-card {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02);
+        margin-bottom: 24px;
+        padding: 24px;
+    }
+    
+    .premium-section-title {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 12.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #475569;
+        letter-spacing: 0.5px;
+    }
+    
+    .nav-pills .nav-link {
+        color: #475569;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+    }
+    
+    .nav-pills .nav-link:hover {
+        background-color: #f1f5f9;
+    }
+    
+    .nav-pills .nav-link.active {
+        background-color: #4f46e5 !important;
+        color: white !important;
+    }
+    
+    .comments-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    .comments-container::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+    .comments-container::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+    .comments-container::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+    
+    .nav-pills-custom .nav-link {
+        color: #475569;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        transition: all 0.2s ease;
+    }
+    .nav-pills-custom .nav-link:hover {
+        background-color: #f1f5f9;
+    }
+    .nav-pills-custom .nav-link.active {
+        background-color: #4f46e5 !important;
+        color: white !important;
+        border-color: #4f46e5 !important;
+    }
+    .nav-pills-custom .nav-link.active .text-dark,
+    .nav-pills-custom .nav-link.active .text-muted {
+        color: white !important;
+    }
+    .nav-pills-custom .nav-link.active .rounded-circle {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 24px;">Resultados da Pesquisa</h1>
+        <p class="text-muted mt-1 mb-0">{{ survey.title }}</p>
+    </div>
+    
+    <div class="d-flex align-items-center gap-3">
+        <!-- Survey Switcher -->
+        <div class="d-flex align-items-center gap-2">
+            <span class="fw-bold text-muted font-monospace" style="font-size: 12px; text-transform: uppercase; white-space: nowrap;">Pesquisa:</span>
+            <div style="width: 260px; flex-shrink: 0;">
+                <select id="surveySwitcher" class="form-select" style="height: 42px; font-weight: 600; border-color: #cbd5e1;">
+                    {% for s in all_surveys %}
+                        <option value="{% url 'survey_results' s.pk %}" {% if survey.pk == s.pk %}selected{% endif %}>{{ s.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- Sector Filter -->
+        <div class="d-flex align-items-center gap-2">
+            <span class="fw-bold text-muted font-monospace" style="font-size: 12px; text-transform: uppercase; white-space: nowrap;">Setor:</span>
+            <div style="width: 220px; flex-shrink: 0;">
+                <select id="sectorFilter" class="form-select" style="height: 42px;">
+                    <option value="">Todos os Setores</option>
+                    {% for subunit in subunits_in_responses %}
+                        <option value="{{ subunit.id }}" {% if current_sector_id == subunit.id %}selected{% endif %}>{{ subunit.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        {% if request.user.is_supervisor and not request.user.is_admin and not request.user.is_hr %}
+        <a href="{% url 'survey_ranking_list' %}" class="btn btn-light fw-bold" style="height: 42px; display: inline-flex; align-items: center;"><i class="bi bi-arrow-left me-1"></i> Voltar</a>
+        {% else %}
+        <a href="{% url 'survey_list' %}" class="btn btn-light fw-bold" style="height: 42px; display: inline-flex; align-items: center;"><i class="bi bi-arrow-left me-1"></i> Voltar</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Key Metrics Section -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 p-4 rounded-4" style="background: #f0fdf4; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: #bbf7d0; color: #166534; font-size: 24px;">
+                    <i class="bi bi-check2-all"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0 text-dark">{{ responses_count }}</h3>
+                    <span class="text-muted" style="font-size: 13px;">Respostas Recebidas</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-0 p-4 rounded-4" style="background: #fffbeb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: #fef08a; color: #854d0e; font-size: 24px;">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0 text-dark">{{ pending_count }}</h3>
+                    <span class="text-muted" style="font-size: 13px;">Faltam Responder</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-0 p-4 rounded-4" style="background: #f8fafc; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: #e2e8f0; color: #475569; font-size: 24px;">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0 text-dark">{{ total_target }}</h3>
+                    <span class="text-muted" style="font-size: 13px;">Público Alvo Total</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs Navigation -->
+<ul class="nav nav-pills mb-4 gap-2 border-bottom pb-3" id="resultsTab" role="tablist">
+    {% if request.user.is_admin or request.user.is_hr %}
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active fw-bold px-4 py-2 rounded-3" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary-pane" type="button" role="tab" aria-controls="summary-pane" aria-selected="true">
+            <i class="bi bi-bar-chart-steps me-2"></i>Resumo Geral
+        </button>
+    </li>
+    {% endif %}
+    {% if survey.is_leadership_survey %}
+        {% if request.user.is_admin or request.user.is_hr %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold px-4 py-2 rounded-3" id="leader-tab" data-bs-toggle="tab" data-bs-target="#leader-pane" type="button" role="tab" aria-controls="leader-pane" aria-selected="false">
+                <i class="bi bi-person-badge me-2"></i>Análise por Líder
+            </button>
+        </li>
+        {% endif %}
+
+    {% endif %}
+    {% if request.user.is_admin or request.user.is_hr %}
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold px-4 py-2 rounded-3" id="details-tab" data-bs-toggle="tab" data-bs-target="#details-pane" type="button" role="tab" aria-controls="details-pane" aria-selected="false">
+            <i class="bi bi-list-columns-reverse me-2"></i>Respostas Detalhadas
+        </button>
+    </li>
+    {% endif %}
+</ul>
+
+<!-- Tabs Content -->
+<div class="tab-content" id="resultsTabContent">
+    
+    {% if request.user.is_admin or request.user.is_hr %}
+    <!-- Tab 1: Summary -->
+    <div class="tab-pane show active" id="summary-pane" role="tabpanel" aria-labelledby="summary-tab">
+        {% for q_id, q_stat in question_stats.items %}
+            <div class="result-card">
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <i class="bi bi-patch-question-fill text-primary fs-5"></i>
+                    <h6 class="premium-section-title mb-0">Q{{ forloop.counter }}. {{ q_stat.question_text }}</h6>
+                </div>
+                
+                {% if q_stat.question_type == 'RATING_10' %}
+                    <div class="row align-items-center g-4">
+                        <div class="col-md-3 text-center border-end py-3">
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 100px; height: 100px; font-weight: 800; font-size: 32px;
+                                {% if q_stat.average_rating >= 8.0 %}
+                                    background: #f0fdf4; color: #166534; border: 4px solid #bbf7d0;
+                                {% elif q_stat.average_rating >= 5.0 %}
+                                    background: #fffbeb; color: #854d0e; border: 4px solid #fef08a;
+                                {% else %}
+                                    background: #fef2f2; color: #991b1b; border: 4px solid #fecaca;
+                                {% endif %}">
+                                {% if q_stat.average_rating %}{{ q_stat.average_rating }}{% else %}-{% endif %}
+                            </div>
+                            <div class="text-muted" style="font-size: 13px; font-weight: 600;">Média de Avaliação</div>
+                            <div class="text-muted mt-1" style="font-size: 11px;">{{ q_stat.rating_count }} respostas</div>
+                        </div>
+                        <div class="col-md-{% if q_stat.dept_averages %}5{% else %}9{% endif %}">
+                            <div class="text-muted mb-2 fw-semibold" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Distribuição de Notas</div>
+                            <div id="chart-dist-{{ q_id }}" style="height: 260px;"></div>
+                        </div>
+                        {% if q_stat.dept_averages %}
+                        <div class="col-md-4">
+                            <div class="text-muted mb-2 fw-semibold" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Médias por Setor</div>
+                            <div id="chart-dept-{{ q_id }}" style="height: 260px;"></div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <script>
+                        (function() {
+                            const categories = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+                            const dataValues = [
+                                {% for score, count in q_stat.rating_distribution.items %}
+                                    {{ count }},
+                                {% endfor %}
+                            ];
+                            const options = {
+                                chart: {
+                                    type: 'bar',
+                                    height: 260,
+                                    toolbar: { show: false }
+                                },
+                                plotOptions: {
+                                    bar: {
+                                        borderRadius: 6,
+                                        columnWidth: '55%',
+                                        dataLabels: { position: 'top' }
+                                    }
+                                },
+                                dataLabels: {
+                                    enabled: true,
+                                    formatter: function (val) { return val > 0 ? val : ""; },
+                                    offsetY: -20,
+                                    style: { fontSize: '11px', colors: ["#475569"] }
+                                },
+                                series: [{
+                                    name: 'Respostas',
+                                    data: dataValues
+                                }],
+                                colors: ['#4f46e5'],
+                                fill: {
+                                    type: 'gradient',
+                                    gradient: {
+                                        shade: 'light',
+                                        type: "vertical",
+                                        shadeIntensity: 0.25,
+                                        opacityFrom: 0.85,
+                                        opacityTo: 0.85,
+                                        stops: [0, 100]
+                                    },
+                                },
+                                xaxis: {
+                                    categories: categories,
+                                    axisBorder: { show: false },
+                                    axisTicks: { show: false }
+                                },
+                                yaxis: {
+                                    labels: {
+                                        formatter: function(val) { return Math.round(val); }
+                                    }
+                                },
+                                grid: {
+                                    borderColor: '#f1f5f9',
+                                    strokeDashArray: 4,
+                                    padding: { top: 20, right: 10, left: 10, bottom: 0 }
+                                }
+                            };
+                            const chart = new ApexCharts(document.querySelector("#chart-dist-{{ q_id }}"), options);
+                            chart.render();
+                        })();
+                    </script>
+                    
+                    {% if q_stat.dept_averages %}
+                    <script>
+                        (function() {
+                            const categories = [];
+                            const dataValues = [];
+                            const colors = [];
+                            let distributedColors = false;
+
+                            {% if survey.is_leadership_survey %}
+                                distributedColors = true;
+                                {% for dept_id, da in q_stat.dept_averages.items %}
+                                    categories.push("{{ da.name|escapejs }}");
+                                    dataValues.push({{ da.average|unlocalize }});
+                                    {% if da.average >= 8.0 %}
+                                        colors.push('#10b981');
+                                    {% elif da.average >= 5.0 %}
+                                        colors.push('#f59e0b');
+                                    {% else %}
+                                        colors.push('#ef4444');
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                {% for dept_id, da in q_stat.dept_averages.items %}
+                                    categories.push("{{ da.name|escapejs }}");
+                                    dataValues.push({{ da.average|unlocalize }});
+                                    colors.push('#4f46e5');
+                                {% endfor %}
+                            {% endif %}
+
+                            const options = {
+                                chart: {
+                                    type: 'bar',
+                                    height: 260,
+                                    toolbar: { show: false }
+                                },
+                                plotOptions: {
+                                    bar: {
+                                        borderRadius: 4,
+                                        horizontal: true,
+                                        barHeight: '60%',
+                                        distributed: distributedColors,
+                                        dataLabels: { position: 'right' }
+                                    }
+                                },
+                                dataLabels: {
+                                    enabled: true,
+                                    offsetX: 25,
+                                    style: { fontSize: '11px', colors: ["#475569"] },
+                                    formatter: function (val) { return val.toFixed(1); }
+                                },
+                                series: [{
+                                    name: 'Média',
+                                    data: dataValues
+                                }],
+                                xaxis: {
+                                    categories: categories,
+                                    max: 10,
+                                    tickAmount: 5,
+                                    axisBorder: { show: false },
+                                    axisTicks: { show: false }
+                                },
+                                colors: colors.length ? colors : ['#4f46e5'],
+                                grid: {
+                                    borderColor: '#f1f5f9',
+                                    strokeDashArray: 4,
+                                    padding: { top: 0, right: 30, left: 10, bottom: 0 }
+                                }
+                            };
+                            const chart = new ApexCharts(document.querySelector("#chart-dept-{{ q_id }}"), options);
+                            chart.render();
+                        })();
+                    </script>
+                    {% endif %}
+                    
+                {% elif q_stat.question_type == 'GOOD_BAD' %}
+                    <div class="row align-items-center g-4">
+                        <div class="col-md-5">
+                            <div id="chart-satisfaction-{{ q_id }}" style="height: 260px;"></div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="d-flex flex-column gap-3">
+                                <div>
+                                    <div class="d-flex justify-content-between mb-1" style="font-size: 13px;">
+                                        <span class="fw-semibold text-success"><i class="bi bi-emoji-smile-fill me-1"></i> Bom</span>
+                                        <span class="text-muted fw-bold">
+                                            {{ q_stat.choices_distribution.Bom|default:0 }} 
+                                            ({% if q_stat.total_responses %}{% widthratio q_stat.choices_distribution.Bom|default:0 q_stat.total_responses 100 %}{% else %}0{% endif %}%)
+                                        </span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: {% if q_stat.total_responses %}{% widthratio q_stat.choices_distribution.Bom|default:0 q_stat.total_responses 100 %}{% else %}0{% endif %}%;"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div class="d-flex justify-content-between mb-1" style="font-size: 13px;">
+                                        <span class="fw-semibold text-warning"><i class="bi bi-emoji-neutral-fill me-1"></i> Regular</span>
+                                        <span class="text-muted fw-bold">
+                                            {{ q_stat.choices_distribution.Regular|default:0 }} 
+                                            ({% if q_stat.total_responses %}{% widthratio q_stat.choices_distribution.Regular|default:0 q_stat.total_responses 100 %}{% else %}0{% endif %}%)
+                                        </span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: {% if q_stat.total_responses %}{% widthratio q_stat.choices_distribution.Regular|default:0 q_stat.total_responses 100 %}{% else %}0{% endif %}%;"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div class="d-flex justify-content-between mb-1" style="font-size: 13px;">
+                                        <span class="fw-semibold text-danger"><i class="bi bi-emoji-frown-fill me-1"></i> Ruim</span>
+                                        <span class="text-muted fw-bold">
+                                            {{ q_stat.choices_distribution.Ruim|default:0 }} 
+                                            ({% if q_stat.total_responses %}{% widthratio q_stat.choices_distribution.Ruim|default:0 q_stat.total_responses 100 %}{% else %}0{% endif %}%)
+                                        </span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-danger" role="progressbar" style="width: {% if q_stat.total_responses %}{% widthratio q_stat.choices_distribution.Ruim|default:0 q_stat.total_responses 100 %}{% else %}0{% endif %}%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <script>
+                        (function() {
+                            const bomVal = {{ q_stat.choices_distribution.Bom|default:0 }};
+                            const regVal = {{ q_stat.choices_distribution.Regular|default:0 }};
+                            const ruimVal = {{ q_stat.choices_distribution.Ruim|default:0 }};
+                            
+                            const options = {
+                                chart: {
+                                    type: 'donut',
+                                    height: 260
+                                },
+                                series: [bomVal, regVal, ruimVal],
+                                labels: ['Bom', 'Regular', 'Ruim'],
+                                colors: ['#10b981', '#f59e0b', '#ef4444'],
+                                dataLabels: {
+                                    enabled: false
+                                },
+                                plotOptions: {
+                                    pie: {
+                                        donut: {
+                                            size: '70%',
+                                            labels: {
+                                                show: true,
+                                                name: {
+                                                    show: true,
+                                                    fontSize: '12px',
+                                                    fontFamily: 'Inter, sans-serif',
+                                                    color: '#64748b',
+                                                    offsetY: -5
+                                                },
+                                                value: {
+                                                    show: true,
+                                                    fontSize: '20px',
+                                                    fontFamily: 'Inter, sans-serif',
+                                                    fontWeight: 'bold',
+                                                    color: '#0f172a',
+                                                    offsetY: 5,
+                                                    formatter: function (val) { return val; }
+                                                },
+                                                total: {
+                                                    show: true,
+                                                    label: 'Respostas',
+                                                    color: '#64748b',
+                                                    formatter: function (w) {
+                                                        return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                legend: {
+                                    show: false
+                                },
+                                tooltip: {
+                                    y: {
+                                        formatter: function (val, { series, seriesIndex, dataPointIndex, w }) {
+                                            const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                            const percent = total > 0 ? ((val / total) * 100).toFixed(0) : 0;
+                                            return val + ' respostas (' + percent + '%)';
+                                        }
+                                    }
+                                }
+                            };
+                            const chart = new ApexCharts(document.querySelector("#chart-satisfaction-{{ q_id }}"), options);
+                            chart.render();
+                        })();
+                    </script>
+                    
+                {% elif q_stat.question_type == 'MULTIPLE_CHOICE' %}
+                    <div class="row align-items-center g-4">
+                        <div class="col-md-8">
+                            <div id="chart-choice-{{ q_id }}" style="height: 260px;"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="list-group list-group-flush border rounded-3 p-2 bg-light">
+                                {% for choice, count in q_stat.choices_distribution.items %}
+                                    <div class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-2 px-3 border-0">
+                                        <span class="text-dark fw-medium" style="font-size: 13px;">{{ choice }}</span>
+                                        <span class="badge bg-primary rounded-pill">{{ count }}</span>
+                                    </div>
+                                {% empty %}
+                                    <div class="p-3 text-center text-muted" style="font-size: 13px;">Nenhuma resposta registrada.</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <script>
+                        (function() {
+                            const categories = [];
+                            const dataValues = [];
+                            
+                            {% for choice, count in q_stat.choices_distribution.items %}
+                                categories.push("{{ choice|escapejs }}");
+                                dataValues.push({{ count }});
+                            {% endfor %}
+                            
+                            const options = {
+                                chart: {
+                                    type: 'bar',
+                                    height: 260,
+                                    toolbar: { show: false }
+                                },
+                                plotOptions: {
+                                    bar: {
+                                        borderRadius: 4,
+                                        horizontal: true,
+                                        barHeight: '50%',
+                                        dataLabels: { position: 'right' }
+                                    }
+                                },
+                                dataLabels: {
+                                    enabled: true,
+                                    offsetX: 20,
+                                    style: { fontSize: '11px', colors: ["#475569"] }
+                                },
+                                series: [{
+                                    name: 'Respostas',
+                                    data: dataValues
+                                }],
+                                colors: ['#4f46e5'],
+                                xaxis: {
+                                    categories: categories,
+                                    labels: {
+                                        formatter: function(val) { return Math.round(val); }
+                                    },
+                                    axisBorder: { show: false },
+                                    axisTicks: { show: false }
+                                },
+                                grid: {
+                                    borderColor: '#f1f5f9',
+                                    strokeDashArray: 4,
+                                    padding: { top: 0, right: 30, left: 10, bottom: 0 }
+                                }
+                            };
+                            const chart = new ApexCharts(document.querySelector("#chart-choice-{{ q_id }}"), options);
+                            chart.render();
+                        })();
+                    </script>
+                    
+                {% elif q_stat.question_type == 'TEXT' %}
+                    <div class="comments-container d-flex flex-column gap-3" style="max-height: 400px; overflow-y: auto; padding-right: 8px;">
+                        {% for ans in q_stat.text_answers %}
+                            <div class="p-3 rounded-3 border" style="background: #f8fafc; border-color: #e2e8f0 !important;">
+                                <p class="mb-2 text-dark" style="font-size: 14px; font-weight: 500; line-height: 1.5;">"{{ ans.text }}"</p>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="badge bg-white text-secondary border d-inline-flex align-items-center gap-1 py-1.5 px-2.5 rounded-pill" style="font-size: 11px;">
+                                        <i class="bi bi-person-circle text-primary"></i>
+                                        {% if ans.employee_name %}{{ ans.employee_name }}{% else %}Anônimo{% endif %}
+                                    </span>
+                                    
+                                    {% if not survey.is_anonymous and ans.dept_name %}
+                                    <span class="badge bg-white text-secondary border d-inline-flex align-items-center gap-1 py-1.5 px-2.5 rounded-pill" style="font-size: 11px;">
+                                        <i class="bi bi-building text-success"></i>
+                                        {{ ans.dept_name }}
+                                    </span>
+                                    {% endif %}
+                                    
+                                    {% if survey.is_leadership_survey and ans.leader_name %}
+                                    <span class="badge bg-white text-secondary border d-inline-flex align-items-center gap-1 py-1.5 px-2.5 rounded-pill" style="font-size: 11px;">
+                                        <i class="bi bi-award-fill text-warning"></i>
+                                        Líder: <strong class="text-dark">{{ ans.leader_name }}</strong>
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center py-4 text-muted">
+                                <i class="bi bi-chat-left-dots fs-3 mb-2 d-block"></i>
+                                <span style="font-size: 13px;">Nenhum comentário enviado para esta pergunta.</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if survey.is_leadership_survey %}
+        {% if request.user.is_admin or request.user.is_hr %}
+        <style>
+            .premium-leader-btn { transition: all 0.2s ease; border: 1px solid transparent; }
+            .premium-leader-btn:hover:not(.active) { background-color: #f8fafc; border-color: #e2e8f0; }
+            .premium-leader-btn.active { 
+                background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important; 
+                box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+                color: white !important;
+            }
+            .premium-leader-btn.active .text-dark, .premium-leader-btn.active .text-muted { color: rgba(255,255,255,0.9) !important; }
+            .premium-leader-btn.active .bg-primary { background: white !important; color: #4f46e5 !important; }
+            .premium-leader-btn.active .badge { background: rgba(255,255,255,0.2) !important; color: white !important; border-color: rgba(255,255,255,0.3) !important; }
+            
+            .leader-question-card { transition: transform 0.2s; }
+            .leader-question-card:hover { transform: translateY(-2px); }
+        </style>
+        <div class="tab-pane" id="leader-pane" role="tabpanel" aria-labelledby="leader-tab">
+        {% if leader_stats %}
+        <div class="row g-4">
+            <!-- Left Column: Leader Selector -->
+            <div class="col-md-4 col-lg-3">
+                <div class="card border-0 shadow-sm p-3 rounded-4" style="background: white; border: 1px solid #e2e8f0 !important; max-height: calc(100vh - 120px); overflow-y: auto; position: sticky; top: 90px;">
+                    <div class="text-muted fw-bold mb-2 font-monospace" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Lideranças Avaliadas</div>
+                    <div class="mb-3 position-relative">
+                        <input type="text" id="leaderSearchInput" class="form-control" placeholder="Buscar líder ou setor..." style="padding-left: 32px; height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px;">
+                        <i class="bi bi-search position-absolute text-muted" style="left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px;"></i>
+                    </div>
+                    <div class="nav flex-column nav-pills-custom gap-2" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                        {% for l_key, stats in leader_stats.items %}
+                        <button class="nav-link premium-leader-btn w-100 text-start d-flex align-items-center justify-content-between p-3 rounded-3 {% if forloop.first %}active{% endif %}" 
+                                id="v-pills-{{ l_key }}-tab" data-bs-toggle="pill" data-bs-target="#v-pills-{{ l_key }}" type="button" role="tab" aria-controls="v-pills-{{ l_key }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+                            <div class="d-flex align-items-center gap-2 overflow-hidden" style="min-width: 0; flex-grow: 1;">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 32px; height: 32px; font-size: 13px;">
+                                    {{ stats.leader_name.0|upper }}
+                                </div>
+                                <div class="overflow-hidden" style="min-width: 0; flex-grow: 1;">
+                                    <div class="fw-bold text-dark text-truncate" style="font-size: 13px;">{{ stats.leader_name }}</div>
+                                    <div class="text-muted text-truncate" style="font-size: 11px;">{{ stats.dept_name }}</div>
+                                </div>
+                            </div>
+                            {% if stats.overall_score is not None %}
+                            <span class="badge flex-shrink-0 ms-2" style="font-size: 11px; font-weight: 700;
+                                {% if stats.overall_score >= 8.0 %}
+                                    background: #dcfce7; color: #15803d;
+                                {% elif stats.overall_score >= 5.0 %}
+                                    background: #fef9c3; color: #a16207;
+                                {% else %}
+                                    background: #fee2e2; color: #b91c1c;
+                                {% endif %}">
+                                {{ stats.overall_score }}
+                            </span>
+                            {% endif %}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column: Detailed Leader Report -->
+            <div class="col-md-8 col-lg-9">
+                <div class="tab-content" id="v-pills-tabContent">
+                    {% for l_key, stats in leader_stats.items %}
+                    <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="v-pills-{{ l_key }}" role="tabpanel" aria-labelledby="v-pills-{{ l_key }}-tab">
+                        
+                        <div class="card border-0 shadow-sm rounded-4" style="background: white; border: 1px solid #e2e8f0 !important;">
+                            <div class="card-header border-bottom p-4 d-flex justify-content-between align-items-center flex-wrap gap-3" style="background: linear-gradient(to right, #ffffff, #f8fafc); border-radius: 1rem 1rem 0 0;">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 48px; height: 48px; font-size: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                                        {{ stats.leader_name.0|upper }}
+                                    </div>
+                                    <div>
+                                        <h4 class="fw-bold text-dark mb-0">{{ stats.leader_name }}</h4>
+                                        <p class="text-muted mb-0" style="font-size: 13px;"><i class="bi bi-building me-1"></i>{{ stats.dept_name }}</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if stats.overall_score is not None %}
+                                    <div class="px-3 py-1.5 rounded-pill fw-bold d-inline-flex align-items-center gap-1.5 border" style="font-size: 13px;
+                                        {% if stats.overall_score >= 8.0 %}
+                                            background: #ecfdf5; color: #065f46; border-color: #a7f3d0 !important;
+                                        {% elif stats.overall_score >= 5.0 %}
+                                            background: #fffbeb; color: #92400e; border-color: #fde68a !important;
+                                        {% else %}
+                                            background: #fef2f2; color: #991b1b; border-color: #fecaca !important;
+                                        {% endif %}">
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                        Score Geral: <strong>{{ stats.overall_score }}/10</strong>
+                                    </div>
+                                    {% endif %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary fw-bold py-2 px-3 rounded-pill" style="font-size: 12px; height: 32px; display: inline-flex; align-items: center;">
+                                        <i class="bi bi-chat-right-text me-1"></i>{{ stats.response_count }} avaliações
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="card-body p-4">
+                                <!-- DADOS DESTA PESQUISA -->
+                                <div class="d-flex align-items-center gap-3 mb-4">
+                                    <div class="d-flex align-items-center justify-content-center rounded-3 shadow-sm" style="width: 40px; height: 40px; background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #2563eb; border: 1px solid #bfdbfe;">
+                                        <i class="bi bi-bar-chart-fill fs-5"></i>
+                                    </div>
+                                    <h5 class="fw-bold mb-0 text-dark" style="font-size: 16px; letter-spacing: -0.2px;">Resultados Desta Pesquisa</h5>
+                                </div>
+                                
+                                <!-- Respostas por Pergunta -->
+                                <div class="row g-4">
+                                    {% for q_id, q_stat in stats.questions.items %}
+                                        <div class="col-md-6">
+                                            <div class="p-4 rounded-4 bg-white h-100 position-relative overflow-hidden leader-question-card" style="box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #f1f5f9 !important;">
+                                                <div class="position-absolute top-0 start-0 w-100" style="height: 3px; background: linear-gradient(90deg, #e2e8f0, #cbd5e1);"></div>
+                                                <h6 class="premium-section-title mb-3 text-dark fw-bold" style="font-size: 11px; line-height: 1.4;">Q. {{ q_stat.question_text }}</h6>
+                                                
+                                                {% if q_stat.question_type == 'RATING_10' %}
+                                                    <div class="d-flex flex-column gap-2 mt-2">
+                                                        <div class="d-flex align-items-center justify-content-between">
+                                                            <div class="d-flex align-items-baseline gap-1">
+                                                                <span class="fs-3 fw-bold text-dark">{{ q_stat.average|default:"-" }}</span>
+                                                                <span class="text-muted" style="font-size: 12px;">/ 10</span>
+                                                            </div>
+                                                            <span class="badge rounded-pill px-2.5 py-1" style="font-size: 11px; font-weight: 700;
+                                                                {% if q_stat.average >= 8.0 %}
+                                                                    background: #dcfce7; color: #15803d;
+                                                                {% elif q_stat.average >= 5.0 %}
+                                                                    background: #fef9c3; color: #a16207;
+                                                                {% else %}
+                                                                    background: #fee2e2; color: #b91c1c;
+                                                                {% endif %}">
+                                                                {% if q_stat.average >= 8.0 %}Excelente{% elif q_stat.average >= 5.0 %}Regular{% else %}Insatisfatório{% endif %}
+                                                            </span>
+                                                        </div>
+                                                        <div class="progress" style="height: 6px; background-color: #e2e8f0; border-radius: 4px;">
+                                                            <div class="progress-bar rounded" role="progressbar" 
+                                                                 style="width: {% if q_stat.average %}{{ q_stat.average }}0{% else %}0{% endif %}%; 
+                                                                 {% if q_stat.average >= 8.0 %}
+                                                                     background-color: #10b981;
+                                                                 {% elif q_stat.average >= 5.0 %}
+                                                                     background-color: #f59e0b;
+                                                                 {% else %}
+                                                                     background-color: #ef4444;
+                                                                 {% endif %}">
+                                                            </div>
+                                                        </div>
+                                                        <span class="text-muted" style="font-size: 11px;"><i class="bi bi-chat-right-text me-1"></i>{{ q_stat.rating_count }} resposta{{ q_stat.rating_count|pluralize:"s" }}</span>
+                                                    </div>
+                                                    
+                                                {% elif q_stat.question_type == 'GOOD_BAD' %}
+                                                    <div class="d-flex flex-column gap-2 mt-3 w-100">
+                                                        {% for choice, count in q_stat.choice_counts.items %}
+                                                            <div class="d-flex justify-content-between align-items-center p-2 px-3 rounded-3" style="border: 1px solid {% if choice == 'Bom' %}#a7f3d0{% elif choice == 'Regular' %}#fde68a{% elif choice == 'Ruim' %}#fecaca{% else %}#e2e8f0{% endif %}; background: {% if choice == 'Bom' %}#f0fdf4{% elif choice == 'Regular' %}#fffbeb{% elif choice == 'Ruim' %}#fef2f2{% else %}#f8fafc{% endif %}; transition: transform 0.2s; cursor: default;" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <span class="fs-5">{% if choice == 'Bom' %}😊{% elif choice == 'Regular' %}😐{% elif choice == 'Ruim' %}😞{% else %}🏷️{% endif %}</span>
+                                                                    <span class="fw-bold" style="font-size: 13px; color: {% if choice == 'Bom' %}#047857{% elif choice == 'Regular' %}#b45309{% elif choice == 'Ruim' %}#b91c1c{% else %}#334155{% endif %};">{{ choice }}</span>
+                                                                </div>
+                                                                <div class="d-flex align-items-center justify-content-center rounded-3 fw-bold shadow-sm bg-white" style="min-width: 36px; height: 32px; font-size: 13px; color: {% if choice == 'Bom' %}#059669{% elif choice == 'Regular' %}#d97706{% elif choice == 'Ruim' %}#dc2626{% else %}#475569{% endif %}; border: 1px solid rgba(0,0,0,0.05);">
+                                                                    {{ count }}
+                                                                </div>
+                                                            </div>
+                                                        {% empty %}
+                                                            <span class="text-muted" style="font-size: 11.5px;">Nenhuma resposta registrada</span>
+                                                        {% endfor %}
+                                                    </div>
+                                                    
+                                                {% elif q_stat.question_type == 'MULTIPLE_CHOICE' %}
+                                                    <div class="d-flex flex-wrap gap-2 mt-2">
+                                                        {% for choice, count in q_stat.choice_counts.items %}
+                                                            <span class="badge bg-white text-secondary border py-2 px-3 rounded-3 d-inline-flex align-items-center gap-2 shadow-sm" style="font-size: 12px; border-color: #e2e8f0 !important; font-weight: 500;">
+                                                                <span class="text-dark">{{ choice }}</span>
+                                                                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill">{{ count }}</span>
+                                                            </span>
+                                                        {% empty %}
+                                                            <span class="text-muted" style="font-size: 11.5px;">Nenhuma resposta registrada</span>
+                                                        {% endfor %}
+                                                    </div>
+                                                    
+                                                {% elif q_stat.question_type == 'TEXT' %}
+                                                    <button class="btn w-100 mt-3 d-flex justify-content-between align-items-center p-3 rounded-3" 
+                                                            type="button" data-bs-toggle="collapse" data-bs-target="#comments-{{ l_key }}-{{ q_id }}" aria-expanded="false" 
+                                                            style="background: #f8fafc; border: 1px solid #e2e8f0; transition: all 0.2s;"
+                                                            onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                                                        <div class="d-flex align-items-center gap-2 text-dark fw-bold" style="font-size: 13px;">
+                                                            <i class="bi bi-chat-left-text text-primary fs-5"></i>
+                                                            <span>Ler Comentários</span>
+                                                        </div>
+                                                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 border border-primary border-opacity-25">{{ q_stat.text_answers|length }} respost{{ q_stat.text_answers|length|pluralize:"a,as" }}</span>
+                                                    </button>
+                                                    
+                                                    <div class="collapse mt-3" id="comments-{{ l_key }}-{{ q_id }}">
+                                                        <div class="d-flex flex-column gap-2" style="max-height: 250px; overflow-y: auto; padding-right: 4px;">
+                                                            {% for ans in q_stat.text_answers %}
+                                                                <div class="p-3 rounded-3 border" style="font-size: 13px; background: white; border-color: #e2e8f0 !important; box-shadow: 0 1px 3px rgba(0,0,0,0.01);">
+                                                                    <p class="mb-2 text-dark" style="line-height: 1.45; font-style: italic;">"{{ ans.text }}"</p>
+                                                                    <div class="d-flex align-items-center gap-2">
+                                                                        <span class="badge bg-light text-muted d-inline-flex align-items-center gap-1 py-1 px-2.5 rounded-pill" style="font-size: 10px;">
+                                                                            <i class="bi bi-person-circle"></i>
+                                                                            {% if ans.employee_name %}{{ ans.employee_name }}{% else %}Anônimo{% endif %}
+                                                                        </span>
+                                                                        {% if not survey.is_anonymous and ans.dept_name %}
+                                                                        <span class="badge bg-light text-muted d-inline-flex align-items-center gap-1 py-1 px-2.5 rounded-pill" style="font-size: 10px;">
+                                                                            <i class="bi bi-building"></i>
+                                                                            {{ ans.dept_name }}
+                                                                        </span>
+                                                                        {% endif %}
+                                                                    </div>
+                                                                </div>
+                                                            {% empty %}
+                                                                <div class="text-center py-2 text-muted" style="font-size: 12px;">Nenhum comentário.</div>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <hr class="my-5" style="border-color: #e2e8f0;">
+
+                                <!-- DADOS HISTÓRICOS -->
+                                <div class="d-flex align-items-center gap-3 mb-4">
+                                    <div class="d-flex align-items-center justify-content-center rounded-3 shadow-sm" style="width: 40px; height: 40px; background: linear-gradient(135deg, #f8fafc, #f1f5f9); color: #475569; border: 1px solid #e2e8f0;">
+                                        <i class="bi bi-clock-history fs-5"></i>
+                                    </div>
+                                    <h5 class="fw-bold mb-0 text-dark" style="font-size: 16px; letter-spacing: -0.2px;">Histórico Geral do Líder</h5>
+                                </div>
+
+                                <!-- Histórico Temporal de Evolução -->
+                                <div class="p-4 rounded-4 border" style="background: #f8fafc; border-color: #e2e8f0 !important;">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <i class="bi bi-graph-up-arrow text-primary fs-5"></i>
+                                        <h6 class="premium-section-title mb-0" style="font-size: 11px;">Evolução Histórica</h6>
+                                    </div>
+                                    <p class="text-muted mb-3" style="font-size: 11.5px; margin-left: 28px;">
+                                        Este gráfico agrupa a nota final deste líder ao longo do tempo, comparando o desempenho dele nesta e em todas as edições passadas.
+                                    </p>
+                                    
+                                    {% if stats.history|length > 1 %}
+                                        <div id="chart-history-{{ l_key }}" style="height: 200px;"></div>
+                                    {% else %}
+                                        <div class="text-center py-4 px-3 rounded-3 border bg-white" style="border-style: dashed !important; border-color: #cbd5e1 !important;">
+                                            <i class="bi bi-calendar3 text-muted fs-4 mb-2 d-block"></i>
+                                            <div class="fw-bold text-secondary" style="font-size: 13px;">Evolução Temporal Indisponível</div>
+                                            <p class="text-muted mb-0 mt-1" style="font-size: 12px; max-width: 380px; margin: 0 auto;">
+                                                Os gráficos de linha de evolução histórica anual requerem pelo menos duas pesquisas de liderança publicadas no sistema.
+                                            </p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if stats.history|length > 1 %}
+                                <script>
+                                    (function() {
+                                        const categories = [];
+                                        const dataValues = [];
+                                        
+                                        {% for h in stats.history %}
+                                            categories.push("{{ h.date }}");
+                                            dataValues.push({{ h.score|unlocalize }});
+                                        {% endfor %}
+                                        
+                                        const options = {
+                                            chart: {
+                                                type: 'area',
+                                                height: 200,
+                                                toolbar: { show: false }
+                                            },
+                                            stroke: {
+                                                curve: 'smooth',
+                                                width: 3
+                                            },
+                                            fill: {
+                                                type: 'gradient',
+                                                gradient: {
+                                                    shadeIntensity: 1,
+                                                    opacityFrom: 0.3,
+                                                    opacityTo: 0.05,
+                                                    stops: [0, 100]
+                                                }
+                                            },
+                                            series: [{
+                                                name: 'Score Geral',
+                                                data: dataValues
+                                            }],
+                                            xaxis: {
+                                                categories: categories,
+                                                axisBorder: { show: false },
+                                                axisTicks: { show: false },
+                                                tooltip: { enabled: false }
+                                            },
+                                            yaxis: {
+                                                min: 0,
+                                                max: 10,
+                                                tickAmount: 5
+                                            },
+                                            tooltip: {
+                                                y: {
+                                                    formatter: function (val, { dataPointIndex }) {
+                                                        const titles = [
+                                                            {% for h in stats.history %}"{{ h.survey_title|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}
+                                                        ];
+                                                        return val + " / 10 (" + titles[dataPointIndex] + ")";
+                                                    }
+                                                }
+                                            },
+                                            colors: ['#4f46e5'],
+                                            grid: {
+                                                borderColor: '#f1f5f9',
+                                                strokeDashArray: 4,
+                                                padding: { top: 10, right: 10, left: 10, bottom: 0 }
+                                            }
+                                        };
+                                        const chart = new ApexCharts(document.querySelector("#chart-history-{{ l_key }}"), options);
+                                        chart.render();
+                                    })();
+                                </script>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted bg-white rounded-4 border">
+            <i class="bi bi-person-badge fs-1 mb-2"></i>
+            <p>Nenhuma análise de líder disponível.</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+
+    {% endif %}
+    
+    {% if request.user.is_admin or request.user.is_hr %}
+    <!-- Tab 3: Detailed -->
+    <div class="tab-pane" id="details-pane" role="tabpanel" aria-labelledby="details-tab">
+        <div class="card border-0 rounded-4 shadow-sm" style="background: white;">
+            <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-columns-reverse text-primary me-2"></i> Respostas Detalhadas</h5>
+                <div class="position-relative" style="width: 240px;">
+                    <input type="text" id="detailsSearchInput" class="form-control form-control-sm" placeholder="Buscar nas respostas..." style="padding-left: 30px; height: 36px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px;">
+                    <i class="bi bi-search position-absolute text-muted" style="left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px;"></i>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4 text-muted font-monospace" style="font-size: 11px; letter-spacing: 0.5px;">COLABORADOR</th>
+                                <th class="text-muted font-monospace" style="font-size: 11px; letter-spacing: 0.5px;">DATA/HORA</th>
+                                {% for q in survey.questions.all %}
+                                    <th class="text-muted font-monospace" style="font-size: 11px; letter-spacing: 0.5px; max-width: 200px;">Q{{ forloop.counter }}. {{ q.question_text|truncatechars:30 }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for response in responses %}
+                                <tr>
+                                    <td class="ps-4 py-3">
+                                        {% if survey.is_anonymous %}
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="rounded-circle d-flex align-items-center justify-content-center bg-secondary text-white" style="width:32px; height:32px;"><i class="bi bi-incognito"></i></div>
+                                                <span class="fw-medium text-muted">Anônimo</span>
+                                            </div>
+                                        {% else %}
+                                            <div class="d-flex align-items-center gap-2">
+                                                {% if response.employee.picture %}
+                                                    <img src="{{ response.employee.picture.picture.url }}" class="rounded-circle" style="width:32px; height:32px; object-fit:cover;">
+                                                {% else %}
+                                                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary text-white" style="width:32px; height:32px;">{{ response.employee.full_name.0|upper }}</div>
+                                                {% endif %}
+                                                <span class="fw-medium text-dark">{{ response.employee.full_name }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted" style="font-size: 13px;">{{ response.submitted_at|date:"d/m/Y H:i" }}</td>
+                                    
+                                    {% for q in survey.questions.all %}
+                                        <td style="font-size: 13px;">
+                                            {% for ans in response.answers.all %}
+                                                {% if ans.question_id == q.id %}
+                                                    {% if q.question_type == 'TEXT' %}
+                                                        <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ ans.text_answer }}">{{ ans.text_answer }}</span>
+                                                    {% elif q.question_type == 'RATING_10' %}
+                                                        <span class="badge bg-primary rounded-pill">{{ ans.rating_answer }}/10</span>
+                                                    {% elif q.question_type == 'GOOD_BAD' %}
+                                                        {% if ans.choice_answer == 'Bom' %}<span class="badge bg-success">Bom</span>
+                                                        {% elif ans.choice_answer == 'Regular' %}<span class="badge bg-warning text-dark">Regular</span>
+                                                        {% else %}<span class="badge bg-danger">Ruim</span>{% endif %}
+                                                    {% elif q.question_type == 'MULTIPLE_CHOICE' %}
+                                                        <span class="badge bg-light text-dark border" style="border-color: #cbd5e1 !important;">{{ ans.choice_answer }}</span>
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="100%" class="text-center py-5 text-muted">
+                                        <i class="bi bi-inbox fs-2 mb-2"></i>
+                                        <p class="mb-0">Nenhuma resposta registrada com os filtros atuais.</p>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sectorFilter = document.getElementById('sectorFilter');
+        if (sectorFilter) {
+            sectorFilter.addEventListener('change', function() {
+                const val = this.value;
+                const url = new URL(window.location.href);
+                if (val) {
+                    url.searchParams.set('sector', val);
+                } else {
+                    url.searchParams.delete('sector');
+                }
+                window.location.href = url.toString();
+            });
+        }
+        
+        const surveySwitcher = document.getElementById('surveySwitcher');
+        if (surveySwitcher) {
+            surveySwitcher.addEventListener('change', function() {
+                if (this.value) {
+                    window.location.href = this.value;
+                }
+            });
+        }
+
+        // 1. Leader Analysis Sidebar Filter
+        const leaderSearchInput = document.getElementById('leaderSearchInput');
+        if (leaderSearchInput) {
+            leaderSearchInput.addEventListener('input', function(e) {
+                const term = e.target.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const buttons = document.querySelectorAll('#v-pills-tab button');
+                buttons.forEach(btn => {
+                    const nameText = btn.querySelector('.fw-bold.text-dark').textContent.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const deptText = btn.querySelector('.text-muted').textContent.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    if (nameText.includes(term) || deptText.includes(term)) {
+                        btn.style.setProperty('display', 'flex', 'important');
+                    } else {
+                        btn.style.setProperty('display', 'none', 'important');
+                    }
+                });
+            });
+        }
+
+        // 3. Detailed Responses Table Filter
+        const detailsSearchInput = document.getElementById('detailsSearchInput');
+        if (detailsSearchInput) {
+            detailsSearchInput.addEventListener('input', function(e) {
+                const term = e.target.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const rows = document.querySelectorAll('#details-pane table tbody tr');
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    if (text.includes(term) || row.querySelector('td[colspan]')) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

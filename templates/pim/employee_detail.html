@@ -1,0 +1,916 @@
+{% extends "base.html" %}
+{% block title %}{{ employee.full_name }}
+{% endblock %}
+{% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;"><a href="{% url 'employee_list' %}" style="color: var(--text-secondary);">Funcionários</a> / {{ employee.full_name }}</span>
+{% endblock %}
+
+{% block content %}
+<style>
+    {% if request.GET.popup %}
+    .page-content { padding: 24px !important; background-color: #ffffff; }
+    {% endif %}
+    
+    /* ── Employee Detail Premium Styles ── */
+    .detail-section {
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 16px !important;
+        padding: 24px !important;
+        background: white !important;
+        margin-top: 10px !important;
+        box-shadow: 0 4px 20px -5px rgba(0,0,0,0.03) !important;
+    }
+    .detail-section-header {
+        border-bottom: 1px dashed #e2e8f0 !important;
+        margin-bottom: 24px !important;
+        padding-bottom: 16px !important;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .detail-section-title {
+        color: #0f172a !important;
+        font-weight: 700 !important;
+        font-size: 16px !important;
+        margin-bottom: 0 !important;
+    }
+    .detail-section-title .section-icon {
+        color: #4f46e5 !important;
+        margin-right: 8px !important;
+    }
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 24px;
+    }
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .detail-item label {
+        font-size: 11.5px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        margin-bottom: 0 !important;
+    }
+    .detail-item span {
+        font-size: 14.5px !important;
+        color: #0f172a !important;
+        font-weight: 600 !important;
+        word-break: break-all;
+        overflow-wrap: break-word;
+        white-space: normal;
+    }
+    
+    /* Premium Buttons & Tables inside detail section */
+    .detail-section .btn-primary {
+        background-color: #202a44 !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        padding: 6px 16px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+        transition: all 0.2s !important;
+    }
+    .detail-section .btn-primary:hover {
+        background-color: #0f172a !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(32,42,68,0.15) !important;
+    }
+    .detail-section .btn-icon {
+        border-radius: 8px !important;
+        width: 32px !important;
+        height: 32px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s !important;
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+        border: 1px solid transparent !important;
+        padding: 0 !important;
+    }
+    .detail-section .btn-icon:hover {
+        background: #e2e8f0 !important;
+        color: #0f172a !important;
+    }
+    .detail-section .btn-icon-danger {
+        background: #fee2e2 !important;
+        color: #ef4444 !important;
+    }
+    .detail-section .btn-icon-danger:hover {
+        background: #fecaca !important;
+        color: #b91c1c !important;
+    }
+    .detail-section .table {
+        margin-top: 10px !important;
+    }
+    .detail-section .table th {
+        font-size: 11.5px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        padding: 12px 16px !important;
+        background: transparent !important;
+    }
+    .detail-section .table td {
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        color: #334155 !important;
+        border-bottom: 1px dashed #f1f5f9 !important;
+        padding: 16px !important;
+        vertical-align: middle !important;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px !important;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px dashed #cbd5e1;
+        margin-top: 16px;
+    }
+    .empty-state-icon {
+        font-size: 32px;
+        color: #94a3b8;
+        margin-bottom: 12px;
+    }
+    .empty-state p {
+        color: #64748b;
+        font-weight: 500;
+        margin: 0;
+    }
+    .nav-tabs-custom {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        border-bottom: 2px solid #f1f5f9;
+        margin-bottom: 24px;
+        padding-bottom: 0;
+    }
+    .nav-tab {
+        padding: 12px 16px;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 13.5px;
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.2s;
+    }
+    .nav-tab:hover {
+        color: #0f172a;
+        background: #f8fafc;
+        border-radius: 8px 8px 0 0;
+    }
+    .nav-tab.active {
+        color: #4f46e5;
+        border-bottom: 2px solid #4f46e5;
+        background: transparent;
+    }
+    
+    .premium-label {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 6px;
+        display: block;
+    }
+    .premium-input {
+        background-color: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        height: 48px !important;
+        font-size: 14px !important;
+        font-weight: 500;
+        color: #334155 !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    .premium-input:hover {
+        background-color: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
+    }
+    .premium-input:focus {
+        background-color: #ffffff !important;
+        border-color: #94a3b8 !important;
+        box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.1) !important;
+    }
+</style>
+<div class="page-header">
+    <div class="d-flex align-items-center gap-3">
+        <div class="employee-avatar" style="width: 64px; height: 64px; font-size: 24px; position:relative;">
+            {% if employee.picture %}
+            <img src="{{ employee.picture.picture.url }}" alt="" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+            {% else %}
+            {{ employee.first_name|first }}{{ employee.last_name|first }}
+            {% endif %}
+            
+            {% if can_edit_personal %}
+            <form id="avatar-form-pim" method="post" action="{% url 'employee_photo_upload' employee.pk %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="file" name="photo" id="profile-photo-upload-pim" style="display: none;" onchange="document.getElementById('avatar-form-pim').submit();" accept="image/*">
+                <label for="profile-photo-upload-pim" class="btn btn-warning d-flex align-items-center justify-content-center" style="position: absolute; bottom: -4px; right: -4px; width: 24px; height: 24px; border-radius: 50%; padding: 0; cursor: pointer; border: 1px solid white;">
+                    <i class="bi bi-camera-fill" style="font-size: 11px; color:#333;"></i>
+                </label>
+            </form>
+            {% endif %}
+        </div>
+        <div>
+            <h1 class="page-title mb-0">{{ employee.full_name }}</h1>
+            <p class="page-subtitle mb-0">{{ employee.job_title|default:"Sem cargo" }} {% if employee.sub_division %}· {{ employee.sub_division }}{% endif %}</p>
+            <div class="mt-1">
+                {% if employee.is_active %}
+                <span class="status-badge badge-active">Ativo</span>
+                {% else %}
+                <span class="status-badge badge-rejected">Desligado</span>
+                {% endif %}
+                {% if employee.employee_id %}<span class="status-badge badge-inactive ms-1">ID: {{ employee.employee_id }}</span>{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+        {% if can_edit_personal %}
+        <a href="{% url 'employee_personal_edit' employee.pk %}" class="btn btn-outline-orange btn-sm"><i class="bi bi-pencil me-1"></i> Editar</a>
+        {% if employee.is_active and user.is_admin or employee.is_active and user.is_hr %}
+        <a href="{% url 'terminate_employee' employee.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-person-x me-1"></i> Desligar</a>
+        {% endif %}
+        {% endif %}
+        {% if request.GET.popup %}
+        <div style="width: 1px; height: 24px; background: #e2e8f0; margin: 0 4px;"></div>
+        <button type="button" class="btn btn-sm btn-light text-muted" style="border-radius:6px; border: 1px solid #e2e8f0;" onclick="if(window.parent && window.parent.bootstrap){ const m = window.parent.bootstrap.Modal.getInstance(window.parent.document.querySelector('.modal.show')); if(m) m.hide(); }" title="Fechar Prontuário">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+
+<div class="nav-tabs-custom mb-4">
+    <a href="#personal" class="nav-tab active" onclick="showTab('personal', this)"><i class="bi bi-person me-1"></i> Pessoal</a>
+    <a href="#contact" class="nav-tab" onclick="showTab('contact', this)"><i class="bi bi-telephone me-1"></i> Contato</a>
+    <a href="#job" class="nav-tab" onclick="showTab('job', this)"><i class="bi bi-briefcase me-1"></i> Emprego</a>
+    <a href="#salary" class="nav-tab" onclick="showTab('salary', this)"><i class="bi bi-cash-stack me-1"></i> Salário</a>
+    <a href="#dependents" class="nav-tab" onclick="showTab('dependents', this)"><i class="bi bi-people me-1"></i> Dependentes</a>
+    <a href="#emergency" class="nav-tab" onclick="showTab('emergency', this)"><i class="bi bi-telephone-x me-1"></i> Emergência</a>
+    <a href="#qualifications" class="nav-tab" onclick="showTab('qualifications', this)"><i class="bi bi-award me-1"></i> Qualificações</a>
+    <a href="#immigration" class="nav-tab" onclick="showTab('immigration', this)"><i class="bi bi-file-earmark-text me-1"></i> Documentos</a>
+    <a href="#attachments" class="nav-tab" onclick="showTab('attachments', this)"><i class="bi bi-paperclip me-1"></i> Anexos</a>
+    <a href="#organogram" class="nav-tab" onclick="showTab('organogram', this)"><i class="bi bi-diagram-3 me-1"></i> Organograma</a>
+</div>
+
+
+<div id="tab-personal">
+    {% if can_edit_personal %}
+    <form method="post" action="{% url 'employee_detail' employee.pk %}">
+                    {% if request.GET.popup %}<input type="hidden" name="popup" value="1">{% endif %}
+        {% csrf_token %}
+        <input type="hidden" name="action" value="personal_data">
+        
+        <div class="detail-section" style="border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; background: white; margin-top: 10px; box-shadow: 0 4px 20px -5px rgba(0,0,0,0.03);">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 1px dashed #e2e8f0;">
+                <h5 class="mb-0" style="color: #0f172a; font-weight: 700; font-size: 16px;"><i class="bi bi-person me-2" style="color: #4f46e5;"></i> Dados Pessoais</h5>
+                <button type="submit" class="btn text-white d-flex align-items-center gap-2 shadow-sm" style="background: #202a44; border-radius: 12px; font-weight: 600; font-size: 13.5px; padding: 8px 20px; border: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 16px rgba(32,42,68,0.2)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)';">
+                    <i class="bi bi-check2"></i> Salvar Alterações
+                </button>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-lg-3 col-md-6">
+                    <label class="premium-label">Nome</label>
+                    <input type="text" name="first_name" class="form-control premium-input shadow-none" value="{{ employee.first_name|default:'' }}">
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="premium-label">Sobrenome</label>
+                    <input type="text" name="last_name" class="form-control premium-input shadow-none" value="{{ employee.last_name|default:'' }}">
+                </div>
+                <div class="col-lg-6 col-md-12">
+                    <label class="premium-label">Apelido / Nome Social</label>
+                    <input type="text" name="nick_name" class="form-control premium-input shadow-none" value="{{ employee.nick_name|default:'' }}">
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <label class="premium-label">Gênero</label>
+                    <select name="gender" class="form-select premium-input shadow-none">
+                        <option value="" {% if not employee.gender %}selected{% endif %}>Selecione...</option>
+                        <option value="1" {% if employee.gender == 1 %}selected{% endif %}>Masculino</option>
+                        <option value="2" {% if employee.gender == 2 %}selected{% endif %}>Feminino</option>
+                        <option value="3" {% if employee.gender == 3 %}selected{% endif %}>Outro</option>
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="premium-label">Estado Civil</label>
+                    <select name="marital_status" class="form-select premium-input shadow-none">
+                        <option value="" {% if not employee.marital_status %}selected{% endif %}>Selecione...</option>
+                        <option value="Single" {% if employee.marital_status == 'Single' %}selected{% endif %}>Solteiro(a)</option>
+                        <option value="Married" {% if employee.marital_status == 'Married' %}selected{% endif %}>Casado(a)</option>
+                        <option value="Other" {% if employee.marital_status == 'Other' %}selected{% endif %}>Outro</option>
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="premium-label">Data de Nascimento</label>
+                    <input type="date" name="birthday" class="form-control premium-input shadow-none" value="{{ employee.birthday|date:'Y-m-d' }}">
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="premium-label">Nacionalidade</label>
+                    <select name="nationality" class="form-select premium-input shadow-none">
+                        <option value="" {% if not employee.nationality %}selected{% endif %}>Selecione...</option>
+                        {% for nat in nationalities %}
+                        <option value="{{ nat.id }}" {% if employee.nationality and employee.nationality.id == nat.id %}selected{% endif %}>{{ nat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <label class="premium-label">CPF / SSN</label>
+                    <input type="text" name="ssn_number" class="form-control premium-input shadow-none" value="{{ employee.ssn_number|default:'' }}">
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <label class="premium-label">Nº CNH</label>
+                    <input type="text" name="driving_license_no" class="form-control premium-input shadow-none" value="{{ employee.driving_license_no|default:'' }}">
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <label class="premium-label">Venc. CNH</label>
+                    <input type="date" name="driving_license_expired_date" class="form-control premium-input shadow-none" value="{{ employee.driving_license_expired_date|date:'Y-m-d' }}">
+                </div>
+            </div>
+        </div>
+    </form>
+    {% else %}
+    <div class="detail-section">
+        <div class="detail-section-header">
+            <h5 class="detail-section-title"><i class="bi bi-person section-icon"></i> Dados Pessoais</h5>
+        </div>
+        <div class="detail-grid">
+            <div class="detail-item"><label>Nome Completo</label><span>{{ employee.full_name }}</span></div>
+            <div class="detail-item"><label>Apelido</label><span>{{ employee.nick_name|default:"—" }}</span></div>
+            <div class="detail-item"><label>Data de Nascimento</label><span>{{ employee.birthday|date:"d/m/Y"|default:"—" }}</span></div>
+            <div class="detail-item"><label>Gênero</label><span>{{ employee.get_gender_display|default:"—" }}</span></div>
+            <div class="detail-item"><label>Estado Civil</label><span>{{ employee.get_marital_status_display|default:"—" }}</span></div>
+            <div class="detail-item"><label>Nacionalidade</label><span>{{ employee.nationality|default:"—" }}</span></div>
+            <div class="detail-item"><label>CPF / SSN</label><span>{{ employee.ssn_number|default:"—" }}</span></div>
+            <div class="detail-item"><label>Nº CNH</label><span>{{ employee.driving_license_no|default:"—" }}</span></div>
+            <div class="detail-item"><label>Venc. CNH</label><span>{{ employee.driving_license_expired_date|date:"d/m/Y"|default:"—" }}</span></div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+
+<div id="tab-contact" style="display: none;">
+    <div class="detail-section">
+        <div class="detail-section-header">
+            <h5 class="detail-section-title"><i class="bi bi-telephone section-icon"></i> Contato</h5>
+            {% if can_edit_personal %}<a href="{% url 'employee_contact_edit' employee.pk %}" class="btn btn-icon btn-icon-primary"><i class="bi bi-pencil"></i></a>{% endif %}
+        </div>
+        <div class="detail-grid">
+            <div class="detail-item"><label>Endereço</label><span>{{ employee.street1|default:"—" }}</span></div>
+            <div class="detail-item"><label>Complemento</label><span>{{ employee.street2|default:"—" }}</span></div>
+            <div class="detail-item"><label>Cidade</label><span>{{ employee.city|default:"—" }}</span></div>
+            <div class="detail-item"><label>Estado</label><span>{{ employee.city.province.name|default:"—" }}</span></div>
+            <div class="detail-item"><label>País</label><span>{{ employee.city.province.country.name|default:"—" }}</span></div>
+            <div class="detail-item"><label>CEP</label><span>{{ employee.zipcode|default:"—" }}</span></div>
+            <div class="detail-item"><label>Celular</label><span>{{ employee.mobile|default:"—" }}</span></div>
+            <div class="detail-item"><label>Telefone</label><span>{{ employee.home_telephone|default:"—" }}</span></div>
+            <div class="detail-item"><label>Email Corporativo</label><span>{{ employee.work_email|default:"—" }}</span></div>
+            <div class="detail-item"><label>Email Alternativo</label><span>{{ employee.other_email|default:"—" }}</span></div>
+        </div>
+    </div>
+</div>
+
+
+<div id="tab-job" style="display: none;">
+    <div class="detail-section">
+        <div class="detail-section-header">
+            <h5 class="detail-section-title"><i class="bi bi-briefcase section-icon"></i> Emprego</h5>
+            {% if can_manage_job %}<a href="{% url 'employee_job_edit' employee.pk %}" class="btn btn-icon btn-icon-primary"><i class="bi bi-pencil"></i></a>{% endif %}
+        </div>
+        <div class="detail-grid">
+            <div class="detail-item"><label>Cargo</label><span>{{ employee.job_title|default:"—" }}</span></div>
+            <div class="detail-item"><label>Empresa</label><span>{{ employee.legal_entity|default:"—" }}</span></div>
+            <div class="detail-item"><label>Categoria</label><span>{{ employee.job_category|default:"—" }}</span></div>
+            <div class="detail-item"><label>Status</label><span>{{ employee.emp_status|default:"—" }}</span></div>
+            <div class="detail-item"><label>Departamento</label><span>{{ employee.sub_division|default:"—" }}</span></div>
+            <div class="detail-item"><label>Admissão</label><span>{{ employee.joined_date|date:"d/m/Y"|default:"—" }}</span></div>
+            <div class="detail-item"><label>Turno</label><span>{{ employee.work_shift|default:"—" }}</span></div>
+            {% if employee.supervisors.exists %}
+            <div class="detail-item" style="grid-column: 1 / -1;">
+                <label>Supervisores Diretos</label>
+                <span>
+                    {% for sup in employee.supervisors.all %}
+                        <a href="{% url 'employee_detail' sup.pk %}" class="badge bg-light text-dark border text-decoration-none me-1 mb-1">{{ sup.full_name }}</a>
+                    {% endfor %}
+                </span>
+            </div>
+            {% endif %}
+            <div class="detail-item">
+                <label>Escala de Trabalho</label>
+                <span>
+                    {% if employee.work_schedule %}
+                        {% if can_manage_job %}
+                        <a href="javascript:void(0);" onclick="openInnerModal('{% url 'assign_schedule' employee.pk %}')" style="text-decoration: none; font-weight: 600;">
+                            {{ employee.work_schedule.name }} <i class="bi bi-pencil-square ms-1" style="font-size: 11px;"></i>
+                        </a>
+                        {% else %}
+                        <span style="font-weight: 600;">{{ employee.work_schedule.name }}</span>
+                        {% endif %}
+                        <div class="text-muted mt-1" style="font-size: 11px; line-height: 1.2;">
+                            {{ employee.work_schedule.entry_time|time:"H:i" }} - {{ employee.work_schedule.exit_time|time:"H:i" }}<br>
+                            {% if employee.work_schedule.lunch_start %}Almoço: {{ employee.work_schedule.lunch_start|time:"H:i" }} - {{ employee.work_schedule.lunch_end|time:"H:i" }}{% endif %}
+                        </div>
+                    {% else %}
+                        <span class="text-muted">—</span>
+                        {% if can_manage_job %}
+                        <a href="javascript:void(0);" onclick="openInnerModal('{% url 'assign_schedule' employee.pk %}')" class="btn btn-sm btn-outline-primary ms-2 py-0" style="font-size: 10px;">Associar</a>
+                        {% endif %}
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="tab-salary" style="display: none;">
+    <div class="detail-section">
+        <div class="detail-section-header">
+            <h5 class="detail-section-title"><i class="bi bi-currency-dollar section-icon"></i> Salário</h5>
+            {% if can_manage_job %}<a href="{% url 'salary_create' employee.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Adicionar</a>{% endif %}
+        </div>
+        {% if employee.salaries.all %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Componente</th><th>Valor</th><th>Moeda</th><th>Frequência</th><th></th></tr></thead>
+                <tbody>
+                {% for s in employee.salaries.all %}
+                <tr>
+                    <td>{{ s.salary_component }}</td>
+                    <td>{{ s.amount|default:"—" }}</td>
+                    <td>{{ s.currency|default:"—" }}</td>
+                    <td>{{ s.payment_frequency|default:"—" }}</td>
+                    <td>{% if can_manage_job %}
+                        <a href="{% url 'salary_edit' s.pk %}" class="btn btn-icon btn-icon-primary"><i class="bi bi-pencil"></i></a>
+                        <a href="{% url 'salary_delete' s.pk %}" class="btn btn-icon btn-icon-danger" onclick="return confirm('Remover?')"><i class="bi bi-trash"></i></a>
+                    {% endif %}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state py-4"><div class="empty-state-icon"><i class="bi bi-cash-coin d-block text-muted"></i></div><p>Nenhum salário cadastrado</p></div>
+        {% endif %}
+    </div>
+</div>
+
+
+<div id="tab-dependents" style="display: none;">
+    <div class="detail-section">
+        <div class="detail-section-header">
+            <h5 class="detail-section-title"><i class="bi bi-people section-icon"></i> Dependentes</h5>
+            {% if can_edit_personal %}<a href="{% url 'dependent_create' employee.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Adicionar</a>{% endif %}
+        </div>
+        {% if employee.dependents.all %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Nome</th><th>Parentesco</th><th>Nascimento</th><th></th></tr></thead>
+                <tbody>
+                {% for dep in employee.dependents.all %}
+                <tr>
+                    <td>{{ dep.name }}</td>
+                    <td>{{ dep.get_relationship_type_display }}</td>
+                    <td>{{ dep.date_of_birth|date:"d/m/Y"|default:"—" }}</td>
+                    <td>{% if can_edit_personal %}
+                        <a href="{% url 'dependent_edit' dep.pk %}" class="btn btn-icon btn-icon-primary"><i class="bi bi-pencil"></i></a>
+                        <a href="{% url 'dependent_delete' dep.pk %}" class="btn btn-icon btn-icon-danger" onclick="return confirm('Remover?')"><i class="bi bi-trash"></i></a>
+                    {% endif %}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state py-4"><div class="empty-state-icon"><i class="bi bi-people d-block text-muted"></i></div><p>Nenhum dependente cadastrado</p></div>
+        {% endif %}
+    </div>
+</div>
+
+
+<div id="tab-emergency" style="display: none;">
+    <div class="detail-section">
+        <div class="detail-section-header">
+            <h5 class="detail-section-title"><i class="bi bi-telephone-x section-icon"></i> Contatos de Emergência</h5>
+            {% if can_edit_personal %}<a href="{% url 'emergency_contact_create' employee.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Adicionar</a>{% endif %}
+        </div>
+        {% if employee.emergency_contacts.all %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Nome</th><th>Parentesco</th><th>Celular</th><th>Residencial</th><th></th></tr></thead>
+                <tbody>
+                {% for ec in employee.emergency_contacts.all %}
+                <tr>
+                    <td>{{ ec.name }}</td>
+                    <td>{{ ec.relationship }}</td>
+                    <td>{{ ec.mobile_phone|default:"—" }}</td>
+                    <td>{{ ec.home_phone|default:"—" }}</td>
+                    <td>{% if can_edit_personal %}
+                        <a href="{% url 'emergency_contact_edit' ec.pk %}" class="btn btn-icon btn-icon-primary"><i class="bi bi-pencil"></i></a>
+                        <a href="{% url 'emergency_contact_delete' ec.pk %}" class="btn btn-icon btn-icon-danger" onclick="return confirm('Remover?')"><i class="bi bi-trash"></i></a>
+                    {% endif %}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state py-4"><div class="empty-state-icon"><i class="bi bi-telephone-x d-block text-muted"></i></div><p>Nenhum contato de emergência</p></div>
+        {% endif %}
+    </div>
+</div>
+
+
+<div id="tab-qualifications" style="display: none;">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="detail-section">
+                <div class="detail-section-header">
+                    <h5 class="detail-section-title"><i class="bi bi-mortarboard section-icon"></i> Educação</h5>
+                    {% if can_edit_personal %}
+                    <a href="{% url 'education_create' employee.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Adicionar</a>
+                    {% endif %}
+                </div>
+                {% if employee.educations.all %}
+                <table class="table table-sm mb-0">
+                    <tbody>
+                    {% for edu in employee.educations.all %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600;">{{ edu.education }}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">{{ edu.institute|default:"" }} {% if edu.year %}({{ edu.year }}){% endif %}</div>
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'education_edit' edu.pk %}" class="btn btn-icon btn-icon-primary"><i class="bi bi-pencil"></i></a>
+                            <a href="{% url 'education_delete' edu.pk %}" class="btn btn-icon btn-icon-danger" onclick="return confirm('Remover?')"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state py-3"><p>Sem formação cadastrada</p></div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="detail-section">
+                <div class="detail-section-header">
+                    <h5 class="detail-section-title">⚡ Habilidades</h5>
+                    {% if can_edit_personal %}
+                    <a href="{% url 'skill_create' employee.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Adicionar</a>
+                    {% endif %}
+                </div>
+                {% if employee.skills.all %}
+                <table class="table table-sm mb-0">
+                    <tbody>
+                    {% for sk in employee.skills.all %}
+                    <tr>
+                        <td><span style="font-weight:500;">{{ sk.skill }}</span></td>
+                        <td><span class="status-badge badge-submitted">{{ sk.get_proficiency_display|default:"—" }}</span></td>
+                        <td class="text-end">
+                            <a href="{% url 'skill_edit' sk.pk %}" class="btn btn-icon btn-icon-primary"><i class="bi bi-pencil"></i></a>
+                            <a href="{% url 'skill_delete' sk.pk %}" class="btn btn-icon btn-icon-danger" onclick="return confirm('Remover?')"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state py-3"><p>Sem habilidades cadastradas</p></div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="detail-section">
+                <div class="detail-section-header">
+                    <h5 class="detail-section-title">🌐 Idiomas</h5>
+                    {% if can_edit_personal %}
+                    <a href="{% url 'language_create' employee.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Adicionar</a>
+                    {% endif %}
+                </div>
+                {% if employee.languages.all %}
+                <table class="table table-sm mb-0">
+                    <tbody>
+                    {% for lang in employee.languages.all %}
+                    <tr>
+                        <td><span style="font-weight:500;">{{ lang.language }}</span></td>
+                        <td><span class="status-badge badge-inactive">{{ lang.get_fluency_display|default:"—" }}</span></td>
+                        <td class="text-end">
+                            <a href="{% url 'language_edit' lang.pk %}" class="btn btn-icon btn-icon-primary"><i class="bi bi-pencil"></i></a>
+                            <a href="{% url 'language_delete' lang.pk %}" class="btn btn-icon btn-icon-danger" onclick="return confirm('Remover?')"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state py-3"><p>Sem idiomas cadastrados</p></div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="detail-section">
+                <div class="detail-section-header">
+                    <h5 class="detail-section-title"><i class="bi bi-briefcase section-icon"></i> Experiência</h5>
+                    {% if can_edit_personal %}
+                    <a href="{% url 'work_experience_create' employee.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Adicionar</a>
+                    {% endif %}
+                </div>
+                {% if employee.work_experiences.all %}
+                <table class="table table-sm mb-0">
+                    <tbody>
+                    {% for exp in employee.work_experiences.all %}
+                    <tr>
+                        <td>
+                            <div style="font-weight:600;">{{ exp.job_title }}</div>
+                            <div style="font-size:12px; color:var(--text-secondary);">{{ exp.employer }} · {{ exp.from_date|date:"Y" }}—{{ exp.to_date|date:"Y"|default:"Atual" }}</div>
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'work_experience_edit' exp.pk %}" class="btn btn-icon btn-icon-primary"><i class="bi bi-pencil"></i></a>
+                            <a href="{% url 'work_experience_delete' exp.pk %}" class="btn btn-icon btn-icon-danger" onclick="return confirm('Remover?')"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state py-3"><p>Sem experiencias cadastradas</p></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="tab-immigration" style="display: none;">
+    <div class="detail-section">
+        <div class="detail-section-header">
+            <h5 class="detail-section-title"><i class="bi bi-passport section-icon"></i> Documentos de Imigração</h5>
+            {% if can_edit_personal %}
+            <a href="{% url 'immigration_create' employee.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Adicionar</a>
+            {% endif %}
+        </div>
+        {% if employee.immigration_records.all %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Tipo</th><th>Número</th><th>Emissão</th><th>Validade</th><th>País</th><th></th></tr></thead>
+                <tbody>
+                {% for rec in employee.immigration_records.all %}
+                <tr>
+                    <td>{{ rec.get_document_type_display }}</td>
+                    <td>{{ rec.number }}</td>
+                    <td>{{ rec.issue_date|date:"d/m/Y"|default:"—" }}</td>
+                    <td>{{ rec.expiry_date|date:"d/m/Y"|default:"—" }}</td>
+                    <td>{{ rec.country|default:"—" }}</td>
+                    <td>{% if can_edit_personal %}
+                        <a href="{% url 'immigration_edit' rec.pk %}" class="btn btn-icon btn-icon-primary"><i class="bi bi-pencil"></i></a>
+                        <a href="{% url 'immigration_delete' rec.pk %}" class="btn btn-icon btn-icon-danger" onclick="return confirm('Remover?')"><i class="bi bi-trash"></i></a>
+                    {% endif %}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state py-4"><div class="empty-state-icon"><i class="bi bi-file-earmark-person d-block text-muted"></i></div><p>Sem documentos de imigracao</p></div>
+        {% endif %}
+    </div>
+</div>
+
+
+<div id="tab-attachments" style="display: none;">
+    <div class="detail-section">
+        <div class="detail-section-header">
+            <h5 class="detail-section-title"><i class="bi bi-paperclip section-icon"></i> Anexos do Funcionário</h5>
+        </div>
+        {% if employee.attachments.all %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Arquivo</th><th>Descrição</th><th>Enviado por</th><th>Data</th><th></th></tr></thead>
+                <tbody>
+                {% for att in employee.attachments.all %}
+                <tr>
+                    <td><a href="{{ att.file.url }}" target="_blank" style="font-weight:600;"><i class="bi bi-file-earmark me-1"></i>{{ att.filename }}</a></td>
+                    <td>{{ att.description|default:"—" }}</td>
+                    <td>{{ att.attached_by.get_full_name|default:att.attached_by.username|default:"—" }}</td>
+                    <td style="font-size:12px;color:var(--text-secondary);">{{ att.attached_at|date:"d/m/Y" }}</td>
+                    <td></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state py-4"><div class="empty-state-icon"><i class="bi bi-paperclip d-block text-muted"></i></div><p>Nenhum anexo cadastrado</p></div>
+        {% endif %}
+    </div>
+</div>
+
+
+<div id="tab-organogram" style="display: none;">
+    <div class="detail-section">
+        <div class="detail-section-header">
+            <h5 class="detail-section-title"><i class="bi bi-diagram-3 section-icon"></i> Organograma Hierárquico</h5>
+        </div>
+        <div style="padding: 20px; overflow-x: auto;">
+            <div id="org-chart" style="min-height: 350px; display: flex; flex-direction: column; align-items: center; gap: 24px;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showTab(id, el) {
+    event.preventDefault();
+    document.querySelectorAll('[id^="tab-"]').forEach(t => t.style.display = 'none');
+    document.getElementById('tab-' + id).style.display = 'block';
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    if (id === 'organogram') renderOrganogram();
+}
+
+function renderOrganogram() {
+    const container = document.getElementById('org-chart');
+    if (container.dataset.rendered) return;
+    container.dataset.rendered = '1';
+
+    const cardStyle = `
+        background: var(--card-bg);
+        border: 1.5px solid var(--border-color);
+        border-radius: 12px;
+        padding: 12px 20px;
+        min-width: 160px;
+        text-align: center;
+        box-shadow: 0 2px 12px rgba(0,0,0,.08);
+        transition: box-shadow .2s;
+    `;
+    const highlightStyle = `
+        background: linear-gradient(135deg, var(--accent-color), #2563eb);
+        border: none;
+        border-radius: 12px;
+        padding: 12px 20px;
+        min-width: 160px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(99,102,241,.35);
+    `;
+
+    function makeCard(name, jobTitle, pk, highlight) {
+        const style = highlight ? highlightStyle : cardStyle;
+        const nameColor = highlight ? '#fff' : 'var(--text-primary)';
+        const subtitleColor = highlight ? 'rgba(255,255,255,.75)' : 'var(--text-secondary)';
+        const isPopup = new URLSearchParams(window.location.search).has('popup');
+        const href = `/pim/${pk}/` + (isPopup ? '?popup=1' : '');
+        return `<a href="${href}" style="text-decoration:none;">
+            <div style="${style}cursor:pointer;" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,.15)'" onmouseout="this.style.boxShadow='${highlight ? '0 4px 20px rgba(99,102,241,.35)' : '0 2px 12px rgba(0,0,0,.08)'}'">
+                <div style="font-weight:700;font-size:14px;color:${nameColor};">${name}</div>
+                <div style="font-size:11px;color:${subtitleColor};margin-top:3px;">${jobTitle}</div>
+            </div>
+        </a>`;
+    }
+
+    const supervisor_data = {{ supervisor_org_data|safe }};
+    const subordinate_data = {{ subordinate_org_data|safe }};
+    const current = {{ current_org_data|safe }};
+
+    let html = '';
+
+    // Supervisors row
+    if (supervisor_data.length > 0) {
+        html += `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);margin-bottom:8px;">Supervisores</div>`;
+        html += `<div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">`;
+        supervisor_data.forEach(s => { html += makeCard(s.name, s.job_title, s.pk, false); });
+        html += `</div>`;
+        // Connector
+        html += `<div style="width:2px;height:28px;background:var(--border-color);"></div>`;
+    }
+
+    // Current employee (highlighted)
+    html += `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);margin-bottom:8px;">Funcionário</div>`;
+    html += makeCard(current.name, current.job_title, current.pk, true);
+
+    // Subordinates row
+    if (subordinate_data.length > 0) {
+        html += `<div style="width:2px;height:28px;background:var(--border-color);"></div>`;
+        html += `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);margin-bottom:8px;">Subordinados</div>`;
+        html += `<div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">`;
+        subordinate_data.forEach(s => { html += makeCard(s.name, s.job_title, s.pk, false); });
+        html += `</div>`;
+    }
+
+    if (supervisor_data.length === 0 && subordinate_data.length === 0) {
+        html += `<div style="margin-top:24px;font-size:13px;color:var(--text-secondary);">Este funcionário não possui supervisores ou subordinados cadastrados.</div>`;
+    }
+
+    container.innerHTML = html;
+}
+</script>
+
+
+<div class="modal fade" id="innerLevelModal" tabindex="-1" style="z-index: 1060;" data-bs-backdrop="static">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: 2px solid #4f46e5; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+      <div class="modal-header bg-white py-3 border-bottom">
+        <h6 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square text-success me-2"></i>Edição de Dados</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0" style="height: 75vh; min-height: 500px; position: relative;">
+         <div id="innerSpinner" class="position-absolute top-50 start-50 translate-middle text-success">
+             <div class="spinner-border"></div>
+         </div>
+         <iframe id="innerLevelIframe" style="position: absolute; top: 0; left: 0; bottom: 0; right: 0; width: 100%; height: 100%; border: none; z-index: 5; visibility: hidden;"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openInnerModal(targetUrl) {
+    const innerModalElement = document.getElementById('innerLevelModal');
+    if (!window.innerModal && innerModalElement) {
+        window.innerModal = new bootstrap.Modal(innerModalElement);
+    }
+    const innerIframe = document.getElementById('innerLevelIframe');
+    if (!innerIframe) return;
+    
+    document.getElementById('innerSpinner').style.display = 'block';
+    innerIframe.style.visibility = 'hidden';
+    
+    if (!targetUrl.includes('popup=1')) {
+        targetUrl += (targetUrl.includes('?') ? '&' : '?') + 'popup=1';
+    }
+    
+    // Convert to absolute URL just to be safe
+    let absUrl = new URL(targetUrl, window.location.origin).toString();
+    innerIframe.src = absUrl;
+    
+    if(window.innerModal) {
+        window.innerModal.show();
+    }
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const innerModalElement = document.getElementById('innerLevelModal');
+    if (innerModalElement && !innerModalElement.getAttribute('data-appended')) {
+        innerModalElement.setAttribute('data-appended', '1');
+        document.body.appendChild(innerModalElement);
+    }
+    const innerIframe = document.getElementById('innerLevelIframe');
+    if (!innerIframe) return;
+
+    if (window.innerModal) return; // Prevent double initialization
+    window.innerModal = new bootstrap.Modal(innerModalElement);
+    
+    const interceptSelectors = 'a.btn-outline-orange, a.btn-primary, a.btn-icon-primary, a[href*="edit"], a[href*="create"], a[href*="assign_schedule"]';
+    
+    document.querySelectorAll(interceptSelectors).forEach(btn => {
+        if(btn.href && !btn.href.includes('#') && !btn.href.includes('delete') && !btn.href.includes('terminate') && !btn.href.includes('photo')) {
+            // Remove previous event listeners by cloning
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            
+            newBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                document.getElementById('innerSpinner').style.display = 'block';
+                innerIframe.style.visibility = 'hidden';
+                
+                let url = new URL(this.href, window.location.origin);
+                url.searchParams.set('popup', '1');
+                innerIframe.src = url.toString();
+                
+                window.innerModal.show();
+            });
+        }
+    });
+
+    innerIframe.addEventListener('load', function() {
+        document.getElementById('innerSpinner').style.display = 'none';
+        this.style.visibility = 'visible';
+        
+        try {
+            let loc = this.contentWindow.location.pathname;
+            if (loc.match(/\/pim\/\d+\/$/) && !loc.includes('edit') && !loc.includes('create')) {
+                window.innerModal.hide();
+                window.location.reload(); 
+            }
+        } catch(e) {}
+    });
+});
+</script>
+
+{% endblock %}
+

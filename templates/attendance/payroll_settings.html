@@ -1,0 +1,343 @@
+{% extends 'modal_base.html' %}
+
+{% block content %}
+<style>
+    /* Premium UI Tokens */
+    :root {
+        --premium-bg: #f8fafc;
+        --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+        --input-bg: #f1f5f9;
+        --primary-gradient: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+    
+    body { background-color: var(--premium-bg); }
+
+    /* Cards */
+    .premium-card {
+        border-radius: 20px;
+        border: none;
+        box-shadow: var(--card-shadow);
+        background: #ffffff;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* List Items */
+    .rule-item {
+        border: 1px solid #e2e8f0;
+        border-radius: 16px !important;
+        margin-bottom: 12px;
+        transition: all 0.3s ease;
+        background: #ffffff;
+    }
+    .rule-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px -10px rgba(0,0,0,0.08);
+        border-color: #cbd5e1;
+    }
+    .rule-item.active-editing {
+        background: #eff6ff;
+        border: 2px solid #3b82f6 !important;
+        box-shadow: 0 12px 24px -10px rgba(59, 130, 246, 0.2);
+    }
+
+    /* Action Buttons (Filled Circles) */
+    .btn-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        transition: all 0.2s ease;
+        color: white;
+    }
+    .btn-circle-warning { background: #fef08a; color: #a16207; }
+    .btn-circle-warning:hover { background: #fde047; transform: scale(1.1); }
+    
+    .btn-circle-success { background: #bbf7d0; color: #15803d; }
+    .btn-circle-success:hover { background: #86efac; transform: scale(1.1); }
+    
+    .btn-circle-primary { background: #bfdbfe; color: #1d4ed8; }
+    .btn-circle-primary:hover { background: #93c5fd; transform: scale(1.1); }
+    
+    .btn-circle-danger { background: #fecaca; color: #b91c1c; }
+    .btn-circle-danger:hover { background: #fca5a5; transform: scale(1.1); }
+
+    /* Inputs */
+    .premium-input {
+        background-color: var(--input-bg);
+        border: 2px solid transparent;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        font-weight: 500;
+        color: #334155;
+        transition: all 0.3s ease;
+    }
+    .premium-input:focus {
+        background-color: #ffffff;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+    .premium-input:disabled {
+        background-color: #e2e8f0;
+        cursor: not-allowed;
+    }
+    
+    /* Input Labels & Text */
+    .premium-label {
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 0.4rem;
+        font-size: 0.9rem;
+    }
+    .premium-help-text {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin-top: 0.4rem;
+    }
+
+    /* Section Divider */
+    .section-title {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #94a3b8;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    /* Submit Button */
+    .btn-gradient {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        font-weight: 600;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -10px rgba(37, 99, 235, 0.5);
+        color: white;
+    }
+
+    /* Switch Customization */
+    .form-switch .form-check-input {
+        width: 3em;
+        height: 1.5em;
+        cursor: pointer;
+    }
+    .form-switch .form-check-input:checked {
+        background-color: #10b981;
+        border-color: #10b981;
+    }
+</style>
+
+<div class="container-fluid mt-3 mb-5 px-4">
+    <div class="row g-4">
+        
+        <div class="col-lg-5">
+            <div class="premium-card h-100 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0 text-slate-800" style="color: #1e293b;">
+                        <div class="d-inline-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px; border-radius: 10px; background: #eff6ff; color: #3b82f6;">
+                            <i class="bi bi-list-check fs-5"></i>
+                        </div>
+                        Regras Ativas
+                    </h5>
+                    <a href="{% url 'payroll_settings' %}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm fw-medium"><i class="bi bi-plus-lg me-1"></i> Nova Regra</a>
+                </div>
+                
+                <ul class="list-group list-group-flush px-1">
+                    {% for config in all_configs %}
+                        <li class="list-group-item rule-item p-4 border {% if target_setting and target_setting.id == config.id %}active-editing{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="fw-bold mb-2" style="color: #1e293b; font-size: 1.05rem;">
+                                        {% if config.legal_entity %}
+                                            <i class="bi bi-building text-slate-400 me-2"></i> {{ config.legal_entity.name }}
+                                        {% else %}
+                                            <i class="bi bi-globe text-primary me-2"></i> TODAS (Regra Padrão)
+                                        {% endif %}
+                                    </h6>
+                                    <div class="d-flex flex-column gap-1">
+                                        <small class="text-slate-500" style="color: #64748b;">
+                                            Status: 
+                                            {% if config.is_active %}
+                                                <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle ms-1"><i class="bi bi-check-circle-fill me-1"></i> Habilitado</span>
+                                            {% else %}
+                                                <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle ms-1"><i class="bi bi-x-circle-fill me-1"></i> Desabilitado</span>
+                                            {% endif %}
+                                        </small>
+                                        <small class="text-slate-500" style="color: #64748b;">Zera em: <span class="fw-semibold text-slate-700">{{ config.hour_bank_reset_months }}</span></small>
+                                        <small class="text-slate-500" style="color: #64748b;">Adicional: <span class="fw-semibold text-slate-700">{{ config.night_shift_start|time:'H:i' }} às {{ config.night_shift_end|time:'H:i' }}</span></small>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap justify-content-end" style="width: 80px;">
+                                    <form method="POST" class="m-0">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="toggle">
+                                        <input type="hidden" name="setting_id" value="{{ config.id }}">
+                                        {% if config.is_active %}
+                                            <button type="submit" class="btn-circle btn-circle-warning" title="Desativar Regra">
+                                                <i class="bi bi-pause-fill"></i>
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn-circle btn-circle-success" title="Reativar Regra">
+                                                <i class="bi bi-play-fill"></i>
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                    <a href="{% url 'payroll_settings' %}?edit={{ config.id }}" class="btn-circle btn-circle-primary" title="Editar Regra"><i class="bi bi-pencil-fill" style="font-size: 0.85rem;"></i></a>
+                                    {% if config.legal_entity %}
+                                        <form method="POST" class="m-0">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="setting_id" value="{{ config.id }}">
+                                            <button type="submit" class="btn-circle btn-circle-danger" onclick="return confirm('Excluir regra específica dessa filial? Os funcionários dela passarão a usar a regra Global.')" title="Excluir Regra">
+                                                <i class="bi bi-trash-fill" style="font-size: 0.85rem;"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </li>
+                    {% empty %}
+                        <div class="text-center p-5 rounded-4 bg-light border border-dashed">
+                            <i class="bi bi-inbox text-muted" style="font-size: 2.5rem;"></i>
+                            <p class="text-muted mt-2 mb-0">Nenhuma regra cadastrada ainda.</p>
+                        </div>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        
+        <div class="col-lg-7">
+            <div class="premium-card h-100 p-4">
+                <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
+                    <div class="d-inline-flex align-items-center justify-content-center me-3" style="width: 42px; height: 42px; border-radius: 12px; background: {% if target_setting %}#fef2f2; color: #ef4444;{% else %}#f0fdf4; color: #22c55e;{% endif %}">
+                        {% if target_setting %}
+                            <i class="bi bi-sliders fs-5"></i>
+                        {% else %}
+                            <i class="bi bi-plus-circle-fill fs-5"></i>
+                        {% endif %}
+                    </div>
+                    <h5 class="fw-bold mb-0 text-slate-800" style="color: #1e293b;">
+                        {% if target_setting %}
+                            Editando Regra Existente
+                        {% else %}
+                            Criar Nova Parametrização
+                        {% endif %}
+                    </h5>
+                </div>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="save">
+                    
+                    <div class="row g-4">
+                        
+                        <div class="col-md-12">
+                            <label class="premium-label">Razão Social / Filial Alvo</label>
+                            {% if target_setting and not target_setting.legal_entity %}
+                                <input type="text" class="form-control premium-input text-muted" value="TODAS (Regra Padrão Global)" disabled>
+                                <input type="hidden" name="legal_entity_id" value="all">
+                            {% else %}
+                                <select class="form-select premium-input" name="legal_entity_id" {% if target_setting %}disabled{% endif %}>
+                                    <option value="all">TODAS (Aplicar em Lote / Criar Padrão Global)</option>
+                                    {% for le in legal_entities %}
+                                        <option value="{{ le.id }}" {% if target_setting.legal_entity_id == le.id %}selected{% endif %}>
+                                            {{ le.name }} ({{ le.tax_id }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                {% if target_setting %}
+                                    <input type="hidden" name="legal_entity_id" value="{{ target_setting.legal_entity_id }}">
+                                    <div class="premium-help-text text-amber-500 mt-2"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> Não é possível alterar a Razão Social alvo de uma regra existente. Exclua a regra e crie outra.</div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+
+                        
+                        <div class="col-md-12 mt-4 bg-slate-50 p-3 rounded-4" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <span class="premium-label d-block mb-1 text-slate-800" style="color: #1e293b; font-size: 1rem;">Status da Regra Operacional</span>
+                                    <span class="premium-help-text m-0">Se desabilitado, os cálculos extras (HE, Noturno) serão ignorados para os funcionários desta filial.</span>
+                                </div>
+                                <div class="form-check form-switch m-0 ps-5">
+                                    {% with c=target_setting|default:all_configs.0 %}
+                                    <input class="form-check-input" type="checkbox" role="switch" id="isActiveSwitch" name="is_active" {% if c.is_active %}checked{% endif %}>
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12"><div class="section-title">Matemática do Banco de Horas</div></div>
+
+                        <div class="col-md-4">
+                            <label class="premium-label">Meses de Zeramento</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-0 ps-3 pe-2" style="position: absolute; z-index: 10; margin-top: 10px; color: #94a3b8;"><i class="bi bi-calendar3"></i></span>
+                                <input type="text" class="form-control premium-input" style="padding-left: 2.5rem;" name="hour_bank_reset_months" value="{{ target_setting.hour_bank_reset_months|default:all_configs.0.hour_bank_reset_months|default:'4,10' }}">
+                            </div>
+                            <div class="premium-help-text">Ex: <b>4,10</b> (Abr e Out).</div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="premium-label">Multiplicador HE Semanal</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-0 ps-3 pe-2" style="position: absolute; z-index: 10; margin-top: 10px; color: #94a3b8;"><i class="bi bi-calculator"></i></span>
+                                <input type="number" step="0.1" class="form-control premium-input" style="padding-left: 2.5rem;" name="overtime_multiplier_weekday" value="{{ target_setting.overtime_multiplier_weekday|default:all_configs.0.overtime_multiplier_weekday|default:'1.6'|stringformat:'.1f'|default:'1.6'|escape }}">
+                            </div>
+                            <div class="premium-help-text">Ex: <b>1.6</b> (para 60%).</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="premium-label">Multiplicador HE DSR</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-0 ps-3 pe-2" style="position: absolute; z-index: 10; margin-top: 10px; color: #94a3b8;"><i class="bi bi-calculator-fill"></i></span>
+                                <input type="number" step="0.1" class="form-control premium-input" style="padding-left: 2.5rem;" name="overtime_multiplier_weekend" value="{{ target_setting.overtime_multiplier_weekend|default:all_configs.0.overtime_multiplier_weekend|default:'2.0'|stringformat:'.1f'|default:'2.0'|escape }}">
+                            </div>
+                            <div class="premium-help-text">Ex: <b>2.0</b> (para 100%).</div>
+                        </div>
+
+                        <div class="col-12"><div class="section-title">Janelas de Corte</div></div>
+
+                        <div class="col-md-4">
+                            <label class="premium-label">Dia de Fechamento</label>
+                            <input type="number" class="form-control premium-input" name="payroll_closing_day" value="{{ target_setting.payroll_closing_day|default:all_configs.0.payroll_closing_day }}" min="1" max="31" required>
+                            <div class="premium-help-text">Sugestão de data na tela do RH.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="premium-label">Início Adicional Noturno</label>
+                            <input type="time" class="form-control premium-input" name="night_shift_start" value="{{ target_setting.night_shift_start|time:'H:i'|default:all_configs.0.night_shift_start|time:'H:i' }}" required>
+                            <div class="premium-help-text">Padrão CLT: 22h00.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="premium-label">Fim Adicional Noturno</label>
+                            <input type="time" class="form-control premium-input" name="night_shift_end" value="{{ target_setting.night_shift_end|time:'H:i'|default:all_configs.0.night_shift_end|time:'H:i' }}" required>
+                            <div class="premium-help-text">Padrão CLT: 05h00.</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-3 mt-5 pt-4 border-top">
+                        {% if target_setting %}
+                            <a href="{% url 'payroll_settings' %}" class="btn text-muted fw-semibold px-4 py-2" style="background: #f1f5f9; border-radius: 12px; transition: all 0.2s ease;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">Cancelar</a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-gradient rounded-pill px-5 py-2 fs-6">
+                            <i class="bi bi-check-circle-fill me-2"></i> 
+                            {% if target_setting %}Atualizar Regra{% else %}Salvar Regra de Fechamento{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

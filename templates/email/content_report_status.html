@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atualização de Denúncia — Netgram</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; color: #334155; margin: 0; padding: 0; }
+        .wrapper { width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; border: 1px solid #e2e8f0; }
+        .header { background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; padding: 35px 20px; text-align: center; }
+        
+        /* Cores de acordo com o evento */
+        .header.PENDING { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+        .header.REVIEWING { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .header.RESOLVED { background: linear-gradient(135deg, #10b981, #059669); }
+        .header.DISMISSED { background: linear-gradient(135deg, #64748b, #475569); }
+        
+        .header h1 { margin: 0; font-size: 22px; font-weight: 700; }
+        .header p { margin: 8px 0 0; font-size: 14px; opacity: 0.9; }
+        .content { padding: 30px 24px; line-height: 1.6; }
+        .intro { font-size: 15px; color: #334155; margin-bottom: 20px; }
+        
+        .info-card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .info-item { margin-bottom: 12px; font-size: 14px; }
+        .info-item:last-child { margin-bottom: 0; }
+        .info-label { color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 11px; display: block; margin-bottom: 2px; }
+        .info-value { font-size: 15px; font-weight: 700; color: #0f172a; }
+        
+        .content-preview { background-color: #f1f5f9; border-left: 4px solid #cbd5e1; padding: 12px 16px; border-radius: 0 8px 8px 0; font-style: italic; font-size: 13.5px; color: #475569; margin: 15px 0; }
+        .content-preview.PENDING { border-left-color: #ef4444; }
+        .content-preview.REVIEWING { border-left-color: #f59e0b; }
+        .content-preview.RESOLVED { border-left-color: #10b981; }
+        .content-preview.DISMISSED { border-left-color: #94a3b8; }
+        
+        .note-card { background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin: 20px 0; }
+        .note-card.DISMISSED { background-color: #f8fafc; border-color: #e2e8f0; }
+        .note-label { color: #16a34a; font-weight: 700; font-size: 12px; text-transform: uppercase; display: block; margin-bottom: 4px; }
+        .note-label.DISMISSED { color: #475569; }
+        .note-text { font-size: 14px; color: #1e293b; line-height: 1.5; }
+        
+        .btn-container { text-align: center; margin: 30px 0; }
+        .btn { display: inline-block; padding: 12px 28px; background: #0f172a; color: #ffffff !important; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; transition: background 0.2s; }
+        
+        .footer { background-color: #f1f5f9; padding: 20px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; }
+        .footer p { margin: 0; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="header {{ status }}">
+            {% if recipient_type == 'admin' %}
+                <h1>Nova Denúncia Recebida</h1>
+                <p>Equipe de moderação, uma nova denúncia requer atenção</p>
+            {% else %}
+                {% if status == 'PENDING' %}
+                    <h1>Denúncia Registrada</h1>
+                    <p>Agradecemos por nos ajudar a manter a comunidade segura</p>
+                {% elif status == 'REVIEWING' %}
+                    <h1>Denúncia Em Análise</h1>
+                    <p>Nossa equipe já está analisando o caso reportado</p>
+                {% elif status == 'RESOLVED' %}
+                    <h1>Denúncia Resolvida</h1>
+                    <p>Ação tomada com relação ao conteúdo denunciado</p>
+                {% elif status == 'DISMISSED' %}
+                    <h1>Denúncia Concluída</h1>
+                    <p>O caso reportado foi avaliado e arquivado</p>
+                {% endif %}
+            {% endif %}
+        </div>
+        
+        <div class="content">
+            {% if recipient_type == 'admin' %}
+                <p class="intro">Olá, <strong>Equipe de Suporte/RH</strong>,</p>
+                <p>Uma nova denúncia de conteúdo foi enviada ao sistema NetlineRH. Por favor, verifique os detalhes abaixo para tomar a ação necessária no painel administrativo.</p>
+            {% else %}
+                <p class="intro">Olá, <strong>{{ first_name }}</strong>,</p>
+                {% if status == 'PENDING' %}
+                    <p>Confirmamos que sua denúncia foi enviada com sucesso para nossa equipe de moderação. Ela será analisada no prazo máximo de 24 horas.</p>
+                {% elif status == 'REVIEWING' %}
+                    <p>Esta mensagem é para informar que a sua denúncia está sendo ativamente analisada por um de nossos moderadores.</p>
+                {% elif status == 'RESOLVED' %}
+                    <p>A sua denúncia foi analisada e concluída. Identificamos que o conteúdo {{ moderator_note|default:"infringia nossas diretrizes e o mesmo foi <strong>removido</strong> do sistema." }}</p>
+                {% elif status == 'DISMISSED' %}
+                    <p>A sua denúncia foi analisada e concluída. Identificamos que o conteúdo {{ moderator_note|default:"não infringe nossas políticas de comunidade e o caso foi arquivado." }}</p>
+                {% endif %}
+            {% endif %}
+            
+            <div class="info-card">
+                <div class="info-item">
+                    <span class="info-label">ID da Denúncia</span>
+                    <span class="info-value">#{{ report_id }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Tipo de Conteúdo</span>
+                    <span class="info-value">{{ report_type }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Motivo Informado</span>
+                    <span class="info-value">{{ reason }}</span>
+                </div>
+                {% if content_preview %}
+                <div class="info-item" style="margin-top: 15px; margin-bottom: 0;">
+                    <span class="info-label">Trecho do Conteúdo</span>
+                    <div class="content-preview {{ status }}">{{ content_preview }}</div>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if moderator_note %}
+            <div class="note-card {{ status }}">
+                <span class="note-label {{ status }}">Nota do Moderador</span>
+                <p class="note-text">{{ moderator_note }}</p>
+            </div>
+            {% endif %}
+
+            {% if recipient_type == 'admin' %}
+            <div class="btn-container">
+                <a href="https://poeirao.netlineplay.com.br/buzz/central-suporte/?tab=denuncias" class="btn" style="background-color: #0d9488;">Acessar Central de Suporte</a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>Este é um e-mail automático enviado pelo <strong>NetlineRH</strong>.</p>
+            <p style="margin-top: 5px;">Recursos Humanos da Netline Telecom.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block breadcrumb %}
+{% if not request.GET.popup %}
+<span style="color: var(--text-secondary); font-size: 13px;">Recrutamento / Vagas / {{ title }}</span>
+{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .skill-picker { border: 1.5px solid #e2e8f0; border-radius: 12px; background: #f8fafc; padding: 8px; }
+    .skill-search { width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; padding: 6px 10px; margin-bottom: 8px; background: #fff; outline: none; }
+    .skill-search:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+    .skill-pills-box { max-height: 130px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 5px; }
+    .skill-pill-pick {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 4px 11px; border-radius: 50px; font-size: 12px; font-weight: 600;
+        border: 1.5px solid #e2e8f0; background: #fff; color: #475569;
+        cursor: pointer; transition: all .15s; user-select: none;
+    }
+    .skill-pill-pick:hover { border-color: #94a3b8; background: #f1f5f9; }
+    .skill-pill-pick.selected-req { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+    .skill-pill-pick.selected-des { background: #eff6ff; border-color: #93c5fd; color: #2563eb; }
+    .skill-pill-pick.selected-req i, .skill-pill-pick.selected-des i { font-size: 10px; }
+    .hidden-select { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if not request.GET.popup %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <a href="{% url 'job_list' %}" class="btn btn-light" style="border-radius: 10px; padding: 8px 12px;"><i class="bi bi-arrow-left"></i></a>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 22px;">{{ title }}</h1>
+            <p class="text-muted mb-0" style="font-size: 13px;">Preencha os dados da oportunidade de trabalho.</p>
+        </div>
+    </div>
+</div>
+{% else %}
+<style>
+    body { background-color: #fff !important; }
+    .page-content { padding: 0 !important; }
+</style>
+{% endif %}
+
+<div class="{% if not request.GET.popup %}card border-0 shadow-sm rounded-4{% endif %}" style="{% if not request.GET.popup %}background: white; max-width: 700px; margin: 0 auto;{% else %}width: 100%;{% endif %}">
+    <div class="{% if not request.GET.popup %}card-body p-4{% else %}p-4 pb-4{% endif %}">
+        {% if request.GET.popup %}
+        <div class="pb-3 mb-4" style="border-bottom: 1px solid #f1f5f9;">
+            <h1 class="page-title mb-1" style="font-weight: 800; color: #0f172a; font-size: 20px;">{{ title }}</h1>
+            <p class="text-muted mb-0" style="font-size: 13px;">Preencha os dados da oportunidade de trabalho.</p>
+        </div>
+        {% endif %}
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label fw-bold text-slate-700" style="font-size: 13.5px;">Título da Vaga</label>
+                {{ form.title }}
+                {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-slate-700" style="font-size: 13.5px;">Setor / Departamento</label>
+                    {{ form.department }}
+                    {% if form.department.errors %}<div class="text-danger small mt-1">{{ form.department.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-slate-700" style="font-size: 13.5px;">
+                        Cargo da Vaga <i class="bi bi-info-circle" title="Usado para cadastrar automaticamente o colaborador no momento da efetivação" style="color:#94a3b8;font-size:12px;"></i>
+                    </label>
+                    {{ form.job_title }}
+                    {% if form.job_title.errors %}<div class="text-danger small mt-1">{{ form.job_title.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold text-slate-700" style="font-size: 13.5px;">Descrição, Atividades e Requisitos</label>
+                {{ form.description }}
+                {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-7">
+                    <label class="form-label fw-bold text-slate-700" style="font-size: 13.5px;">Situação / Status</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}<div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold text-slate-700" style="font-size: 13.5px;">
+                        Nº Posições <i class="bi bi-info-circle" title="Quantas pessoas serão contratadas nesta vaga" style="color:#94a3b8;font-size:12px;"></i>
+                    </label>
+                    {{ form.quantity }}
+                    {% if form.quantity.errors %}<div class="text-danger small mt-1">{{ form.quantity.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold" style="font-size: 11px; color:#64748b; text-transform:uppercase; letter-spacing:.5px;">
+                        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#dc2626;margin-right:5px;"></span>Skills Obrigatórias
+                    </label>
+                    <select id="id_required_skills" name="required_skills" multiple class="hidden-select">
+                        {% for skill in form.required_skills.field.queryset %}
+                        <option value="{{ skill.pk }}" {% if skill.pk|stringformat:'s' in form.required_skills.value %}selected{% endif %}>{{ skill.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="skill-picker">
+                        <input type="text" class="skill-search" placeholder="Filtrar skills..." data-target="req">
+                        <div class="skill-pills-box" id="req-pills">
+                            {% for skill in form.required_skills.field.queryset %}
+                            <span class="skill-pill-pick {% if skill.pk|stringformat:'s' in form.required_skills.value %}selected-req{% endif %}"
+                                  data-value="{{ skill.pk }}" data-type="req" data-name="{{ skill.name|lower }}">
+                                {% if skill.pk|stringformat:'s' in form.required_skills.value %}<i class="bi bi-check-lg"></i>{% endif %}
+                                {{ skill.name }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold" style="font-size: 11px; color:#64748b; text-transform:uppercase; letter-spacing:.5px;">
+                        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#2563eb;margin-right:5px;"></span>Skills Desejáveis
+                    </label>
+                    <select id="id_desired_skills" name="desired_skills" multiple class="hidden-select">
+                        {% for skill in form.desired_skills.field.queryset %}
+                        <option value="{{ skill.pk }}" {% if skill.pk|stringformat:'s' in form.desired_skills.value %}selected{% endif %}>{{ skill.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="skill-picker">
+                        <input type="text" class="skill-search" placeholder="Filtrar skills..." data-target="des">
+                        <div class="skill-pills-box" id="des-pills">
+                            {% for skill in form.desired_skills.field.queryset %}
+                            <span class="skill-pill-pick {% if skill.pk|stringformat:'s' in form.desired_skills.value %}selected-des{% endif %}"
+                                  data-value="{{ skill.pk }}" data-type="des" data-name="{{ skill.name|lower }}">
+                                {% if skill.pk|stringformat:'s' in form.desired_skills.value %}<i class="bi bi-check-lg"></i>{% endif %}
+                                {{ skill.name }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end">
+                {% if request.GET.popup %}
+                <button type="button" class="btn btn-light px-4" style="border-radius: 12px; font-weight: 600; padding: 10px 20px;"
+                        onclick="window.parent.postMessage('iframeModalClose', '*')">Cancelar</button>
+                {% else %}
+                <a href="{% url 'job_list' %}" class="btn btn-light px-4" style="border-radius: 12px; font-weight: 600; padding: 10px 20px;">Cancelar</a>
+                {% endif %}
+                <button type="submit" class="btn btn-dark px-4" style="border-radius: 12px; font-weight: 600; background: #0f172a; border: none; padding: 10px 20px;">Salvar Vaga</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.skill-pill-pick').forEach(function(pill) {
+    pill.addEventListener('click', function() {
+        var type = this.dataset.type;
+        var val  = this.dataset.value;
+        var sel  = document.getElementById('id_' + (type === 'req' ? 'required' : 'desired') + '_skills');
+        var opt  = sel.querySelector('option[value="' + val + '"]');
+        var cls  = type === 'req' ? 'selected-req' : 'selected-des';
+        if (this.classList.contains(cls)) {
+            this.classList.remove(cls);
+            this.innerHTML = this.innerHTML.replace(/<i[^>]*><\/i>/, '');
+            if (opt) opt.selected = false;
+        } else {
+            this.classList.add(cls);
+            this.innerHTML = '<i class="bi bi-check-lg"></i>' + this.textContent.trim();
+            if (opt) opt.selected = true;
+        }
+    });
+});
+document.querySelectorAll('.skill-search').forEach(function(input) {
+    input.addEventListener('input', function() {
+        var q = this.value.toLowerCase();
+        var box = document.getElementById(this.dataset.target + '-pills');
+        box.querySelectorAll('.skill-pill-pick').forEach(function(p) {
+            p.style.display = p.dataset.name.includes(q) ? '' : 'none';
+        });
+    });
+});
+</script>
+{% endblock %}

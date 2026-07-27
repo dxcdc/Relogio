@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% if not request.GET.popup %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="page-title"><i class="bi bi-calendar-event text-orange"></i> {{ title }}</h1>
+        {% block breadcrumb %}<span style="color: var(--text-secondary); font-size: 13px;"><a href="{% url 'schedule_list' %}" style="color:var(--text-secondary);">Escalas</a> / {{ title }}</span>{% endblock %}
+    </div>
+    <a href="{% url 'schedule_list' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Voltar</a>
+</div>
+{% endif %}
+
+<style>
+    .premium-form-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #475569;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+    }
+    
+    .premium-input {
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 10px 16px;
+        font-size: 14px;
+        color: #1e293b;
+        background-color: #fff;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        transition: all 0.2s;
+        width: 100%;
+        font-weight: 500;
+    }
+    .premium-input:focus {
+        border-color: #10b981;
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(16,185,129,0.1);
+    }
+    .premium-input:disabled {
+        background-color: #f8fafc;
+        color: #94a3b8;
+        border-color: #e2e8f0;
+    }
+
+    .form-switch .form-check-input {
+        width: 38px;
+        height: 22px;
+        cursor: pointer;
+    }
+    .form-switch .form-check-input:checked {
+        background-color: #10b981;
+        border-color: #10b981;
+    }
+
+    .premium-table th {
+        font-size: 11px;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 16px;
+        border-bottom: 2px solid #f1f5f9;
+        background: white;
+    }
+    .premium-table td {
+        padding: 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f8fafc;
+        background: white;
+    }
+    .premium-table tr:hover td {
+        background: #f8fafc;
+    }
+
+    .premium-section-title {
+        font-size: 13px;
+        font-weight: 800;
+        color: #0f172a;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-premium-copy {
+        background: #fff;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 8px 12px;
+        transition: all 0.2s;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    .btn-premium-copy:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+        border-color: #94a3b8;
+    }
+
+    .btn-premium-save {
+        background: #0f172a;
+        color: white;
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 12px 32px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+        transition: all 0.2s;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-premium-save:hover {
+        background: #1e293b;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.2);
+    }
+
+    .premium-tooltip {
+        position: relative;
+        display: inline-block;
+    }
+    .premium-tooltip .tooltip-text {
+        visibility: hidden;
+        width: 280px;
+        background-color: #0f172a;
+        color: #f8fafc;
+        text-align: left;
+        border-radius: 12px;
+        padding: 12px 16px;
+        position: absolute;
+        z-index: 100;
+        top: 130%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: all 0.2s ease-in-out;
+        font-size: 12.5px;
+        line-height: 1.5;
+        font-weight: 500;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+        white-space: normal;
+        text-transform: none;
+        letter-spacing: normal;
+        pointer-events: none;
+    }
+    .premium-tooltip .tooltip-text::after {
+        content: "";
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 6px;
+        border-style: solid;
+        border-color: transparent transparent #0f172a transparent;
+    }
+    .premium-tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+        top: 150%;
+    }
+</style>
+
+<div class="{% if not request.GET.popup %}card mt-3 mx-auto{% else %}container-fluid py-4 px-4{% endif %}" style="max-width: 1000px; border: none; box-shadow: none; background: #fff;">
+    <div class="{% if not request.GET.popup %}card-body{% endif %}">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-5">
+                <div class="premium-section-title mb-4">
+                    <span style="width: 24px; height: 24px; background: rgba(16,185,129,0.1); color: #10b981; border-radius: 6px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-info-circle-fill"></i></span>
+                    Dados Gerais
+                </div>
+                
+                <div class="row g-4 p-4 rounded-4" style="background: #f8fafc; border: 1px solid #f1f5f9;">
+                    <div class="col-md-4">
+                        <label class="premium-form-label">Nome da Escala <span class="text-danger">*</span></label>
+                        {{ form.name }}
+                        {% if form.name.errors %}<div class="text-danger mt-1" style="font-size:12px;">{{ form.name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="premium-form-label text-nowrap" style="display:flex; align-items:center; gap:6px;">
+                            Tolerância (min) <span class="text-danger">*</span> 
+                            <div class="premium-tooltip">
+                                <i class="bi bi-question-circle-fill" style="color: #cbd5e1; cursor: help; font-size: 15px; transition: color 0.2s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#cbd5e1'"></i>
+                                <span class="tooltip-text">
+                                    <strong style="color: #38bdf8; font-size: 13px; display: block; margin-bottom: 4px;">Como funciona?</strong>
+                                    Se o turno inicia 08:00 e a tolerância for de <strong>10 min</strong>:<br>
+                                    <span style="color: #4ade80;">✓</span> O app libera a batida às 07:50.<br>
+                                    <span style="color: #f87171;">✗</span> O atraso conta a partir de 08:11.
+                                </span>
+                            </div>
+                        </label>
+                        {{ form.tolerance_minutes }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="premium-form-label text-nowrap">Descanso Auto (min)</label>
+                        {{ form.automatic_break_minutes }}
+                    </div>
+                    <div class="col-md-2 d-flex align-items-center mt-auto mb-2">
+                        <div class="form-check form-switch ps-0">
+                            {{ form.is_active }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <div class="premium-section-title mb-2">
+                    <span style="width: 24px; height: 24px; background: rgba(16,185,129,0.1); color: #10b981; border-radius: 6px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-calendar-week-fill"></i></span>
+                    Turnos por Dia da Semana
+                </div>
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 24px; margin-left: 32px;">Ative os dias de trabalho e configure os horários avulsos separadamente.</p>
+                
+                <div class="table-responsive rounded-4" style="border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
+                    <table class="table premium-table mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width: 12%">Dia</th>
+                                <th style="width: 14%">Ação</th>
+                                <th style="width: 16%">Entrada</th>
+                                <th style="width: 16%">Início Almoço</th>
+                                <th style="width: 16%">Fim Almoço</th>
+                                <th style="width: 16%">Saída</th>
+                                <th style="width: 10%" class="text-center"><i class="bi bi-lightning-charge-fill" style="color: #10b981;" title="Ações Rápidas"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in days_data %}
+                            <tr {% if not day.is_work_day %}style="opacity: 0.6; filter: grayscale(100%);"{% endif %} id="row-{{ day.weekday }}">
+                                <td style="font-weight: 700; color: #0f172a; font-size: 13px;">{{ day.name }}</td>
+                                <td>
+                                    <div class="form-check form-switch p-0 m-0 d-flex align-items-center gap-2">
+                                        <input class="form-check-input m-0 flexSwitch" style="float: none; margin-left: 0;" type="checkbox" role="switch" name="is_work_{{ day.weekday }}" id="switch-{{ day.weekday }}" {% if day.is_work_day %}checked{% endif %} onchange="toggleDay('{{ day.weekday }}')">
+                                        <label class="form-check-label mb-0" for="switch-{{ day.weekday }}" id="label-{{ day.weekday }}" style="font-size: 13px; font-weight: 600; color: #475569;">{% if day.is_work_day %}Trabalho{% else %}Folga{% endif %}</label>
+                                    </div>
+                                </td>
+                                <td><input type="time" name="entry_{{ day.weekday }}" class="premium-input time-input" value="{{ day.entry_time|default:'' }}" {% if not day.is_work_day %}disabled{% endif %}></td>
+                                <td><input type="time" name="lunch_start_{{ day.weekday }}" class="premium-input time-input" value="{{ day.lunch_start|default:'' }}" {% if not day.is_work_day %}disabled{% endif %}></td>
+                                <td><input type="time" name="lunch_end_{{ day.weekday }}" class="premium-input time-input" value="{{ day.lunch_end|default:'' }}" {% if not day.is_work_day %}disabled{% endif %}></td>
+                                <td><input type="time" name="exit_{{ day.weekday }}" class="premium-input time-input" value="{{ day.exit_time|default:'' }}" {% if not day.is_work_day %}disabled{% endif %}></td>
+                                <td class="text-center">
+                                    <button type="button" class="btn-premium-copy p-2" onclick="copyDown({{ day.weekday }})" title="Replicar horário para baixo">
+                                        <i class="bi bi-arrow-down"></i> Copiar
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% if form.errors %}
+                <div class="alert alert-danger rounded-3 p-3 mt-4 mb-0" style="font-size: 13px; font-weight: 500; border: none; background: #fef2f2; color: #dc2626;"><i class="bi bi-exclamation-triangle-fill me-2"></i>Verifique os erros no formulário e tente novamente.</div>
+            {% endif %}
+            
+            <div class="text-end mt-4 pt-3 border-top">
+                <button type="submit" class="btn-premium-save"><i class="bi bi-check2"></i> Salvar Parametrização</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleDay(weekday) {
+        const switchEl = document.getElementById('switch-' + weekday);
+        const labelEl = document.getElementById('label-' + weekday);
+        const rowEl = document.getElementById('row-' + weekday);
+        const inputs = rowEl.querySelectorAll('.time-input');
+        
+        if (switchEl.checked) {
+            labelEl.innerText = "Trabalho";
+            rowEl.style.background = "transparent";
+            rowEl.style.opacity = "1";
+            inputs.forEach(inp => inp.disabled = false);
+            
+            // Auto complete from previous row if empty just to help UX
+            if(weekday > 0) {
+                let prevEntry = document.querySelector(`input[name="entry_${weekday-1}"]`);
+                let prevExit = document.querySelector(`input[name="exit_${weekday-1}"]`);
+                if(prevEntry && prevExit && !inputs[0].value && prevEntry.value) {
+                    inputs[0].value = prevEntry.value; // entry
+                    inputs[1].value = document.querySelector(`input[name="lunch_start_${weekday-1}"]`).value; // l start
+                    inputs[2].value = document.querySelector(`input[name="lunch_end_${weekday-1}"]`).value; // l end
+                    inputs[3].value = prevExit.value; // exit
+                }
+            }
+        } else {
+            labelEl.innerText = "Folga";
+            rowEl.style.background = "rgba(0,0,0,0.01)";
+            rowEl.style.opacity = "0.7";
+            inputs.forEach(inp => {
+                inp.disabled = true;
+                inp.value = ""; // Clear values
+            });
+        }
+    }
+
+    function copyDown(fromWeekday) {
+        // Read values from source row
+        const rowFrom = document.getElementById('row-' + fromWeekday);
+        const inputsFrom = rowFrom.querySelectorAll('.time-input');
+        const vals = Array.from(inputsFrom).map(inp => inp.value);
+        
+        let copied = 0;
+        // Copy to all following rows
+        for (let i = fromWeekday + 1; i <= 6; i++) {
+            const switchTarget = document.getElementById('switch-' + i);
+            if (switchTarget.checked) {
+                // Only copy to days marked as 'Trabalho'
+                const targetRow = document.getElementById('row-' + i);
+                const targetInputs = targetRow.querySelectorAll('.time-input');
+                for (let k = 0; k < inputsFrom.length; k++) {
+                    targetInputs[k].value = vals[k];
+                }
+                copied++;
+            }
+        }
+        
+        if (copied > 0) {
+            // Optional visual feedback
+            const btn = rowFrom.querySelector('.btn-light');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="bi bi-check2-all text-success"></i> Feito!`;
+            setTimeout(() => { btn.innerHTML = originalHtml; }, 1500);
+        }
+    }
+</script>
+{% endblock %}

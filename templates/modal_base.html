@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuração do Ponto</title>
+    <link rel="icon" type="image/png" href="/static/img/netline_icon.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        /* Scoped scrollbar para o iframe não ficar feio */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        /* Ajustes Premium Estritos sobre o TomSelect */
+        .ts-wrapper {
+            flex: 1 1 auto;
+        }
+        .input-group > .ts-wrapper > .ts-control {
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+            border-left: none !important;
+        }
+        .ts-control {
+            border-radius: 50px !important;
+            min-height: 42px !important;
+            padding: 8px 14px !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: none !important;
+            font-family: 'Inter', sans-serif !important;
+            color: #334155 !important;
+            background-color: #fff !important;
+            display: flex;
+            align-items: center;
+        }
+        .ts-control.focus {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+        }
+        .ts-dropdown {
+            border-radius: 12px !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+            padding: 6px !important;
+            margin-top: 4px !important;
+            background-color: #ffffff !important;
+            z-index: 9999 !important;
+        }
+        .ts-dropdown .option[data-value=""] {
+            display: none !important;
+        }
+        .ts-dropdown .ts-dropdown-content {
+            max-height: 280px !important;
+        }
+        .ts-dropdown .dropdown-input-wrap {
+            padding: 8px !important;
+        }
+        .ts-dropdown .dropdown-input {
+            border-radius: 8px !important;
+            border: 1px solid #e2e8f0 !important;
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+            box-shadow: none !important;
+            font-family: 'Inter', sans-serif !important;
+            transition: all 0.2s ease;
+        }
+        .ts-dropdown .dropdown-input:focus {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.1) !important;
+        }
+        .ts-dropdown .option {
+            border-radius: 8px !important;
+            padding: 10px 14px !important;
+            color: #475569 !important;
+            font-size: 14px !important;
+            transition: background 0.15s ease;
+            margin-bottom: 2px;
+        }
+        .ts-dropdown .option.active, .ts-dropdown .option:hover {
+            background-color: #f0fdf4 !important;
+            color: #059669 !important;
+            font-weight: 600 !important;
+        }
+        .ts-dropdown .option.selected {
+            background-color: #ecfdf5 !important;
+            color: #10b981 !important;
+            font-weight: 700 !important;
+        }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="px-3 py-2">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </div>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const initTomSelectGlobal = () => {
+            document.querySelectorAll('select').forEach((el) => {
+                if (!el.classList.contains('tomselected') && !el.classList.contains('no-ts')) {
+                    let placeholderText = el.getAttribute('placeholder') || 'Selecione uma opção...';
+                    if(el.options.length > 0 && el.options[0].text.includes('---')) {
+                        placeholderText = "Selecione uma opção...";
+                    }
+                    
+                    let pluginsList = [];
+                    if (el.options.length > 10 || el.hasAttribute('multiple')) {
+                        pluginsList.push('dropdown_input');
+                    }
+
+                    new TomSelect(el, {
+                        dropdownParent: 'body',
+                        create: false,
+                        placeholder: placeholderText,
+                        sortField: [],
+                        plugins: pluginsList,
+                        render: {
+                            no_results: function(data, escape) {
+                                return '<div class="no-results" style="padding: 10px; color: #94a3b8; font-size: 13px;">Nenhuma opção encontrada...</div>';
+                            }
+                        }
+                    });
+                }
+            });
+        };
+        
+        initTomSelectGlobal();
+        
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.addedNodes.length) {
+                    initTomSelectGlobal();
+                }
+            });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+    });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

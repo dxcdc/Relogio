@@ -1,0 +1,603 @@
+{% extends "base.html" %}
+{% block title %}Reembolsos{% endblock %}
+
+{% block breadcrumb %}
+<span style="color: #64748b; font-size: 14px; font-weight: 500;">
+    <a href="#" style="color: #64748b; text-decoration: none;">Gestão</a> / Reembolsos Corporativos
+</span>
+{% endblock %}
+
+{% block content %}
+<style>
+/* Premium Dashboard Aesthetic */
+:root {
+    --card-bg: #ffffff;
+    --card-border: #e2e8f0;
+    --primary: #4f46e5;
+    --primary-light: #e0e7ff;
+    --success: #10b981;
+    --danger: #ef4444;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --radius: 16px;
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+}
+
+/* Modals */
+.modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 1050; align-items: center; justify-content: center; padding: 1rem; box-sizing: border-box; overflow-y: auto; overflow-x: hidden;
+}
+.custom-modal-box {
+    background: #fff; width: 100%; flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden; margin: auto; text-align: left; align-items: stretch; position: relative;
+}
+.modal-premium {
+    background: var(--card-bg); border-radius: 20px; padding: 32px; width: 480px; max-width: 95%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+.btn-premium { font-weight: 600; padding: 8px 20px; border-radius: 8px; font-size: 13px; transition: all 0.2s; box-shadow: none !important; outline: none !important; }
+.btn-outline { border: 1px solid var(--card-border); background: transparent; color: var(--text-main); box-shadow: none !important; }
+.btn-outline:hover, .btn-outline:focus, .btn-outline:active { background: #f8fafc; box-shadow: none !important; outline: none !important; }
+
+
+/* List Card */
+.claim-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.claim-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+}
+
+.claim-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.claim-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.claim-details h5 {
+    margin: 0 0 4px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.claim-details p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.claim-controls {
+    text-align: right;
+}
+
+.claim-date {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+/* Status Pills */
+.status-pill {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 8px;
+}
+.status-submitted { background: #fffcf0; color: #d97706; border: 1px solid #fef3c7; }
+.status-supervisor { background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; }
+.status-approved { background: #f0fdf4; color: #166534; border: 1px solid #dcfce3; }
+.status-rejected { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
+.status-paid { background: #f0f9ff; color: #0369a1; border: 1px solid #e0f2fe; }
+.status-neutral { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+.btn-resolve {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: var(--text-main);
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.btn-resolve:hover {
+    background: #e2e8f0;
+    color: var(--text-main);
+}
+</style>
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 14px; color: white; font-size: 20px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+            <i class="bi bi-receipt"></i>
+        </div>
+        <div>
+            <h1 class="page-title mb-0" style="font-weight: 800; color: #0f172a; font-size: 22px;">
+                Todos Reembolsos
+                <a href="javascript:void(0)" onclick="document.getElementById('modalHelpInfo').style.display='flex'" style="color: var(--text-muted); font-size: 18px; margin-left: 8px;" title="Como funciona?">
+                    <i class="bi bi-question-circle"></i>
+                </a>
+            </h1>
+            <p class="text-muted mb-0" style="font-size: 13px;">Gerencie as despesas corporativas e adiantamentos.</p>
+        </div>
+    </div>
+    <div class="d-flex flex-wrap align-items-center gap-3">
+        <form method="get" class="d-flex align-items-center m-0">
+            <div class="d-flex align-items-center" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 50px; padding: 0.35rem 1rem; width: 280px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: all 0.2s ease;" onfocusin="this.style.boxShadow='0 0 0 3px rgba(79,70,229,0.15)'; this.style.borderColor='#4f46e5';" onfocusout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.05)'; this.style.borderColor='#e2e8f0';">
+                <i class="bi bi-search text-muted me-2" style="font-size: 0.85rem;"></i>
+                <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Buscar prestador ou ID..." style="border: none; background: transparent; outline: none; width: 100%; font-size: 0.85rem; color: #0f172a;">
+                {% if q %}
+                <a href="{% url 'claim_list' %}" class="text-muted ms-2" title="Limpar filtro" style="text-decoration: none;"><i class="bi bi-x-circle-fill"></i></a>
+                {% endif %}
+            </div>
+        </form>
+        <div class="d-none d-md-block" style="border-left: 1px solid #e2e8f0; height: 30px;"></div>
+        <a href="javascript:void(0)" onclick="document.getElementById('modalNewClaim').style.display='flex'" class="btn btn-dark d-flex align-items-center gap-2 px-4 shadow-sm" style="border-radius: 12px; font-weight: 600; background: #0f172a; border: none;">
+            <i class="bi bi-plus-lg"></i> Nova Solicitação
+        </a>
+    </div>
+</div>
+
+
+
+<div class="claim-list-wrapper">
+    {% for c in claims %}
+    <div class="claim-card">
+        <div class="claim-info">
+            {% if c.employee.picture %}
+            <img src="{{ c.employee.picture.picture.url }}" alt="Avatar" class="claim-avatar" style="object-fit: cover;">
+            {% else %}
+            <div class="claim-avatar">{{ c.employee.full_name.0|upper }}</div>
+            {% endif %}
+            
+            <div class="claim-details">
+                <h5>{{ c.employee.full_name }}</h5>
+                <p>
+                    <i class="bi bi-tags opacity-75 me-1"></i> {{ c.claim_event }} &nbsp;|&nbsp; 
+                    <i class="bi bi-hash opacity-75 me-1"></i> Ref: {{ c.reference_id|default:"Sem ID" }}
+                </p>
+                <div class="mt-2 text-primary" style="font-weight: 700; font-size: 16px;">
+                    R$ {{ c.total_amount }}
+                </div>
+            </div>
+        </div>
+        <div class="claim-controls">
+            <div>
+                {% if c.status == 'INITIATED' %}<span class="status-pill status-neutral">Rascunho</span>
+                {% elif c.status == 'SUBMITTED' %}<span class="status-pill status-submitted">Ag. Supervisor</span>
+                {% elif c.status == 'SUPERVISOR_APPROVED' %}<span class="status-pill status-supervisor">Ag. RH/Admin</span>
+                {% elif c.status == 'APPROVED' %}<span class="status-pill status-approved">Aprovado</span>
+                {% elif c.status == 'REJECTED' %}<span class="status-pill status-rejected">Rejeitado</span>
+                {% elif c.status == 'PAID' %}<span class="status-pill status-paid"><i class="bi bi-check2-all"></i> Pago</span>
+                {% else %}<span class="status-pill status-neutral">{{ c.get_status_display }}</span>{% endif %}
+            </div>
+            <div class="claim-date">Solicitado em {{ c.created_at|date:"d/m/Y" }}</div>
+            <div class="d-flex justify-content-end">
+                <button type="button" class="btn-resolve"
+                        onclick="document.getElementById('modalClaimView{{ c.pk }}').style.display='flex'">
+                    <i class="bi bi-eye me-1"></i> Ver Relatório
+                </button>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-receipt fs-1" style="opacity: 0.5;"></i>
+        <p class="mt-3" style="font-weight: 500;">Nenhuma solicitação de reembolso registrada.</p>
+    </div>
+    {% endfor %}
+</div>
+
+
+
+
+{% for c in claims %}
+<div id="modalClaimView{{ c.pk }}" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+  <div class="custom-modal-box" style="border-radius: 20px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-width: 780px; max-height: 90vh;">
+
+      
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 24px 28px 20px; background: #fff; border-top-left-radius: 20px; border-top-right-radius: 20px; border-bottom: 1px solid #f1f5f9;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            
+            <div style="width: 44px; height: 44px; background: #ecfdf5; border-radius: 12px; color: #10b981; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="bi bi-receipt-cutoff"></i>
+            </div>
+            
+            <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <h5 style="color: #0f172a; font-size: 18px; font-weight: 700; margin: 0;">
+                    Solicitação #{{ c.pk }}
+                </h5>
+            {% if c.status == 'INITIATED' %}
+                <span style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:20px;font-size:11px;font-weight:700;padding:3px 10px;">Rascunho</span>
+            {% elif c.status == 'SUBMITTED' %}
+                <span style="background:#fffcf0;color:#d97706;border:1px solid #fef3c7;border-radius:20px;font-size:11px;font-weight:700;padding:3px 10px;">Ag. Supervisor</span>
+            {% elif c.status == 'SUPERVISOR_APPROVED' %}
+                <span style="background:#fff7ed;color:#ea580c;border:1px solid #ffedd5;border-radius:20px;font-size:11px;font-weight:700;padding:3px 10px;">Ag. RH/Admin</span>
+            {% elif c.status == 'APPROVED' %}
+                <span style="background:#f0fdf4;color:#166534;border:1px solid #dcfce3;border-radius:20px;font-size:11px;font-weight:700;padding:3px 10px;">Aprovado ✓</span>
+            {% elif c.status == 'REJECTED' %}
+                <span style="background:#fef2f2;color:#991b1b;border:1px solid #fee2e2;border-radius:20px;font-size:11px;font-weight:700;padding:3px 10px;">Rejeitado</span>
+            {% elif c.status == 'PAID' %}
+                <span style="background:#f0f9ff;color:#0369a1;border:1px solid #e0f2fe;border-radius:20px;font-size:11px;font-weight:700;padding:3px 10px;">Pago ✓</span>
+            {% endif %}
+            </div>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <a href="javascript:void(0)" onclick="syncModalClaim(this, {{ c.pk }})" id="syncBtn{{ c.pk }}" style="color:#4f46e5;text-decoration:none; display: flex; align-items: center; justify-content: center; background: #e0e7ff; width: 34px; height: 34px; border-radius: 50%; font-size: 14px; transition: transform 0.3s;" title="Sincronizar (Puxar Novas Alterações)">
+                <i class="bi bi-arrow-clockwise"></i>
+            </a>
+            <button type="button" class="btn-close" onclick="document.getElementById('modalClaimView{{ c.pk }}').style.display='none'" style="margin: 0; opacity: 0.6; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'"></button>
+        </div>
+      </div>
+
+      
+      <div style="padding:0;overflow-y:auto;flex:1;">
+        <div class="row g-0">
+
+          
+          <div class="col-md-5 border-end" style="padding:24px 28px;">
+
+            
+            <div class="d-flex align-items-center gap-3 mb-4">
+                {% if c.employee.picture %}
+                <img src="{{ c.employee.picture.picture.url }}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
+                {% else %}
+                <div style="width:44px;height:44px;border-radius:50%;background:#e0e7ff;color:#4f46e5;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;">{{ c.employee.full_name.0|upper }}</div>
+                {% endif %}
+                <div>
+                    <div style="font-size:15px;font-weight:700;color:#0f172a;">{{ c.employee.full_name }}</div>
+                    <div style="font-size:12px;color:#64748b;">{{ c.employee.job_title|default:"Funcionário" }}</div>
+                </div>
+            </div>
+
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+                <div>
+                    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:3px;">Evento</div>
+                    <div style="font-size:13px;font-weight:600;color:#0f172a;">{{ c.claim_event }}</div>
+                </div>
+                <div>
+                    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:3px;">Referência</div>
+                    <div style="font-size:13px;font-weight:600;color:#0f172a;">{{ c.reference_id|default:"—" }}</div>
+                </div>
+                <div>
+                    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:3px;">Criado em</div>
+                    <div style="font-size:13px;font-weight:600;color:#0f172a;">{{ c.created_at|date:"d/m/Y" }}</div>
+                </div>
+                <div>
+                    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:3px;">Total</div>
+                    <div style="font-size:17px;font-weight:800;color:#4f46e5;">R$ {{ c.total_amount }}</div>
+                </div>
+            </div>
+
+            {% if c.description %}
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:20px;font-size:13px;color:#475569;line-height:1.5;">
+                {{ c.description }}
+            </div>
+            {% endif %}
+
+            
+            <div style="border-top:1px solid #f1f5f9;padding-top:18px;">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:14px;">
+                    <i class="bi bi-signpost-split me-1"></i> Fluxo de Aprovação
+                </div>
+
+                
+                <div style="display:flex;gap:12px;align-items:stretch;margin-bottom:4px;">
+                    <div style="display:flex;flex-direction:column;align-items:center;">
+                        <div style="width:24px;height:24px;border-radius:50%;background:#10b981;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;"><i class="bi bi-person-badge"></i></div>
+                        {% if c.status == 'INITIATED' %}
+                            <div style="width:2px;flex-grow:1;min-height:16px;background:#e2e8f0;margin:3px 0;"></div>
+                        {% else %}
+                            <div style="width:2px;flex-grow:1;min-height:16px;background:#10b981;margin:3px 0;"></div>
+                        {% endif %}
+                    </div>
+                    <div style="padding-bottom:14px;">
+                        <div style="font-size:13px;font-weight:700;color:#0f172a;">Enviado pelo Gestor</div>
+                        <div style="font-size:11px;color:#64748b;">
+                            {% if c.status == 'INITIATED' %}
+                                Rascunho não enviado.
+                            {% else %}
+                                {{ c.submitted_date|date:"d/m/Y"|default:c.created_at|date:"d/m/Y" }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div style="display:flex;gap:12px;">
+                    <div>
+                        {% if c.status == 'APPROVED' or c.status == 'PAID' %}
+                            <div style="width:24px;height:24px;border-radius:50%;background:#10b981;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;"><i class="bi bi-check-lg"></i></div>
+                        {% elif c.status == 'REJECTED' %}
+                            <div style="width:24px;height:24px;border-radius:50%;background:#ef4444;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;"><i class="bi bi-x-lg"></i></div>
+                        {% elif c.status == 'SUPERVISOR_APPROVED' or c.status == 'SUBMITTED' %}
+                            <div style="width:24px;height:24px;border-radius:50%;background:#f59e0b;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;"><i class="bi bi-hourglass-split"></i></div>
+                        {% else %}
+                            <div style="width:24px;height:24px;border-radius:50%;background:#e2e8f0;color:#64748b;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;"><i class="bi bi-building"></i></div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div style="font-size:13px;font-weight:700;color:#0f172a;">RH / Administração</div>
+                        <div style="font-size:11px;color:#64748b;">
+                            {% if c.status == 'APPROVED' %}Aprovado definitivamente. ✓
+                            {% elif c.status == 'PAID' %}Pago.
+                            {% elif c.status == 'REJECTED' %}Rejeitado.
+                            {% elif c.status == 'SUPERVISOR_APPROVED' or c.status == 'SUBMITTED' %}<span style="color:#f59e0b;font-weight:600;">Aguardando validação</span>
+                            {% else %}Em aguardo.{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            {% if c.rejection_reason %}
+            <div style="margin-top:16px;background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:12px 14px;">
+                <div style="font-size:10px;font-weight:700;color:#b91c1c;text-transform:uppercase;margin-bottom:4px;"><i class="bi bi-exclamation-octagon me-1"></i> Motivo da Rejeição</div>
+                <div style="font-size:13px;color:#991b1b;">{{ c.rejection_reason }}</div>
+            </div>
+            {% endif %}
+
+          </div>
+
+          
+          <div class="col-md-7" style="padding:24px 28px;">
+
+            
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:12px;">
+                <i class="bi bi-list-check me-1"></i> Despesas ({{ c.expenses.count }})
+            </div>
+
+            {% if c.expenses.all %}
+            <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px;">
+                <thead>
+                    <tr style="border-bottom:2px solid #f1f5f9;">
+                        <th style="text-align:left;padding:6px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8;">Tipo</th>
+                        <th style="text-align:left;padding:6px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8;">Data</th>
+                        <th style="text-align:right;padding:6px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8;">Valor</th>
+                        <th style="text-align:left;padding:6px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8;">Nota</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exp in c.expenses.all %}
+                    <tr style="border-bottom:1px solid #f8fafc;">
+                        <td style="padding:8px 8px;">
+                            <span style="background:#e0e7ff;color:#4f46e5;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap;">{{ exp.expense_type }}</span>
+                        </td>
+                        <td style="padding:8px 8px;color:#64748b;">{{ exp.expense_date|date:"d/m/Y" }}</td>
+                        <td style="padding:8px 8px;text-align:right;font-weight:700;color:#4f46e5;">R$ {{ exp.amount }}</td>
+                        <td style="padding:8px 8px;color:#94a3b8;font-size:12px;">{{ exp.note|default:"—"|truncatechars:30 }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="border-top:2px solid #e2e8f0;background:#fafbff;">
+                        <td colspan="2" style="padding:10px 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#64748b;">Total Geral</td>
+                        <td style="padding:10px 8px;text-align:right;font-size:16px;font-weight:800;color:#4f46e5;">R$ {{ c.total_amount }}</td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align:center;padding:32px 0;color:#94a3b8;margin-bottom:24px;">
+                <i class="bi bi-receipt" style="font-size:32px;"></i>
+                <p style="margin-top:10px;font-size:13px;">Nenhuma despesa registrada ainda.</p>
+                {% if c.status == 'INITIATED' %}
+                <a href="javascript:void(0)" onclick="openClaimPopup('{% url 'claim_detail' c.pk %}?popup=1')" style="font-size:13px;color:#4f46e5;text-decoration:none;font-weight:600;">
+                    <i class="bi bi-plus-circle me-1"></i> Adicionar despesas
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            
+            {% if c.attachments.all %}
+            <div style="border-top:1px solid #f1f5f9;padding-top:18px;">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:12px;">
+                    <i class="bi bi-paperclip me-1"></i> Comprovantes ({{ c.attachments.count }})
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    {% for att in c.attachments.all %}
+                    <a href="{{ att.file.url }}" target="_blank"
+                       style="display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;text-decoration:none;color:#0f172a;transition:background .15s;">
+                        <i class="bi bi-file-earmark-text" style="font-size:18px;color:#4f46e5;flex-shrink:0;"></i>
+                        <div style="flex:1;overflow:hidden;">
+                            <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ att.file_name }}</div>
+                            <div style="font-size:10px;color:#94a3b8;">{{ att.uploaded_at|date:"d/m/Y" }}</div>
+                        </div>
+                        <i class="bi bi-box-arrow-up-right" style="font-size:12px;color:#94a3b8;"></i>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#f8fafc;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-top:1px solid #f1f5f9;">
+          <div style="display: flex; align-items: center; gap: 18px;">
+              <a href="javascript:void(0)" onclick="openClaimPopup('{% url 'claim_detail' c.pk %}?popup=1')" style="font-size:13px;color:#64748b;text-decoration:none;">
+                  <i class="bi bi-pencil-square me-1"></i>
+                  {% if c.status == 'INITIATED' %}Editar / Adicionar Despesas{% else %}Ver Página Completa{% endif %}
+              </a>
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+              <button type="button"
+                      onclick="document.getElementById('modalClaimView{{ c.pk }}').style.display='none'"
+                      class="btn btn-light rounded-pill border px-4">Fechar</button>
+              {% if c.status == 'INITIATED' %}
+              <form action="{% url 'claim_delete' c.pk %}" method="post" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit"
+                          onclick="return confirm('Tem certeza que deseja apagar e cancelar este rascunho de reembolso? Esta ação não pode ser desfeita.')"
+                          class="btn btn-outline-danger rounded-pill px-4 bg-white" style="font-weight:600; border-width: 1px;">
+                      Cancelar Rascunho
+                  </button>
+              </form>
+              <a href="{% url 'claim_submit' c.pk %}"
+                 onclick="return confirm('Enviar para aprovação? Após enviar, não poderá mais adicionar despesas.')"
+                 class="btn rounded-pill px-4 text-white" style="background:#4f46e5;border:none;font-weight:600;">
+                  <i class="bi bi-send me-1"></i> Enviar para Aprovação
+              </a>
+              {% endif %}
+          </div>
+      </div>
+
+  </div>
+</div>
+{% endfor %}
+
+
+<div id="modalHelpInfo" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+    <div class="custom-modal-box" style="border-radius: 20px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-width: 600px; padding: 24px 28px;">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #ecfdf5; border-radius: 12px; color: #10b981; font-size: 18px;">
+                    <i class="bi bi-info-circle-fill"></i>
+                </div>
+                <h5 class="modal-title fw-bold" style="color: #0f172a; font-size: 18px; margin: 0;">Como funcionam os Reembolsos?</h5>
+            </div>
+            <button type="button" class="btn-close" onclick="document.getElementById('modalHelpInfo').style.display='none'"></button>
+        </div>
+        <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin: 0 0 16px;">
+            Como gestor(a), utilize esta seção para registrar despesas corporativas realizadas por você ou por membros da sua equipe. Isso abrange <strong>viagens de negócios</strong>, <strong>alimentação</strong>, <strong>transporte/combustível</strong>, e <strong>materiais adquiridos</strong> em serviço.
+        </p>
+        <div style="background: #e0f2fe; border: 1px solid #bae6fd; border-left: 4px solid #0284c7; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #0369a1; margin-bottom: 24px;">
+            <strong>Atenção:</strong> Toda solicitação de reembolso é enviada diretamente para a aprovação final do <strong>RH/Administração</strong>. É obrigatório digitalizar e anexar todas as <strong>notas fiscais e comprovantes</strong> durante a criação da solicitação.
+        </div>
+        
+        <div class="d-flex gap-2 justify-content-end">
+            <button type="button" class="btn-premium btn-outline" onclick="document.getElementById('modalHelpInfo').style.display='none'">Entendi</button>
+        </div>
+    </div>
+</div>
+
+
+<div id="modalNewClaim" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+    <div class="custom-modal-box" style="border-radius: 20px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-width: 600px; padding: 24px 28px;">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #ecfdf5; border-radius: 12px; color: #10b981; font-size: 18px;">
+                    <i class="bi bi-file-earmark-plus-fill"></i>
+                </div>
+                <h5 class="modal-title fw-bold" style="color: #0f172a; font-size: 18px; margin: 0;">Nova Solicitação</h5>
+            </div>
+            <button type="button" class="btn-close" onclick="document.getElementById('modalNewClaim').style.display='none'"></button>
+        </div>
+        
+        <form method="post" action="{% url 'claim_create' %}">
+            {% csrf_token %}
+            <div style="margin-bottom: 24px;">
+                {{ form.as_p }}
+            </div>
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="button" class="btn-premium btn-outline" onclick="document.getElementById('modalNewClaim').style.display='none'">Cancelar</button>
+                <button type="submit" class="btn btn-primary" style="border-radius: 8px; font-weight: 600; padding: 8px 20px; box-shadow: none;">Iniciar Relatório</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div id="modalIframe" class="modal-overlay" style="z-index: 1060;" onclick="if(event.target===this){ this.style.display='none'; document.getElementById('claimIframe').src=''; }">
+    <div class="custom-modal-box" style="border-radius: 20px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.1); background: #f8fafc; max-width: 1300px; height: 90vh;">
+        
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 24px 28px 20px; background: #fff; border-top-left-radius: 20px; border-top-right-radius: 20px; border-bottom: 1px solid #f1f5f9;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                
+                <div style="width: 44px; height: 44px; background: #ecfdf5; border-radius: 12px; color: #10b981; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="bi bi-receipt-cutoff"></i>
+                </div>
+                <h5 style="color: #0f172a; font-size: 18px; font-weight: 700; margin: 0;">
+                    Detalhes Completos da Solicitação
+                </h5>
+            </div>
+            
+            <div style="display: flex; align-items: center;">
+                <button type="button" class="btn-close" onclick="document.getElementById('modalIframe').style.display='none'; document.getElementById('claimIframe').src='';" style="margin: 0; opacity: 0.6; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'"></button>
+            </div>
+        </div>
+        <iframe id="claimIframe" src="" style="width:100%; height:100%; border:none; flex:1; background:var(--bg-light);"></iframe>
+    </div>
+</div>
+<script>
+function openClaimPopup(url) {
+    document.getElementById('claimIframe').src = url;
+    document.getElementById('modalIframe').style.display = 'flex';
+}
+
+function syncModalClaim(btn, pk) {
+    const icon = btn.querySelector('i');
+    icon.style.transition = 'transform 0.5s ease';
+    icon.style.transform = 'rotate(360deg)';
+    
+    // Add timestamp to prevent browser cache from responding with old HTML
+    const url = new URL(window.location.href);
+    url.searchParams.set('_t', new Date().getTime());
+    
+    fetch(url, { cache: 'no-store' })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newModal = doc.getElementById('modalClaimView' + pk);
+            const currentContainer = document.getElementById('modalClaimView' + pk);
+            
+            if (newModal && currentContainer) {
+                currentContainer.innerHTML = newModal.innerHTML;
+            }
+            setTimeout(() => { icon.style.transform = ''; }, 500);
+        })
+        .catch(err => {
+            console.error('Erro na sincronização:', err);
+            setTimeout(() => { icon.style.transform = ''; }, 500);
+        });
+}
+</script>
+
+{% endblock %}

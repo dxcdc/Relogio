@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Responder Pesquisa{% endblock %}
+
+{% block content %}
+<style>
+.take-card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); overflow: hidden; }
+.take-header { background: linear-gradient(135deg, #4f46e5, #3b82f6); padding: 32px 24px; color: white; }
+.q-card { padding: 24px; border-bottom: 1px solid #f1f5f9; }
+.q-card:last-child { border-bottom: none; }
+.q-label { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 12px; }
+.rating-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.rating-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #cbd5e1; background: white; color: #475569; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.rating-btn:hover { border-color: #4f46e5; color: #4f46e5; background: #e0e7ff; }
+.rating-radio:checked + .rating-btn { background: #4f46e5; border-color: #4f46e5; color: white; }
+.rating-radio { display: none; }
+</style>
+
+<div class="take-card my-4">
+    <div class="take-header">
+        <h2 class="fw-bold mb-2">{{ survey.title }}</h2>
+        <p class="mb-0 opacity-75">{{ survey.description|default:"" }}</p>
+    </div>
+    
+    {% if survey.is_anonymous %}
+    <div class="bg-light p-3 border-bottom d-flex align-items-center gap-2" style="color: #64748b; font-size: 13px;">
+        <i class="bi bi-shield-lock-fill text-success fs-5"></i>
+        <span>Esta pesquisa é <strong>100% anônima</strong>. O seu nome e perfil não serão associados às suas respostas.</span>
+    </div>
+    {% else %}
+    <div class="bg-light p-3 border-bottom d-flex align-items-center gap-2" style="color: #64748b; font-size: 13px;">
+        <i class="bi bi-info-circle-fill text-primary fs-5"></i>
+        <span>Esta pesquisa <strong>não é anônima</strong>. O seu nome e perfil serão associados às suas respostas.</span>
+    </div>
+    {% endif %}
+
+    {% if survey.is_leadership_survey %}
+    <div class="p-3 border-bottom d-flex align-items-center gap-3" style="background: #f5f3ff; color: #1e1b4b; font-size: 14px; border-left: 4px solid #8b5cf6;">
+        <div class="rounded-circle d-flex align-items-center justify-content-center bg-white text-purple" style="width: 40px; height: 40px; color: #8b5cf6; font-size: 20px; border: 1px solid #ddd6fe;">
+            <i class="bi bi-person-badge-fill"></i>
+        </div>
+        <div>
+            {% if leader %}
+            <span class="d-block fw-bold" style="font-size: 11px; color: #6d28d9; letter-spacing: 0.5px;">AVALIAÇÃO DE LIDERANÇA</span>
+            <span style="color: #4c1d95;">Você está avaliando o líder <strong>{{ leader.full_name }}</strong> do setor <strong>{{ department.name|default:"Sem Setor" }}</strong>.</span>
+            {% else %}
+            <span class="d-block fw-bold text-danger" style="font-size: 11px; letter-spacing: 0.5px;">LÍDER NÃO IDENTIFICADO</span>
+            <span class="text-muted">Não identificamos um supervisor/líder associado ao seu setor. Suas respostas serão enviadas sem um líder vinculado.</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="POST" class="p-0">
+        {% csrf_token %}
+        
+        {% for q in survey.questions.all %}
+        <div class="q-card">
+            <div class="q-label">{{ forloop.counter }}. {{ q.question_text }} {% if q.is_required %}<span class="text-danger">*</span>{% endif %}</div>
+            
+            {% if q.question_type == 'TEXT' %}
+                <textarea name="question_{{ q.id }}" class="form-control" rows="3" placeholder="Sua resposta..." {% if q.is_required %}required{% endif %}></textarea>
+            
+            {% elif q.question_type == 'RATING_10' %}
+                <div class="rating-group">
+                    {% for i in "1234567890"|make_list %}
+                        {% if forloop.counter <= 10 %}
+                        <label>
+                            <input type="radio" class="rating-radio" name="question_{{ q.id }}" value="{{ forloop.counter }}" {% if q.is_required %}required{% endif %}>
+                            <div class="rating-btn">{{ forloop.counter }}</div>
+                        </label>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            
+            {% elif q.question_type == 'GOOD_BAD' %}
+                <div class="d-flex flex-column gap-2">
+                    <label class="form-check p-3 rounded-3 border" style="cursor: pointer;">
+                        <input class="form-check-input ms-2 me-3" type="radio" name="question_{{ q.id }}" value="Bom" {% if q.is_required %}required{% endif %}>
+                        <span class="fw-medium text-success"><i class="bi bi-emoji-smile me-1"></i> Bom</span>
+                    </label>
+                    <label class="form-check p-3 rounded-3 border" style="cursor: pointer;">
+                        <input class="form-check-input ms-2 me-3" type="radio" name="question_{{ q.id }}" value="Regular">
+                        <span class="fw-medium text-warning"><i class="bi bi-emoji-neutral me-1"></i> Regular</span>
+                    </label>
+                    <label class="form-check p-3 rounded-3 border" style="cursor: pointer;">
+                        <input class="form-check-input ms-2 me-3" type="radio" name="question_{{ q.id }}" value="Ruim">
+                        <span class="fw-medium text-danger"><i class="bi bi-emoji-frown me-1"></i> Ruim</span>
+                    </label>
+                </div>
+            
+            {% elif q.question_type == 'MULTIPLE_CHOICE' %}
+                <div class="d-flex flex-column gap-2">
+                    
+                    
+                    <div id="mc_container_{{ q.id }}"></div>
+                    <script>
+                        const choicesStr{{ q.id }} = "{{ q.choices|escapejs }}";
+                        const choices{{ q.id }} = choicesStr{{ q.id }}.split(';').map(s => s.trim()).filter(s => s);
+                        const container{{ q.id }} = document.getElementById("mc_container_{{ q.id }}");
+                        choices{{ q.id }}.forEach(c => {
+                            container{{ q.id }}.innerHTML += `
+                                <label class="form-check p-3 rounded-3 border mb-2" style="cursor: pointer;">
+                                    <input class="form-check-input ms-2 me-3" type="radio" name="question_{{ q.id }}" value="${c}" {% if q.is_required %}required{% endif %}>
+                                    <span class="fw-medium" style="color: #334155;">${c}</span>
+                                </label>
+                            `;
+                        });
+                    </script>
+                </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        
+        <div class="p-4 bg-light border-top text-end">
+            <a href="{% url 'dashboard' %}" class="btn btn-light fw-bold me-2">Voltar</a>
+            <button type="submit" class="btn btn-primary fw-bold px-4" style="background: #4f46e5; border:none; border-radius:8px;">Enviar Respostas</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
