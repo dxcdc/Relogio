@@ -32,8 +32,9 @@ html, body {
   font-family: 'Inter', sans-serif;
   background: var(--bg);
   color: var(--ink);
-  overflow-x: hidden;
-  max-width: 100vw;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
 }
 a { text-decoration: none; color: inherit; }
 
@@ -100,7 +101,7 @@ nav.sc {
 /* ═══ HERO ═══════════════════════════════════════ */
 .hero {
   position: relative;
-  min-height: 100vh;
+  height: calc(100vh - 64px);
   overflow: hidden;
   display: flex;
   background: var(--bg);
@@ -110,9 +111,9 @@ nav.sc {
 .hero-left {
   position: relative; z-index: 10;
   display: flex; flex-direction: column;
-  justify-content: flex-end;
-  padding: 0 0 80px 60px;
-  width: 42%;
+  justify-content: center;
+  padding: 40px 0 20px 60px;
+  width: 45%;
   flex-shrink: 0;
 }
 .hero-eyebrow {
@@ -1736,19 +1737,19 @@ function submitContact(e) {
 
   // ── SONDAS / SATÉLITES ORBITANDO ──
   // Sonda 1 (Vinho - com brilho emissivo)
-  const s1Geo = new THREE.SphereGeometry(0.18, 16, 16);
+  const s1Geo = new THREE.SphereGeometry(0.09, 16, 16);
   const s1Mat = new THREE.MeshPhongMaterial({ color: 0x8B351E, emissive: 0x3d0e04, shininess: 100 });
   const sonda1 = new THREE.Mesh(s1Geo, s1Mat);
   logoGroup.add(sonda1);
 
   // Sonda 2 (Laranja)
-  const s2Geo = new THREE.SphereGeometry(0.15, 16, 16);
+  const s2Geo = new THREE.SphereGeometry(0.07, 16, 16);
   const s2Mat = new THREE.MeshPhongMaterial({ color: 0xE84621, emissive: 0x471003, shininess: 100 });
   const sonda2 = new THREE.Mesh(s2Geo, s2Mat);
   logoGroup.add(sonda2);
 
   // Sonda 3 (Amarela)
-  const s3Geo = new THREE.SphereGeometry(0.12, 16, 16);
+  const s3Geo = new THREE.SphereGeometry(0.05, 16, 16);
   const s3Mat = new THREE.MeshPhongMaterial({ color: 0xFAB814, emissive: 0x3d2b02, shininess: 100 });
   const sonda3 = new THREE.Mesh(s3Geo, s3Mat);
   logoGroup.add(sonda3);

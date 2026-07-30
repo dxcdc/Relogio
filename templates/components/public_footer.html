@@ -1,66 +1,60 @@
 {% load static %}
 <style>
-/* ═══ FOOTER ═════════════════════════════════════ */
+/* ═══ FOOTER UNIFICADO (1 LINHA) ══════════════════ */
 .public-footer {
   background: #080808; color: rgba(255,255,255,.55);
-  padding: 48px 60px 0;
+  padding: 16px 60px;
   position: relative; z-index: 10;
+  border-top: 1px solid rgba(255,255,255,.07);
 }
 .public-foot-inner {
   display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 32px;
-  padding-bottom: 36px;
-  border-bottom: 1px solid rgba(255,255,255,.07);
+  flex-wrap: nowrap; gap: 24px;
 }
-.public-foot-brand-block { display: flex; align-items: center; gap: 20px; max-width: 520px; }
-.public-foot-logo { height: 52px; width: auto; object-fit: contain; display: block; flex-shrink: 0; }
 .public-foot-desc {
-  font-size: 13.5px; font-weight: 400;
-  color: rgba(255,255,255,.65); line-height: 1.6;
+  font-size: 13px; font-weight: 400;
+  color: rgba(255,255,255,.65);
   margin-bottom: 0;
 }
-.public-foot-contact { display: flex; flex-direction: row; gap: 20px; flex-wrap: wrap; flex-shrink: 0; }
+.public-foot-contact { display: flex; flex-direction: row; gap: 20px; flex-shrink: 0; }
 .public-foot-contact-item {
-  display: flex; align-items: center; gap: 10px;
-  font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.8);
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 500; color: rgba(255,255,255,.8);
   text-decoration: none; transition: color .2s;
 }
-.public-foot-contact-item i { color: var(--green, #0dc02a); font-size: 15px; flex-shrink: 0; }
+.public-foot-contact-item i { color: var(--green, #0dc02a); font-size: 14px; flex-shrink: 0; }
 .public-foot-contact-item:hover { color: #fff; }
 .public-foot-social-block { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-.public-foot-socials { display: flex; gap: 10px; }
+.public-foot-socials { display: flex; gap: 8px; }
 .public-foot-soc {
-  width: 40px; height: 40px; border-radius: 12px;
+  width: 32px; height: 32px; border-radius: 8px;
   background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px; color: rgba(255,255,255,.7); text-decoration: none; transition: all .2s;
+  font-size: 14px; color: rgba(255,255,255,.7); text-decoration: none; transition: all .2s;
 }
 .public-foot-soc:hover { color: var(--green, #0dc02a); border-color: rgba(0,170,69,.35); background: rgba(0,170,69,.12); transform: translateY(-2px); }
-.public-foot-bottom {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  text-align: center; gap: 6px;
-  padding: 24px 0;
-  font-size: 12.5px; font-weight: 400; color: rgba(255,255,255,.45);
+
+.public-foot-copyright {
+  font-size: 12px;
+  color: rgba(255,255,255,.3);
+  white-space: nowrap;
 }
 
 @media(max-width:1024px) {
-  .public-footer { padding: 40px 24px 0; }
-  .public-foot-inner { flex-direction: column; align-items: center; text-align: center; gap: 24px; }
-  .public-foot-brand-block { flex-direction: column; text-align: center; }
-  .public-foot-contact { align-items: center; }
+  .public-footer { padding: 16px 24px; }
+  .public-foot-inner { flex-direction: column; text-align: center; gap: 12px; }
+  .public-foot-contact { justify-content: center; }
 }
 </style>
 
 <footer class="public-footer">
   <div class="public-foot-inner">
-    
     <div class="public-foot-brand-block">
       <p class="public-foot-desc">
         A plataforma completa de RH para equipes do CDC.
       </p>
     </div>
 
-    
     <div class="public-foot-contact">
       <a href="tel:8132246963" class="public-foot-contact-item">
         <i class="bi bi-telephone-fill"></i>
@@ -72,18 +66,15 @@
       </a>
     </div>
 
-    
+    <div class="public-foot-copyright">
+      CDC Relógio &copy; 2026
+    </div>
+
     <div class="public-foot-social-block">
       <div class="public-foot-socials">
         <a class="public-foot-soc" href="https://www.linkedin.com/company/centro-de-desenvolvimento-e-cidadania/" target="_blank" rel="noopener" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
         <a class="public-foot-soc" href="https://www.instagram.com/cdc_osc/" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>
       </div>
     </div>
-
-  </div>
-
-  <div class="public-foot-bottom">
-    <span>· CDC Relógio &copy; 2026 Todos os direitos reservados ·</span>
-    <span>· Centro de Desenvolvimento e Cidadania - CDC · CNPJ 03.970.166/0001-29 ·</span>
   </div>
 </footer>
