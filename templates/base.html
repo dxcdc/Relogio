@@ -160,6 +160,7 @@
         document.documentElement.setAttribute('data-theme', 'light');
         document.documentElement.setAttribute('data-bs-theme', 'light');
     </script>
+    <link rel="stylesheet" href="{% static 'css/themes_extended.css' %}">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -755,9 +756,32 @@
                 </div>
             </div>
             
-            <!-- Grupo da Direita (Notificações + Widget de Ponto + Dropdown de Perfil) com gap e alinhamento consistentes -->
+            <!-- Grupo da Direita (Seletor de Temas + Notificações + Widget de Ponto + Dropdown de Perfil) -->
             <div class="topbar-right d-flex align-items-center gap-3">
                 
+                <!-- Menu Dropdown Seletor de Temas na Área Logada -->
+                <div class="theme-dropdown">
+                  <button type="button" class="theme-dropdown-btn" onclick="toggleThemeDropdown(event)">
+                    <i class="bi bi-palette-fill"></i>
+                    <span id="currentThemeLabel">Temas</span>
+                    <i class="bi bi-chevron-down" style="font-size: 10px; opacity: 0.6;"></i>
+                  </button>
+                  <div class="theme-dropdown-menu" id="themeDropdownMenu">
+                    <button type="button" class="theme-opt" onclick="selectTheme('default')">
+                      <span class="theme-dot" style="background: #00AA45;"></span> Padrão (Verde)
+                    </button>
+                    <button type="button" class="theme-opt" onclick="selectTheme('cdc')">
+                      <span class="theme-dot" style="background: #E84621;"></span> CDC Logo (Vinho/Laranja)
+                    </button>
+                    <button type="button" class="theme-opt" onclick="selectTheme('dark')">
+                      <span class="theme-dot" style="background: #0F172A;"></span> Modo Noturno (Dark)
+                    </button>
+                    <button type="button" class="theme-opt" onclick="selectTheme('ocean')">
+                      <span class="theme-dot" style="background: #0284C7;"></span> Azul Corporativo (Ocean)
+                    </button>
+                  </div>
+                </div>
+
                 <div class="dropdown me-2 d-none d-md-block">
                     <button class="btn btn-icon position-relative border-0" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--text-secondary); background: transparent;">
                         <i class="bi bi-bell fs-5"></i>
@@ -1683,6 +1707,48 @@ window.addEventListener('message', function(e) {
         new ResizeObserver(reportHeight).observe(document.body);
     }
 })();
+</script>
+<script>
+function toggleThemeDropdown(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('themeDropdownMenu');
+  if (menu) menu.classList.toggle('show');
+}
+
+function selectTheme(themeName) {
+  localStorage.setItem('cdc_selected_theme', themeName);
+  applySelectedTheme(themeName);
+  const menu = document.getElementById('themeDropdownMenu');
+  if (menu) menu.classList.remove('show');
+}
+
+function applySelectedTheme(themeName) {
+  const selected = themeName || localStorage.getItem('cdc_selected_theme') || 'default';
+  document.documentElement.setAttribute('data-theme', selected);
+  
+  document.body.classList.remove('theme-cdc', 'theme-dark', 'theme-ocean');
+  if (selected !== 'default') {
+    document.body.classList.add('theme-' + selected);
+  }
+  
+  const label = document.getElementById('currentThemeLabel');
+  if (label) {
+    if (selected === 'cdc') label.textContent = 'CDC Logo';
+    else if (selected === 'dark') label.textContent = 'Noturno';
+    else if (selected === 'ocean') label.textContent = 'Azul';
+    else label.textContent = 'Padrão';
+  }
+}
+
+document.addEventListener('click', function() {
+  const menu = document.getElementById('themeDropdownMenu');
+  if (menu) menu.classList.remove('show');
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  applySelectedTheme();
+});
+applySelectedTheme();
 </script>
 </body>
 </html>
