@@ -5,7 +5,7 @@ echo "🚀 Iniciando Instalação do CDC Relógio em relogio.cdc.org.br..."
 
 # 1. Atualiza sistema
 apt update && apt upgrade -y
-apt install -y python3 python3-venv python3-pip nginx git certbot python3-certbot-nginx
+apt install -y python3 python3-venv python3-pip python3-dev build-essential pkg-config default-libmysqlclient-dev nginx git certbot python3-certbot-nginx
 
 # 2. Cria pasta do projeto se não existir
 mkdir -p /var/www/relogio
