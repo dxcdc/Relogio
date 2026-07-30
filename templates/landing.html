@@ -34,19 +34,8 @@ html, body {
   color: var(--ink);
   overflow-x: hidden;
   max-width: 100vw;
-  cursor: none;
 }
 a { text-decoration: none; color: inherit; }
-
-/* ═══ CURSOR ═════════════════════════════════════ */
-.cursor {
-  position: fixed; pointer-events: none; z-index: 9999;
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--green); mix-blend-mode: multiply;
-  transform: translate(-50%,-50%);
-  transition: width .2s, height .2s;
-}
-body:hover .cursor { opacity: 1; }
 
 /* ═══ WEBGL CANVAS ═══════════════════════════════ */
 #hero-canvas {
@@ -530,7 +519,6 @@ section { position: relative; }
 </head>
 <body>
 
-<div class="cursor" id="C"></div>
 <div class="scroll-txt">Scroll</div>
 
 
@@ -1821,21 +1809,7 @@ function submitContact(e) {
   });
 })();
 
-/* ═══════════════════════════════════════════════════
-   CURSOR
-═══════════════════════════════════════════════════ */
-const curEl = document.getElementById('C');
-document.addEventListener('mousemove', e => { 
-  if (curEl) {
-    curEl.style.left = e.clientX + 'px'; 
-    curEl.style.top = e.clientY + 'px'; 
-  }
-});
 
-document.querySelectorAll('a, button, .feat, .test-card, .fl-item, .ps-row').forEach(el => {
-  el.addEventListener('mouseenter', () => { curEl.style.width = '18px'; curEl.style.height = '18px'; });
-  el.addEventListener('mouseleave', () => { curEl.style.width = '10px'; curEl.style.height = '10px'; });
-});
 
 /* ═══════════════════════════════════════════════════
    NAV SCROLL
