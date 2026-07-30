@@ -54,12 +54,29 @@
 }
 .public-nav-cta:hover { background: var(--green, #0dc02a); color: #fff; transform: translateY(-1px); }
 
+.public-nav-theme-btn {
+  font-size: 12px; font-weight: 600; letter-spacing: .3px;
+  padding: 10px 18px; border-radius: 100px;
+  background: rgba(255, 255, 255, 0.15); color: #000;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  display: flex; align-items: center; gap: 7px;
+  cursor: pointer; transition: all .3s ease;
+}
+.public-nav-theme-btn:hover, .public-nav-theme-btn.active {
+  background: linear-gradient(135deg, #8B351E, #E84621) !important;
+  color: #fff !important;
+  border-color: #E84621 !important;
+  box-shadow: 0 4px 12px rgba(232, 70, 33, 0.35) !important;
+}
+
 @media(max-width:1024px) {
   .public-site-nav { padding: 20px 32px; }
   .public-site-nav.sc, body:not(.is-landing) .public-site-nav { padding: 14px 32px; }
   .public-nav-links { display: none; }
 }
 </style>
+
+<link rel="stylesheet" href="{% static 'css/themes_extended.css' %}">
 
 <nav id="nav" class="public-site-nav">
   <a href="/" class="public-nav-brand">
@@ -76,19 +93,79 @@
       <a href="{% url 'public_job_list' %}"><i class="bi bi-briefcase"></i> Vagas</a>
     {% endif %}
   </div>
-  <a href="/login/" class="public-nav-cta">
-    <i class="bi bi-box-arrow-in-right"></i>
-    Login
-  </a>
+  
+  <div style="display: flex; align-items: center; gap: 10px;">
+    
+    <!-- Menu Dropdown Seletor de Temas -->
+    <div class="theme-dropdown">
+      <button type="button" class="theme-dropdown-btn" onclick="toggleThemeDropdown(event)">
+        <i class="bi bi-palette-fill"></i>
+        <span id="currentThemeLabel">Temas</span>
+        <i class="bi bi-chevron-down" style="font-size: 10px; opacity: 0.6;"></i>
+      </button>
+      <div class="theme-dropdown-menu" id="themeDropdownMenu">
+        <button type="button" class="theme-opt" onclick="selectTheme('default')">
+          <span class="theme-dot" style="background: #00AA45;"></span> Padrão (Verde)
+        </button>
+        <button type="button" class="theme-opt" onclick="selectTheme('cdc')">
+          <span class="theme-dot" style="background: #E84621;"></span> CDC Logo (Vinho/Laranja)
+        </button>
+        <button type="button" class="theme-opt" onclick="selectTheme('dark')">
+          <span class="theme-dot" style="background: #0F172A;"></span> Modo Noturno (Dark)
+        </button>
+        <button type="button" class="theme-opt" onclick="selectTheme('ocean')">
+          <span class="theme-dot" style="background: #0284C7;"></span> Azul Corporativo (Ocean)
+        </button>
+      </div>
+    </div>
+
+    <a href="/login/" class="public-nav-cta">
+      <i class="bi bi-box-arrow-in-right"></i>
+      Login
+    </a>
+  </div>
 </nav>
 
 <script>
-// Header scroll logic
-window.addEventListener('scroll', () => {
-    const nav = document.getElementById('nav');
-    if (nav) {
-        if (window.scrollY > 50) nav.classList.add('sc');
-        else nav.classList.remove('sc');
-    }
+function toggleThemeDropdown(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('themeDropdownMenu');
+  if (menu) menu.classList.toggle('show');
+}
+
+function selectTheme(themeName) {
+  localStorage.setItem('cdc_selected_theme', themeName);
+  applySelectedTheme(themeName);
+  const menu = document.getElementById('themeDropdownMenu');
+  if (menu) menu.classList.remove('show');
+}
+
+function applySelectedTheme(themeName) {
+  const selected = themeName || localStorage.getItem('cdc_selected_theme') || 'default';
+  document.documentElement.setAttribute('data-theme', selected);
+  
+  // Atualiza classes no body
+  document.body.classList.remove('theme-cdc', 'theme-dark', 'theme-ocean');
+  if (selected !== 'default') {
+    document.body.classList.add('theme-' + selected);
+  }
+  
+  const label = document.getElementById('currentThemeLabel');
+  if (label) {
+    if (selected === 'cdc') label.textContent = 'CDC Logo';
+    else if (selected === 'dark') label.textContent = 'Noturno';
+    else if (selected === 'ocean') label.textContent = 'Azul';
+    else label.textContent = 'Padrão';
+  }
+}
+
+document.addEventListener('click', function() {
+  const menu = document.getElementById('themeDropdownMenu');
+  if (menu) menu.classList.remove('show');
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+  applySelectedTheme();
+});
+applySelectedTheme();
 </script>

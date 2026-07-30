@@ -1,0 +1,65 @@
+/* 🎨 TEMA OFICIAL CDC — PALETA DA LOGO (VINHO, LARANJA E AMARELO)
+   Ativado dinamicamente via data-theme="cdc" ou classe .theme-cdc
+*/
+
+[data-theme="cdc"], body.theme-cdc {
+  --green: #E84621 !important;          /* Laranja CDC */
+  --accent-color: #E84621 !important;
+  --navy: #8B351E !important;           /* Vinho CDC */
+  --primary: #8B351E !important;
+}
+
+/* ── ESTILOS ESPECÍFICOS DO TEMA CDC ── */
+[data-theme="cdc"] .btn-primary,
+[data-theme="cdc"] .btn-navy,
+body.theme-cdc .btn-primary,
+body.theme-cdc .btn-navy {
+  background: linear-gradient(135deg, #8B351E, #E84621) !important;
+  border-color: #E84621 !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="cdc"] .hero-eyebrow,
+body.theme-cdc .hero-eyebrow {
+  color: #E84621 !important;
+  font-weight: 600 !important;
+}
+
+[data-theme="cdc"] .hero-h1 em,
+body.theme-cdc .hero-h1 em {
+  color: #E84621 !important;
+  font-style: normal !important;
+}
+
+[data-theme="cdc"] .btn-cta,
+[data-theme="cdc"] .cta-btn,
+body.theme-cdc .btn-cta,
+body.theme-cdc .cta-btn {
+  background: linear-gradient(135deg, #8B351E, #E84621) !important;
+  border: 1px solid #E84621 !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  box-shadow: 0 6px 20px rgba(232, 70, 33, 0.4) !important;
+}
+
+[data-theme="cdc"] .badge-success,
+[data-theme="cdc"] .status-pill-active,
+body.theme-cdc .badge-success,
+body.theme-cdc .status-pill-active {
+  background: rgba(232, 70, 33, 0.12) !important;
+  color: #E84621 !important;
+  border: 1px solid rgba(232, 70, 33, 0.3) !important;
+}
+
+[data-theme="cdc"] .menu-item.active,
+body.theme-cdc .menu-item.active {
+  border-left-color: #E84621 !important;
+}
+
+/* Destaque do Botão de Alternância Ativo */
+.theme-toggle-btn.active {
+  background: linear-gradient(135deg, #8B351E, #E84621) !important;
+  color: #FFFFFF !important;
+  border-color: #E84621 !important;
+}

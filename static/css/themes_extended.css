@@ -1,0 +1,158 @@
+/* 🎨 TEMAS ESTENDIDOS DO CDC CORE
+   Opções disponíveis no menu seletor:
+   1. default  - Tema Padrão Original Clean
+   2. cdc      - Tema CDC Logo (Vinho #8B351E, Laranja #E84621, Amarelo #F6A02A)
+   3. dark     - Modo Noturno Nobre (#0F172A, #1E293B, #3B82F6)
+   4. ocean    - Azul Corporativo / Ocean (#1E3A8A, #0284C7, #38BDF8)
+*/
+
+/* ── TEMA 2: CDC LOGO ── */
+[data-theme="cdc"], body.theme-cdc {
+  --green: #E84621 !important;
+  --accent-color: #E84621 !important;
+  --navy: #8B351E !important;
+  --primary: #8B351E !important;
+}
+
+[data-theme="cdc"] .btn-primary,
+[data-theme="cdc"] .btn-navy,
+body.theme-cdc .btn-primary,
+body.theme-cdc .btn-navy {
+  background: linear-gradient(135deg, #8B351E, #E84621) !important;
+  border-color: #E84621 !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="cdc"] .hero-eyebrow,
+body.theme-cdc .hero-eyebrow {
+  color: #E84621 !important;
+}
+
+[data-theme="cdc"] .hero-h1 em,
+body.theme-cdc .hero-h1 em {
+  color: #E84621 !important;
+}
+
+/* ── TEMA 3: MODO NOTURNO NOBRE (DARK) ── */
+[data-theme="dark"], body.theme-dark {
+  --bg: #0F172A !important;
+  --bg-2: #1E293B !important;
+  --ink: #F8FAFC !important;
+  --ink2: rgba(248, 250, 252, 0.7) !important;
+  --ink3: rgba(248, 250, 252, 0.2) !important;
+  --green: #38BDF8 !important;
+  --accent-color: #38BDF8 !important;
+  --navy: #0284C7 !important;
+  --primary: #0284C7 !important;
+}
+
+[data-theme="dark"] body,
+body.theme-dark {
+  background-color: #0F172A !important;
+  color: #F8FAFC !important;
+}
+
+[data-theme="dark"] .lcard,
+[data-theme="dark"] .card,
+body.theme-dark .lcard,
+body.theme-dark .card {
+  background: #1E293B !important;
+  color: #F8FAFC !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .btn-primary,
+body.theme-dark .btn-primary {
+  background: linear-gradient(135deg, #0284C7, #38BDF8) !important;
+  border-color: #38BDF8 !important;
+  color: #FFFFFF !important;
+}
+
+/* ── TEMA 4: AZUL CORPORATIVO (OCEAN) ── */
+[data-theme="ocean"], body.theme-ocean {
+  --green: #0284C7 !important;
+  --accent-color: #0284C7 !important;
+  --navy: #1E3A8A !important;
+  --primary: #1E3A8A !important;
+}
+
+[data-theme="ocean"] .btn-primary,
+[data-theme="ocean"] .btn-navy,
+body.theme-ocean .btn-primary,
+body.theme-ocean .btn-navy {
+  background: linear-gradient(135deg, #1E3A8A, #0284C7) !important;
+  border-color: #0284C7 !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="ocean"] .hero-eyebrow,
+body.theme-ocean .hero-eyebrow {
+  color: #0284C7 !important;
+}
+
+[data-theme="ocean"] .hero-h1 em,
+body.theme-ocean .hero-h1 em {
+  color: #0284C7 !important;
+}
+
+/* ── ESTILOS DO MENU DROPDOWN DE TEMAS ── */
+.theme-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.theme-dropdown-btn {
+  font-size: 12px; font-weight: 600; letter-spacing: .3px;
+  padding: 9px 16px; border-radius: 100px;
+  background: rgba(255, 255, 255, 0.15); color: inherit;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  display: flex; align-items: center; gap: 7px;
+  cursor: pointer; transition: all .25s ease;
+}
+
+.theme-dropdown-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.theme-dropdown-menu {
+  position: absolute; right: 0; top: calc(100% + 8px);
+  background: #FFFFFF; color: #0F172A;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  padding: 8px; min-width: 200px;
+  z-index: 1000;
+  display: none;
+  flex-direction: column; gap: 4px;
+}
+
+.theme-dropdown-menu.show {
+  display: flex;
+  animation: fadeInDown 0.2s ease;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.theme-opt {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 8px;
+  font-size: 13px; font-weight: 500; color: #334155;
+  cursor: pointer; transition: background 0.15s ease;
+  border: none; background: transparent; width: 100%; text-align: left;
+}
+
+.theme-opt:hover {
+  background: #F1F5F9; color: #0F172A;
+}
+
+.theme-opt.active {
+  background: #E2E8F0; color: #0F172A; font-weight: 700;
+}
+
+.theme-dot {
+  width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0;
+}
