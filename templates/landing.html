@@ -100,12 +100,12 @@ nav.sc {
 /* ═══ HERO ═══════════════════════════════════════ */
 .hero {
   position: relative;
-  height: calc(100vh - 54px);
-  min-height: 520px;
+  height: calc(100vh - 46px);
+  min-height: 480px;
   overflow: hidden;
   display: flex;
   background: var(--bg);
-  padding-top: 54px;
+  padding-top: 46px;
 }
 
 /* Left text panel */
@@ -113,22 +113,22 @@ nav.sc {
   position: relative; z-index: 10;
   display: flex; flex-direction: column;
   justify-content: center;
-  padding: 20px 0 20px 60px;
-  width: 42%;
+  padding: 10px 0 10px 60px;
+  width: 44%;
   flex-shrink: 0;
 }
 .hero-eyebrow {
   font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-  color: var(--navy); margin-bottom: 14px; font-weight: 600;
+  color: var(--navy); margin-bottom: 10px; font-weight: 600;
   opacity: 0; transform: translateY(16px);
   animation: up .8s .1s cubic-bezier(.23,1,.32,1) forwards;
 }
 
 .hero-h1 {
-  font-size: clamp(28px, 3.2vw, 44px);
+  font-size: clamp(26px, 3.0vw, 40px);
   font-weight: 800; line-height: 1.15;
   letter-spacing: -1.5px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 .hero-h1 .w { display: block; overflow: hidden; }
 .hero-h1 .w span { display: inline-block; color: var(--ink); }
@@ -140,8 +140,8 @@ nav.sc {
 }
 
 .hero-sub {
-  font-size: 15px; font-weight: 400; line-height: 1.6;
-  color: var(--ink2); max-width: 400px; margin-bottom: 24px;
+  font-size: 14px; font-weight: 400; line-height: 1.55;
+  color: var(--ink2); max-width: 380px; margin-bottom: 20px;
   opacity: 0; transform: translateY(16px);
   animation: up .9s .4s cubic-bezier(.23,1,.32,1) forwards;
 }
@@ -1709,9 +1709,9 @@ function submitContact(e) {
   fillLight.position.set(-6, -2, -3);
   scene.add(fillLight);
 
-  // ── LOGO GROUP (para mover a animação inteira para a extrema direita) ──
+  // ── LOGO GROUP (para mover a animação inteira para a direita equilibrada) ──
   const logoGroup = new THREE.Group();
-  logoGroup.position.set(4.5, 0, 0); // Posiciona na extrema direita do espaço 3D
+  logoGroup.position.set(2.4, 0, 0); // Posição equilibrada no painel direito
   scene.add(logoGroup);
 
   // ── MAIN SHAPE: CDC Logo Planar Card ──
@@ -1833,7 +1833,7 @@ function submitContact(e) {
 
     camera.position.x += (mx * .4 - camera.position.x) * .06;
     camera.position.y += (my * .3 - camera.position.y) * .06;
-    camera.lookAt(0, 0, 0);
+    camera.lookAt(0.6, 0, 0);
 
     renderer.render(scene, camera);
   }
