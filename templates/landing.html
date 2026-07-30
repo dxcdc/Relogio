@@ -1744,7 +1744,7 @@ function submitContact(e) {
   // Sonda 2 (Laranja)
   const s2Geo = new THREE.SphereGeometry(0.15, 16, 16);
   const s2Mat = new THREE.MeshPhongMaterial({ color: 0xE84621, emissive: 0x471003, shininess: 100 });
-  const sonda2 = new THREE.Mesh(s2Geo, sonda2);
+  const sonda2 = new THREE.Mesh(s2Geo, s2Mat);
   logoGroup.add(sonda2);
 
   // Sonda 3 (Amarela)
