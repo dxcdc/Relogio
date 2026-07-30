@@ -38,8 +38,8 @@ body.theme-cdc .hero-h1 em {
   --bg: #0F172A !important;
   --bg-2: #1E293B !important;
   --ink: #F8FAFC !important;
-  --ink2: rgba(248, 250, 252, 0.7) !important;
-  --ink3: rgba(248, 250, 252, 0.2) !important;
+  --ink2: rgba(248, 250, 252, 0.75) !important;
+  --ink3: rgba(248, 250, 252, 0.25) !important;
   --green: #38BDF8 !important;
   --accent-color: #38BDF8 !important;
   --navy: #0284C7 !important;
@@ -66,6 +66,85 @@ body.theme-dark .btn-primary {
   background: linear-gradient(135deg, #0284C7, #38BDF8) !important;
   border-color: #38BDF8 !important;
   color: #FFFFFF !important;
+}
+
+/* ── SEÇÃO FALE COM A GENTE & FORMULÁRIOS NO MODO NOTURNO ── */
+[data-theme="dark"] .contact-sec,
+body.theme-dark .contact-sec {
+  background: #0B132B !important;
+  color: #F8FAFC !important;
+}
+
+[data-theme="dark"] .contact-sec .s-title,
+[data-theme="dark"] .contact-sec .s-body,
+[data-theme="dark"] .contact-sec .ci-label,
+[data-theme="dark"] .contact-sec .ci-value,
+[data-theme="dark"] .contact-sec .s-label,
+body.theme-dark .contact-sec .s-title,
+body.theme-dark .contact-sec .s-body,
+body.theme-dark .contact-sec .ci-label,
+body.theme-dark .contact-sec .ci-value {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .contact-sec .s-body,
+body.theme-dark .contact-sec .s-body {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+[data-theme="dark"] .contact-sec .ci-label,
+body.theme-dark .contact-sec .ci-label {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+[data-theme="dark"] .contact-form-wrap,
+body.theme-dark .contact-form-wrap {
+  background: #1C2541 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4) !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .contact-form-wrap .cf-title,
+[data-theme="dark"] .contact-form-wrap .cf-label,
+body.theme-dark .contact-form-wrap .cf-title,
+body.theme-dark .contact-form-wrap .cf-label {
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+}
+
+[data-theme="dark"] .contact-form-wrap .cf-input,
+[data-theme="dark"] .contact-form-wrap .cf-select,
+[data-theme="dark"] .contact-form-wrap .cf-textarea,
+body.theme-dark .contact-form-wrap .cf-input,
+body.theme-dark .contact-form-wrap .cf-select,
+body.theme-dark .contact-form-wrap .cf-textarea {
+  background: #0B132B !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .contact-form-wrap .cf-input::placeholder,
+[data-theme="dark"] .contact-form-wrap .cf-textarea::placeholder,
+body.theme-dark .contact-form-wrap .cf-input::placeholder,
+body.theme-dark .contact-form-wrap .cf-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
+[data-theme="dark"] .contact-form-wrap .cf-submit,
+body.theme-dark .contact-form-wrap .cf-submit {
+  background: linear-gradient(135deg, #0284C7, #38BDF8) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35) !important;
+}
+
+[data-theme="dark"] .ci-icon,
+body.theme-dark .ci-icon {
+  background: rgba(56, 189, 248, 0.15) !important;
+  color: #38BDF8 !important;
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
 }
 
 /* ── TEMA 4: AZUL CORPORATIVO (OCEAN) ── */
