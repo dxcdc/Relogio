@@ -33,11 +33,13 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 if DEBUG:
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,100.64.206.33,.ngrok-free.app,.ngrok-free.dev,.ngrok.io,.ngrok-free.com')
+_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,relogio.cdc.org.br,100.64.206.33,.ngrok-free.app,.ngrok-free.dev,.ngrok.io,.ngrok-free.com')
 ALLOWED_HOSTS = [h.strip() for h in _hosts_env.split(',') if h.strip()]
 
 
 CSRF_TRUSTED_ORIGINS = [
+    'https://relogio.cdc.org.br',
+    'http://relogio.cdc.org.br',
     'https://*.ngrok-free.app',
     'https://*.ngrok-free.dev',
     'https://*.ngrok-free.com',
@@ -47,6 +49,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://poeirao.cdc.org.br',
     'https://177.12.121.46',
 ]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 AUTH_USER_MODEL = 'core.OrangeUser'
 
