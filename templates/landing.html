@@ -1709,9 +1709,10 @@ function submitContact(e) {
   fillLight.position.set(-6, -2, -3);
   scene.add(fillLight);
 
-  // ── LOGO GROUP (para mover a animação inteira para a direita equilibrada) ──
+  // ── LOGO GROUP (para mover e redimensionar a animação inteira) ──
   const logoGroup = new THREE.Group();
   logoGroup.position.set(2.4, 0, 0); // Posição equilibrada no painel direito
+  logoGroup.scale.set(0.68, 0.68, 0.68); // Reduz o tamanho geral em 32% para um visual sofisticado e compacto
   scene.add(logoGroup);
 
   // ── MAIN SHAPE: CDC Logo Planar Card ──
