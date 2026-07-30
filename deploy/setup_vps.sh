@@ -27,7 +27,7 @@ python3 -m venv venv
 # 5. Configuração do .env de Produção
 if [ ! -f "/var/www/relogio/.env" ]; then
     echo "⚙️ Gerando arquivo .env de produção..."
-    SECRET_KEY=$(python3 -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
+    SECRET_KEY=$(./venv/bin/python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
     cat <<EOF > /var/www/relogio/.env
 DJANGO_SECRET_KEY=${SECRET_KEY}
 DJANGO_DEBUG=False
