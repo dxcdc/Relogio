@@ -354,52 +354,46 @@ a { text-decoration: none; color: inherit; }
 .lfoot-soc { width:36px;height:36px; border-radius:10px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07); display:flex; align-items:center; justify-content:center; font-size:14px; color:rgba(255,255,255,.3); transition:all .2s; }
 .lfoot-soc:hover { color:var(--green); border-color:rgba(0,170,69,.3); }
 
-/* ─── FOOTER — simplificado ─────────────────────── */
 .lfooter {
   background: #080808; color: rgba(255,255,255,.55);
-  padding: 56px 60px 0;
+  padding: 48px 60px 0;
   position: relative; z-index: 10;
 }
 .lfoot-inner {
-  display: flex; justify-content: space-between;
-  gap: 60px;
-  padding-bottom: 48px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 32px;
+  padding-bottom: 36px;
   border-bottom: 1px solid rgba(255,255,255,.07);
 }
-.lfoot-logo { height: 36px; object-fit: contain; margin-bottom: 20px; display: block; }
+.lfoot-brand-block { display: flex; align-items: center; gap: 20px; max-width: 520px; }
+.lfoot-logo { height: 52px; width: auto; object-fit: contain; display: block; flex-shrink: 0; }
 .lfoot-desc {
-  font-size: 13.5px; font-weight: 300;
-  color: rgba(255,255,255,.5); line-height: 1.85;
-  margin-bottom: 28px;
+  font-size: 13.5px; font-weight: 400;
+  color: rgba(255,255,255,.65); line-height: 1.6;
+  margin-bottom: 0;
 }
-.lfoot-contact { display: flex; flex-direction: column; gap: 12px; }
+.lfoot-contact { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
 .lfoot-contact-item {
   display: flex; align-items: center; gap: 10px;
-  font-size: 13px; font-weight: 400; color: rgba(255,255,255,.65);
+  font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.8);
   text-decoration: none; transition: color .2s;
 }
-.lfoot-contact-item i { color: var(--green); font-size: 14px; flex-shrink: 0; }
+.lfoot-contact-item i { color: var(--green); font-size: 15px; flex-shrink: 0; }
 .lfoot-contact-item:hover { color: #fff; }
-.lfoot-social-block { display: flex; flex-direction: column; gap: 16px; padding-top: 8px; align-items: flex-start; }
-.lfoot-social-title { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,.28); }
+.lfoot-social-block { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .lfoot-socials { display: flex; gap: 10px; }
 .lfoot-soc {
-  width: 38px; height: 38px; border-radius: 11px;
-  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+  width: 40px; height: 40px; border-radius: 12px;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
   display: flex; align-items: center; justify-content: center;
-  font-size: 15px; color: rgba(255,255,255,.5); text-decoration: none; transition: all .2s;
+  font-size: 16px; color: rgba(255,255,255,.7); text-decoration: none; transition: all .2s;
 }
-.lfoot-soc:hover { color: var(--green); border-color: rgba(0,170,69,.35); background: rgba(0,170,69,.07); }
-.lfoot-reset-link {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 12px; color: var(--green); transition: opacity .2s;
-  text-decoration: none;
-}
-.lfoot-reset-link:hover { opacity: .75; }
+.lfoot-soc:hover { color: var(--green); border-color: rgba(0,170,69,.35); background: rgba(0,170,69,.12); transform: translateY(-2px); }
 .lfoot-bottom {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 20px 0;
-  font-size: 12px; font-weight: 300; color: rgba(255,255,255,.28);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 6px;
+  padding: 24px 0;
+  font-size: 12.5px; font-weight: 400; color: rgba(255,255,255,.45);
 }
 
 @media(max-width:900px) {
@@ -431,9 +425,9 @@ a { text-decoration: none; color: inherit; }
   </a>
   <div class="lnav-links">
     <a href="{% url 'landing' %}"><i class="bi bi-house"></i> Página Inicial</a>
-    <a href="{% url 'landing' %}#contact"><i class="bi bi-envelope"></i> Contato</a>
+    <a href="mailto:rh@cdc.org.br"><i class="bi bi-envelope"></i> Contato</a>
     <a href="{% url 'password_reset_request' %}"><i class="bi bi-key"></i> Recuperar Acesso</a>
-    <a href="tel:08002814437"><i class="bi bi-telephone"></i> 0800 281 4437</a>
+    <a href="tel:8132246963"><i class="bi bi-telephone"></i> (81) 3224-6963</a>
   </div>
 </nav>
 
@@ -577,39 +571,38 @@ a { text-decoration: none; color: inherit; }
   <div class="lfoot-inner">
     
     <div class="lfoot-brand-block">
-      <img src="{% static 'img/cdc_logo_full.png' %}" alt="CDC Core" class="lfoot-logo">
-      <p class="lfoot-desc">A plataforma completa de RH para equipes do Centro CDC.<br>Controle total, em tempo real.</p>
-      <div class="lfoot-contact">
-        <a href="tel:08002814437" class="lfoot-contact-item">
-          <i class="bi bi-telephone-fill"></i>
-          0800 281 4437
-        </a>
-        <a href="{% url 'landing' %}#contact" class="lfoot-contact-item">
-          <i class="bi bi-envelope-fill"></i>
-          Enviar mensagem
-        </a>
-      </div>
+      <img src="{% static 'img/cdc_icon.png' %}" alt="CDC" class="lfoot-logo">
+      <p class="lfoot-desc">
+        A plataforma completa de RH para equipes do Centro CDC.<br>
+        Controle total, em tempo real.
+      </p>
     </div>
 
-
+    
+    <div class="lfoot-contact">
+      <a href="tel:8132246963" class="lfoot-contact-item">
+        <i class="bi bi-telephone-fill"></i>
+        (81) 3224-6963
+      </a>
+      <a href="mailto:rh@cdc.org.br" class="lfoot-contact-item">
+        <i class="bi bi-envelope-fill"></i>
+        rh@cdc.org.br
+      </a>
+    </div>
 
     
     <div class="lfoot-social-block">
-      <p class="lfoot-social-title">Redes Sociais</p>
       <div class="lfoot-socials">
-        <a class="lfoot-soc" href="#"><i class="bi bi-linkedin"></i></a>
-        <a class="lfoot-soc" href="#"><i class="bi bi-instagram"></i></a>
-        <a class="lfoot-soc" href="#"><i class="bi bi-twitter-x"></i></a>
+        <a class="lfoot-soc" href="https://www.linkedin.com/company/centro-de-desenvolvimento-e-cidadania/" target="_blank" rel="noopener" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+        <a class="lfoot-soc" href="https://www.instagram.com/cdc_osc/" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>
       </div>
-      <a href="{% url 'password_reset_request' %}" class="lfoot-reset-link">
-        <i class="bi bi-key"></i> Esqueci minha senha
-      </a>
     </div>
+
   </div>
 
   <div class="lfoot-bottom">
-    <span>CDC Core &copy; 2026 &mdash; Sistema de RH do Centro CDC</span>
-    <span>Todos os direitos reservados &nbsp;·&nbsp; Centro de Desenvolvimento e Cidadania - CDC</span>
+    <span>· CDC Relógio &copy; 2026 Todos os direitos reservados ·</span>
+    <span>· Centro de Desenvolvimento e Cidadania - CDC · CNPJ 03.970.166/0001-29 ·</span>
   </div>
 </footer>
 

@@ -3,58 +3,51 @@
 /* ═══ FOOTER ═════════════════════════════════════ */
 .public-footer {
   background: #080808; color: rgba(255,255,255,.55);
-  padding: 56px 60px 0;
+  padding: 48px 60px 0;
   position: relative; z-index: 10;
 }
 .public-foot-inner {
-  display: flex; justify-content: space-between;
-  gap: 60px;
-  padding-bottom: 48px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 32px;
+  padding-bottom: 36px;
   border-bottom: 1px solid rgba(255,255,255,.07);
 }
-.public-foot-brand-block { max-width: 400px; }
-.public-foot-logo { height: 36px; object-fit: contain; margin-bottom: 20px; display: block; }
+.public-foot-brand-block { display: flex; align-items: center; gap: 20px; max-width: 520px; }
+.public-foot-logo { height: 52px; width: auto; object-fit: contain; display: block; flex-shrink: 0; }
 .public-foot-desc {
-  font-size: 13.5px; font-weight: 300;
-  color: rgba(255,255,255,.5); line-height: 1.85;
-  margin-bottom: 28px;
+  font-size: 13.5px; font-weight: 400;
+  color: rgba(255,255,255,.65); line-height: 1.6;
+  margin-bottom: 0;
 }
-.public-foot-contact { display: flex; flex-direction: column; gap: 12px; }
+.public-foot-contact { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
 .public-foot-contact-item {
   display: flex; align-items: center; gap: 10px;
-  font-size: 13px; font-weight: 400; color: rgba(255,255,255,.65);
+  font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.8);
   text-decoration: none; transition: color .2s;
 }
-.public-foot-contact-item i { color: var(--green, #0dc02a); font-size: 14px; flex-shrink: 0; }
+.public-foot-contact-item i { color: var(--green, #0dc02a); font-size: 15px; flex-shrink: 0; }
 .public-foot-contact-item:hover { color: #fff; }
-.public-foot-social-block { display: flex; flex-direction: column; gap: 16px; padding-top: 8px; align-items: flex-start; }
-.public-foot-social-title { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,.28); margin-bottom: 0; }
+.public-foot-social-block { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .public-foot-socials { display: flex; gap: 10px; }
 .public-foot-soc {
-  width: 38px; height: 38px; border-radius: 11px;
-  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+  width: 40px; height: 40px; border-radius: 12px;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
   display: flex; align-items: center; justify-content: center;
-  font-size: 15px; color: rgba(255,255,255,.5); text-decoration: none; transition: all .2s;
+  font-size: 16px; color: rgba(255,255,255,.7); text-decoration: none; transition: all .2s;
 }
-.public-foot-soc:hover { color: var(--green, #0dc02a); border-color: rgba(0,170,69,.35); background: rgba(0,170,69,.07); }
-.public-foot-reset-link {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 12px; color: var(--green, #0dc02a); transition: opacity .2s;
-  text-decoration: none;
-}
-.public-foot-reset-link:hover { opacity: .75; }
+.public-foot-soc:hover { color: var(--green, #0dc02a); border-color: rgba(0,170,69,.35); background: rgba(0,170,69,.12); transform: translateY(-2px); }
 .public-foot-bottom {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 20px 0;
-  font-size: 12px; font-weight: 300; color: rgba(255,255,255,.28);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 6px;
+  padding: 24px 0;
+  font-size: 12.5px; font-weight: 400; color: rgba(255,255,255,.45);
 }
 
 @media(max-width:1024px) {
-  .public-footer { padding: 56px 32px 0; }
-  .public-foot-inner { flex-direction: column; gap: 40px; }
-}
-@media(max-width:640px) {
-  .public-foot-bottom { flex-direction: column; text-align: center; gap: 10px; }
+  .public-footer { padding: 40px 24px 0; }
+  .public-foot-inner { flex-direction: column; align-items: center; text-align: center; gap: 24px; }
+  .public-foot-brand-block { flex-direction: column; text-align: center; }
+  .public-foot-contact { align-items: center; }
 }
 </style>
 
@@ -62,36 +55,37 @@
   <div class="public-foot-inner">
     
     <div class="public-foot-brand-block">
-      <img src="{% static 'img/cdc_logo_full.png' %}" alt="CDC Core" class="public-foot-logo" style="max-height: 64px; width: auto; object-fit: contain;">
-      <p class="public-foot-desc">A plataforma completa de RH do Centro CDC.<br>Controle total, em tempo real.</p>
-      <div class="public-foot-contact">
-        <a href="tel:08002814437" class="public-foot-contact-item">
-          <i class="bi bi-telephone-fill"></i>
-          0800 281 4437
-        </a>
-        <a href="mailto:rh@cdc.org.br" class="public-foot-contact-item">
-          <i class="bi bi-envelope-fill"></i>
-          rh@cdc.org.br
-        </a>
-      </div>
+      <img src="{% static 'img/cdc_icon.png' %}" alt="CDC" class="public-foot-logo">
+      <p class="public-foot-desc">
+        A plataforma completa de RH para equipes do Centro CDC.<br>
+        Controle total, em tempo real.
+      </p>
+    </div>
+
+    
+    <div class="public-foot-contact">
+      <a href="tel:8132246963" class="public-foot-contact-item">
+        <i class="bi bi-telephone-fill"></i>
+        (81) 3224-6963
+      </a>
+      <a href="mailto:rh@cdc.org.br" class="public-foot-contact-item">
+        <i class="bi bi-envelope-fill"></i>
+        rh@cdc.org.br
+      </a>
     </div>
 
     
     <div class="public-foot-social-block">
-      <p class="public-foot-social-title">Redes Sociais</p>
       <div class="public-foot-socials">
-        <a class="public-foot-soc" href="#"><i class="bi bi-linkedin"></i></a>
-        <a class="public-foot-soc" href="#"><i class="bi bi-instagram"></i></a>
-        <a class="public-foot-soc" href="#"><i class="bi bi-twitter-x"></i></a>
+        <a class="public-foot-soc" href="https://www.linkedin.com/company/centro-de-desenvolvimento-e-cidadania/" target="_blank" rel="noopener" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+        <a class="public-foot-soc" href="https://www.instagram.com/cdc_osc/" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>
       </div>
-      <a href="{% url 'password_reset_request' %}" class="public-foot-reset-link">
-        <i class="bi bi-key"></i> Esqueci minha senha
-      </a>
     </div>
+
   </div>
 
   <div class="public-foot-bottom">
-    <span>CDC Core &copy; {% now 'Y' %} &mdash; Sistema de RH do Centro CDC</span>
-    <span>Todos os direitos reservados &nbsp;·&nbsp; Centro de Desenvolvimento e Cidadania - CDC</span>
+    <span>· CDC Relógio &copy; 2026 Todos os direitos reservados ·</span>
+    <span>· Centro de Desenvolvimento e Cidadania - CDC · CNPJ 03.970.166/0001-29 ·</span>
   </div>
 </footer>
