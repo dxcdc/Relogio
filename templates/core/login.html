@@ -345,46 +345,51 @@ a { text-decoration: none; color: inherit; }
 }
 .lfoot-top { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:48px; margin-bottom:52px; }
 .lfoot-brand { font-size:18px; font-weight:800; color:#fff; letter-spacing:-.5px; margin-bottom:14px; }
+.lfooter {
   background: #080808; color: rgba(255,255,255,.55);
-  padding: 24px 60px 16px;
+  padding: 28px 60px 20px;
   position: relative; z-index: 10;
   border-top: 1px solid rgba(255,255,255,.07);
 }
-.lfoot-inner {
+.lfoot-row-1 {
   display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: nowrap; gap: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(255,255,255,.07);
+  gap: 20px; flex-wrap: nowrap;
+  padding-bottom: 16px;
 }
-.lfoot-brand-block { display: flex; align-items: center; gap: 15px; }
-.lfoot-logo { height: 52px; width: auto; object-fit: contain; display: block; flex-shrink: 0; }
+.lfoot-brand-block { display: flex; align-items: center; gap: 12px; }
+.lfoot-logo { width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; }
 .lfoot-desc {
-  font-size: 13px; font-weight: 400;
-  color: rgba(255,255,255,.65); line-height: 1.4;
-  margin-bottom: 0; white-space: nowrap;
+  font-size: 13.5px; font-weight: 400;
+  color: rgba(255,255,255,.75); margin-bottom: 0;
+  white-space: nowrap;
 }
-.lfoot-contact { display: flex; flex-direction: row; gap: 20px; flex-shrink: 0; }
+.lfoot-social-block { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
+.lfoot-soc {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; color: rgba(255,255,255,.75); text-decoration: none; transition: all .2s;
+}
+.lfoot-soc:hover { color: var(--green); border-color: rgba(0,170,69,.35); background: rgba(0,170,69,.12); transform: translateY(-2px); }
+
+.lfoot-row-2 {
+  display: flex; align-items: center; justify-content: center;
+  gap: 32px; padding-top: 14px; padding-bottom: 20px;
+  border-top: 1px solid rgba(255,255,255,.05);
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
 .lfoot-contact-item {
   display: flex; align-items: center; gap: 8px;
   font-size: 13px; font-weight: 500; color: rgba(255,255,255,.8);
   text-decoration: none; transition: color .2s; white-space: nowrap;
 }
-.lfoot-contact-item i { color: var(--green); font-size: 14px; flex-shrink: 0; }
+.lfoot-contact-item i { color: var(--green); font-size: 14px; }
 .lfoot-contact-item:hover { color: #fff; }
-.lfoot-social-block { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-.lfoot-socials { display: flex; gap: 8px; }
-.lfoot-soc {
-  width: 34px; height: 34px; border-radius: 10px;
-  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; color: rgba(255,255,255,.7); text-decoration: none; transition: all .2s;
-}
-.lfoot-soc:hover { color: var(--green); border-color: rgba(0,170,69,.35); background: rgba(0,170,69,.12); transform: translateY(-2px); }
+
 .lfoot-bottom {
-  display: flex; flex-direction: row; align-items: center; justify-content: space-between;
-  text-align: center; gap: 12px;
-  padding: 14px 0 0;
-  font-size: 12px; font-weight: 400; color: rgba(255,255,255,.45);
+  display: flex; flex-direction: row; align-items: center; justify-content: center;
+  text-align: center; gap: 12px; padding-top: 16px;
+  font-size: 12px; font-weight: 400; color: rgba(255,255,255,.4);
 }
 
 @media(max-width:900px) {
@@ -550,32 +555,32 @@ a { text-decoration: none; color: inherit; }
 </main>
 
 <footer class="lfooter">
-  <div class="lfoot-inner">
+  <!-- LINHA 1: Logo + Texto + Redes Sociais no mesmo nível -->
+  <div class="lfoot-row-1">
     <div class="lfoot-brand-block">
-      <p class="lfoot-desc">
-        A plataforma completa de RH para equipes do CDC.
-      </p>
-    </div>
-
-    <div class="lfoot-contact">
-      <a href="tel:8132246963" class="lfoot-contact-item">
-        <i class="bi bi-telephone-fill"></i>
-        (81) 3224-6963
-      </a>
-      <a href="mailto:rh@cdc.org.br" class="lfoot-contact-item">
-        <i class="bi bi-envelope-fill"></i>
-        rh@cdc.org.br
-      </a>
+      <img src="{% static 'img/cdc_icon.png' %}" alt="CDC" class="lfoot-logo">
+      <span class="lfoot-desc">A plataforma completa de RH para equipes do CDC.</span>
     </div>
 
     <div class="lfoot-social-block">
-      <div class="lfoot-socials">
-        <a class="lfoot-soc" href="https://www.linkedin.com/company/centro-de-desenvolvimento-e-cidadania/" target="_blank" rel="noopener" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
-        <a class="lfoot-soc" href="https://www.instagram.com/cdc_osc/" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>
-      </div>
+      <a class="lfoot-soc" href="https://www.linkedin.com/company/centro-de-desenvolvimento-e-cidadania/" target="_blank" rel="noopener" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+      <a class="lfoot-soc" href="https://www.instagram.com/cdc_osc/" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>
     </div>
   </div>
 
+  <!-- LINHA 2: Contatos centralizados -->
+  <div class="lfoot-row-2">
+    <a href="tel:8132246963" class="lfoot-contact-item">
+      <i class="bi bi-telephone-fill"></i>
+      (81) 3224-6963
+    </a>
+    <a href="mailto:rh@cdc.org.br" class="lfoot-contact-item">
+      <i class="bi bi-envelope-fill"></i>
+      rh@cdc.org.br
+    </a>
+  </div>
+
+  <!-- LINHA BASE: Copyright & CNPJ -->
   <div class="lfoot-bottom">
     <span>· CDC Relógio &copy; 2026 Todos os direitos reservados ·</span>
     <span>· Centro de Desenvolvimento e Cidadania - CDC · CNPJ 03.970.166/0001-29 ·</span>
