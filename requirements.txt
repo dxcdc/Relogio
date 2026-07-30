@@ -74,4 +74,7 @@ firebase-admin==7.4.0
 psycopg2-binary==2.9.12
 django-tenants==3.10.1
 drf-spectacular==0.29.0
+google-auth-oauthlib>=1.0.0
+google-api-python-client>=2.0.0
+
 
