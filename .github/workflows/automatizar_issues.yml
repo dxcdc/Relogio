@@ -1,0 +1,68 @@
+name: Automatizar Issues do Repositório
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  create-issues:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Executar Automação de Issues via GitHub CLI
+        run: |
+          create_issue_if_not_exists() {
+            local title="$1"
+            local label="$2"
+            local body="$3"
+
+            echo "🔍 Verificando se a issue \"$title\" existe..."
+            local exists
+            exists=$(gh issue list --state all --search "\"$title\" in:title" --json number --jq '. | length')
+
+            if [ "$exists" -gt 0 ]; then
+              echo "⚠️ A issue \"$title\" já existe. Pulando criação."
+            else
+              echo "➕ Criando a issue \"$title\"..."
+              gh issue create --title "$title" --label "$label" --body "$body"
+            fi
+          }
+
+          # Issue 1: Integração Mattermost
+          create_issue_if_not_exists \
+            "[FEAT] Integração com o Chat Mattermost" \
+            "enhancement" \
+            "### 📌 Descrição
+          Implementar integração do CDC Relógio com o chat Mattermost corporativo para envio de notificações em tempo real.
+
+          ### 🎯 Casos de Uso
+          - Notificar em canais de equipe quando batidas de ponto forem registradas (ao vivo).
+          - Alertas de atrasos ou inconsistências enviados aos supervisores de departamento.
+          - Divulgação automática de novos anúncios da plataforma.
+
+          ### ✅ Critérios de Aceite
+          - [ ] Criar modulo de configuração de Webhooks de entrada do Mattermost no painel de administração.
+          - [ ] Desenvolver webhook sender integrado aos sinais (signals) de batida de ponto.
+          - [ ] Permitir filtrar canais e notificações por projeto/filial.
+          - [ ] Documentar formato do payload de notificação."
+
+          # Issue 2: Restrição de Domínio @cdc.org.br
+          create_issue_if_not_exists \
+            "[FEAT] Restrição de Login para Domínio Único @cdc.org.br" \
+            "enhancement" \
+            "### 📌 Descrição
+          Garantir conformidade e segurança da plataforma restringindo o acesso exclusivamente a e-mails contendo o domínio oficial `@cdc.org.br`.
+
+          ### 🎯 Casos de Uso
+          - Cadastro de novos colaboradores restrito a e-mails institucionais.
+          - Bloqueio de conexões Google OAuth originadas por e-mails pessoais ou externos.
+
+          ### ✅ Critérios de Aceite
+          - [ ] Adicionar validação de domínio no formulário de login e cadastro.
+          - [ ] Bloquear autenticação com o Google se o e-mail não terminar com \`@cdc.org.br\` na view \`core/views_google.py\`.
+          - [ ] Exibir mensagem de alerta clara para o usuário informando a restrição de domínio."
+
+          echo "✨ Processo concluído com sucesso."
