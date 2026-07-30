@@ -356,13 +356,15 @@ a { text-decoration: none; color: inherit; }
 
 .lfooter {
   background: #080808; color: rgba(255,255,255,.55);
-  padding: 16px 60px;
+  padding: 48px 60px 24px;
   position: relative; z-index: 10;
   border-top: 1px solid rgba(255,255,255,.07);
 }
 .lfoot-inner {
   display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: nowrap; gap: 24px;
+  flex-wrap: wrap; gap: 32px;
+  padding-bottom: 36px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
 }
 .lfoot-brand-block { display: flex; align-items: center; gap: 20px; max-width: 520px; }
 .lfoot-logo { height: 52px; width: auto; object-fit: contain; display: block; flex-shrink: 0; }
@@ -609,16 +611,17 @@ a { text-decoration: none; color: inherit; }
       </a>
     </div>
 
-    <div style="font-size: 12px; color: rgba(255,255,255,.3); white-space: nowrap;">
-      CDC Relógio &copy; 2026
-    </div>
-
     <div class="lfoot-social-block">
       <div class="lfoot-socials">
         <a class="lfoot-soc" href="https://www.linkedin.com/company/centro-de-desenvolvimento-e-cidadania/" target="_blank" rel="noopener" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
         <a class="lfoot-soc" href="https://www.instagram.com/cdc_osc/" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>
       </div>
     </div>
+  </div>
+
+  <div class="lfoot-bottom">
+    <span>· CDC Relógio &copy; 2026 Todos os direitos reservados ·</span>
+    <span>· Centro de Desenvolvimento e Cidadania - CDC · CNPJ 03.970.166/0001-29 ·</span>
   </div>
 </footer>
 
