@@ -1709,9 +1709,9 @@ function submitContact(e) {
   fillLight.position.set(-6, -2, -3);
   scene.add(fillLight);
 
-  // ── LOGO GROUP (para mover a animação inteira para a direita) ──
+  // ── LOGO GROUP (para mover a animação inteira para a extrema direita) ──
   const logoGroup = new THREE.Group();
-  logoGroup.position.set(3.8, -.1, 0); // Desloca para a extrema direita
+  logoGroup.position.set(4.5, 0, 0); // Posiciona na extrema direita do espaço 3D
   scene.add(logoGroup);
 
   // ── MAIN SHAPE: CDC Logo Planar Card ──
@@ -1831,9 +1831,9 @@ function submitContact(e) {
     particles.rotation.y = t * .03;
     particles.rotation.x = my * .03;
 
-    camera.position.x += (3.2 + mx * .4 - camera.position.x) * .06;
-    camera.position.y += (.5 + my * .3 - camera.position.y) * .06;
-    camera.lookAt(3.8, 0, 0);
+    camera.position.x += (mx * .4 - camera.position.x) * .06;
+    camera.position.y += (my * .3 - camera.position.y) * .06;
+    camera.lookAt(0, 0, 0);
 
     renderer.render(scene, camera);
   }
