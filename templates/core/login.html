@@ -411,40 +411,7 @@ a { text-decoration: none; color: inherit; }
 
 <link rel="stylesheet" href="{% static 'css/themes_extended.css' %}">
 
-<nav class="lnav">
-  <a href="{% url 'landing' %}" class="lnav-brand">
-    <div class="lnav-mark"><img src="{% static 'img/cdc_icon.png' %}" alt="CDC"></div>
-    CDC <span style="font-weight:300;opacity:.5;margin-left:3px">RH</span>
-  </a>
-  <div class="lnav-links">
-    <a href="{% url 'landing' %}"><i class="bi bi-house"></i> Página Inicial</a>
-    <a href="mailto:rh@cdc.org.br"><i class="bi bi-envelope"></i> Contato</a>
-    <a href="{% url 'password_reset_request' %}"><i class="bi bi-key"></i> Recuperar Acesso</a>
-    <a href="tel:8132246963"><i class="bi bi-telephone"></i> (81) 3224-6963</a>
-  </div>
-  
-  <div class="theme-dropdown">
-    <button type="button" class="theme-dropdown-btn" onclick="toggleThemeDropdown(event)">
-      <i class="bi bi-palette-fill"></i>
-      <span id="currentThemeLabel">Temas</span>
-      <i class="bi bi-chevron-down" style="font-size: 10px; opacity: 0.6;"></i>
-    </button>
-    <div class="theme-dropdown-menu" id="themeDropdownMenu">
-      <button type="button" class="theme-opt" onclick="selectTheme('default')">
-        <span class="theme-dot" style="background: #00AA45;"></span> CDC Essencial
-      </button>
-      <button type="button" class="theme-opt" onclick="selectTheme('cdc')">
-        <span class="theme-dot" style="background: #E84621;"></span> CDC Logo (Vinho/Laranja)
-      </button>
-      <button type="button" class="theme-opt" onclick="selectTheme('dark')">
-        <span class="theme-dot" style="background: #0F172A;"></span> Modo Noturno (Dark)
-      </button>
-      <button type="button" class="theme-opt" onclick="selectTheme('ocean')">
-        <span class="theme-dot" style="background: #0284C7;"></span> Azul Corporativo (Ocean)
-      </button>
-    </div>
-  </div>
-</nav>
+{% include 'components/public_nav.html' %}
 
 
 <main class="lpage">

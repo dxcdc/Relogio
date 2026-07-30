@@ -122,9 +122,24 @@ nav.sc {
   animation: up .8s .1s cubic-bezier(.23,1,.32,1) forwards;
 }
 
+.hero-h1 {
+  font-size: clamp(32px, 3.6vw, 52px);
+  font-weight: 800; line-height: 1.15;
+  letter-spacing: -1.5px;
+  margin-bottom: 20px;
+}
+.hero-h1 .w { display: block; overflow: hidden; }
+.hero-h1 .w span { display: inline-block; color: var(--ink); }
+.hero-word-dynamic {
+  color: var(--navy) !important;
+  font-weight: 900;
+  display: inline-block;
+  transition: transform 0.4s cubic-bezier(.23,1,.32,1), opacity 0.4s;
+}
+
 .hero-sub {
-  font-size: 20px; font-weight: 400; line-height: 1.55;
-  color: var(--ink); max-width: 460px; margin-bottom: 36px;
+  font-size: 16px; font-weight: 400; line-height: 1.6;
+  color: var(--ink2); max-width: 460px; margin-bottom: 32px;
   opacity: 0; transform: translateY(16px);
   animation: up .9s .4s cubic-bezier(.23,1,.32,1) forwards;
 }
@@ -513,12 +528,16 @@ section { position: relative; }
 
   <div class="hero-left">
     <div class="hero-eyebrow">— Sistema de RH do Centro CDC</div>
-    <p class="hero-sub">Plataforma de RH corporativo feita para o ritmo ininterrupto das unidades do Centro CDC. Controle de ponto inteligente, licenças, performance e muito mais.</p>
+    <h1 class="hero-h1">
+      <div class="w"><span>Tecnologia para cuidar</span></div>
+      <div class="w"><span>de quem faz acontecer,</span></div>
+      <div class="w"><span id="heroWord" class="hero-word-dynamic">+ Organização</span></div>
+    </h1>
+    <p class="hero-sub">Apoiando os Colaboradores e parceiros em sua rotina de trabalho.</p>
     <a href="/login/" class="hero-btn">
       <span>Começar agora</span>
       <i class="bi bi-arrow-right"></i>
     </a>
-
   </div>
 
   <div class="hero-canvas-wrap" id="hero-3d"></div>
@@ -1882,6 +1901,26 @@ document.querySelectorAll('.hero-btn, .btn-dark, .nav-cta').forEach(btn => {
   btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
 });
 
+/* ═══════════════════════════════════════════════════
+   HERO WORD CYCLE (+ Organização, + Cuidado, + Proximidade)
+═══════════════════════════════════════════════════ */
+const heroWords = ["+ Organização", "+ Cuidado", "+ Proximidade"];
+let hwIdx = 0;
+const hwEl = document.getElementById('heroWord');
+if (hwEl) {
+  setInterval(() => {
+    hwEl.style.opacity = '0';
+    hwEl.style.transform = 'translateY(-15px)';
+    setTimeout(() => {
+      hwIdx = (hwIdx + 1) % heroWords.length;
+      hwEl.textContent = heroWords[hwIdx];
+      hwEl.style.transform = 'translateY(15px)';
+      void hwEl.offsetWidth; // force reflow
+      hwEl.style.opacity = '1';
+      hwEl.style.transform = 'translateY(0)';
+    }, 350);
+  }, 3000);
+}
 </script>
 </body>
 </html>

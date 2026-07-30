@@ -3,7 +3,7 @@
 .public-site-nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 28px 60px;
+  padding: 24px 60px;
   background: transparent;
   transition: background .6s, padding .5s, border-bottom .5s, backdrop-filter .5s;
 }
@@ -70,8 +70,8 @@
 }
 
 @media(max-width:1024px) {
-  .public-site-nav { padding: 20px 32px; }
-  .public-site-nav.sc, body:not(.is-landing) .public-site-nav { padding: 14px 32px; }
+  .public-site-nav { padding: 18px 24px; }
+  .public-site-nav.sc, body:not(.is-landing) .public-site-nav { padding: 14px 24px; }
   .public-nav-links { display: none; }
 }
 </style>
@@ -114,10 +114,17 @@
       </div>
     </div>
 
-    <a href="/login/" class="public-nav-cta">
-      <i class="bi bi-box-arrow-in-right"></i>
-      Login
-    </a>
+    {% if request.path == '/login/' or request.path == '/login' %}
+      <a href="/" class="public-nav-cta">
+        <i class="bi bi-house"></i>
+        Início
+      </a>
+    {% else %}
+      <a href="/login/" class="public-nav-cta">
+        <i class="bi bi-box-arrow-in-right"></i>
+        Login
+      </a>
+    {% endif %}
   </div>
 </nav>
 
