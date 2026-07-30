@@ -129,20 +129,35 @@ nav.sc {
   font-size: clamp(28px, 3.2vw, 44px);
   font-weight: 800; line-height: 1.2;
   letter-spacing: -1px; color: var(--ink);
-  margin-bottom: 16px; max-width: 520px;
+  margin-bottom: 0; max-width: 520px;
+}
+
+/* Subtítulo como continuação direta do título */
+.hero-sub {
+  font-size: clamp(20px, 2.2vw, 30px);
+  font-weight: 700; line-height: 1.2;
+  letter-spacing: -.5px;
+  color: var(--ink); max-width: 520px;
+  margin-top: 4px; margin-bottom: 20px;
+  opacity: 0; transform: translateY(16px);
+  animation: up .9s .35s cubic-bezier(.23,1,.32,1) forwards;
+}
+
+/* Letreiro acima do botão */
+.hero-ticker {
+  font-size: clamp(14px, 1.4vw, 18px);
+  font-weight: 700; letter-spacing: .5px;
+  color: var(--navy);
+  margin-bottom: 28px;
+  opacity: 0; transform: translateY(16px);
+  animation: up .9s .55s cubic-bezier(.23,1,.32,1) forwards;
+  display: flex; align-items: center; gap: 8px;
 }
 .hero-word-dynamic {
   color: var(--navy) !important;
   font-weight: 900;
   display: inline-block;
   transition: transform 0.4s cubic-bezier(.23,1,.32,1), opacity 0.4s;
-}
-
-.hero-sub {
-  font-size: 14px; font-weight: 400; line-height: 1.55;
-  color: var(--ink2); max-width: 380px; margin-bottom: 20px;
-  opacity: 0; transform: translateY(16px);
-  animation: up .9s .4s cubic-bezier(.23,1,.32,1) forwards;
 }
 .hero-btn {
   display: inline-flex; align-items: center; gap: 10px;
@@ -529,13 +544,19 @@ section { position: relative; }
 
   <div class="hero-left">
     <div class="hero-eyebrow">— Sistema de RH do CDC</div>
+
     <h1 class="hero-h1">
       Tecnologia para cuidar de quem faz acontecer,
-      <span id="heroWord" class="hero-word-dynamic">+ Organização</span>
     </h1>
+
     <p class="hero-sub">
       Apoiando os Colaboradores e parceiros em sua rotina de trabalho.
     </p>
+
+    <div class="hero-ticker">
+      <span id="heroWord" class="hero-word-dynamic">+ Organização</span>
+    </div>
+
     <a href="/login/" class="hero-btn">
       <span>Começar agora</span>
       <i class="bi bi-arrow-right"></i>
