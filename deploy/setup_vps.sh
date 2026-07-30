@@ -38,6 +38,7 @@ fi
 
 # 6. Migrações e Coleta de Estáticos
 echo "🗄️ Executando migrações do banco e estáticos..."
+mkdir -p /var/www/relogio/logs
 ./venv/bin/python manage.py migrate --noinput
 ./venv/bin/python manage.py collectstatic --noinput
 

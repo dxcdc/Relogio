@@ -326,7 +326,9 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 
-import os
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
