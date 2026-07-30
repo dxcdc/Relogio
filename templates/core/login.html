@@ -351,40 +351,42 @@ a { text-decoration: none; color: inherit; }
   position: relative; z-index: 10;
   border-top: 1px solid rgba(255,255,255,.07);
 }
-.lfoot-row-1 {
+.lfoot-inner {
   display: flex; align-items: center; justify-content: space-between;
   gap: 20px; flex-wrap: nowrap;
-  padding-bottom: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.lfoot-brand-group {
+  display: flex; flex-direction: column; gap: 10px;
 }
 .lfoot-brand-block { display: flex; align-items: center; gap: 12px; }
 .lfoot-logo { width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; }
 .lfoot-desc {
   font-size: 13.5px; font-weight: 400;
-  color: rgba(255,255,255,.75); margin-bottom: 0;
+  color: rgba(255,255,255,.8); margin-bottom: 0;
   white-space: nowrap;
 }
+.lfoot-contact {
+  display: flex; align-items: center; gap: 24px;
+  padding-left: 44px;
+}
+.lfoot-contact-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 500; color: rgba(255,255,255,.75);
+  text-decoration: none; transition: color .2s; white-space: nowrap;
+}
+.lfoot-contact-item i { color: var(--green); font-size: 14px; }
+.lfoot-contact-item:hover { color: #fff; }
+
 .lfoot-social-block { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
 .lfoot-soc {
-  width: 36px; height: 36px; border-radius: 10px;
+  width: 38px; height: 38px; border-radius: 10px;
   background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
   display: flex; align-items: center; justify-content: center;
   font-size: 15px; color: rgba(255,255,255,.75); text-decoration: none; transition: all .2s;
 }
 .lfoot-soc:hover { color: var(--green); border-color: rgba(0,170,69,.35); background: rgba(0,170,69,.12); transform: translateY(-2px); }
-
-.lfoot-row-2 {
-  display: flex; align-items: center; justify-content: center;
-  gap: 32px; padding-top: 14px; padding-bottom: 20px;
-  border-top: 1px solid rgba(255,255,255,.05);
-  border-bottom: 1px solid rgba(255,255,255,.05);
-}
-.lfoot-contact-item {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 13px; font-weight: 500; color: rgba(255,255,255,.8);
-  text-decoration: none; transition: color .2s; white-space: nowrap;
-}
-.lfoot-contact-item i { color: var(--green); font-size: 14px; }
-.lfoot-contact-item:hover { color: #fff; }
 
 .lfoot-bottom {
   display: flex; flex-direction: row; align-items: center; justify-content: center;
@@ -555,29 +557,30 @@ a { text-decoration: none; color: inherit; }
 </main>
 
 <footer class="lfooter">
-  <!-- LINHA 1: Logo + Texto + Redes Sociais no mesmo nível -->
-  <div class="lfoot-row-1">
-    <div class="lfoot-brand-block">
-      <img src="{% static 'img/cdc_icon.png' %}" alt="CDC" class="lfoot-logo">
-      <span class="lfoot-desc">A plataforma completa de RH para equipes do CDC.</span>
+  <div class="lfoot-inner">
+    <!-- Bloco Esquerda: Marca + Contatos logo em baixo da logo -->
+    <div class="lfoot-brand-group">
+      <div class="lfoot-brand-block">
+        <img src="{% static 'img/cdc_icon.png' %}" alt="CDC" class="lfoot-logo">
+        <span class="lfoot-desc">A plataforma completa de RH para equipes do CDC.</span>
+      </div>
+      <div class="lfoot-contact">
+        <a href="tel:8132246963" class="lfoot-contact-item">
+          <i class="bi bi-telephone-fill"></i>
+          (81) 3224-6963
+        </a>
+        <a href="mailto:rh@cdc.org.br" class="lfoot-contact-item">
+          <i class="bi bi-envelope-fill"></i>
+          rh@cdc.org.br
+        </a>
+      </div>
     </div>
 
+    <!-- Bloco Direita: Redes Sociais -->
     <div class="lfoot-social-block">
       <a class="lfoot-soc" href="https://www.linkedin.com/company/centro-de-desenvolvimento-e-cidadania/" target="_blank" rel="noopener" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
       <a class="lfoot-soc" href="https://www.instagram.com/cdc_osc/" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>
     </div>
-  </div>
-
-  <!-- LINHA 2: Contatos centralizados -->
-  <div class="lfoot-row-2">
-    <a href="tel:8132246963" class="lfoot-contact-item">
-      <i class="bi bi-telephone-fill"></i>
-      (81) 3224-6963
-    </a>
-    <a href="mailto:rh@cdc.org.br" class="lfoot-contact-item">
-      <i class="bi bi-envelope-fill"></i>
-      rh@cdc.org.br
-    </a>
   </div>
 
   <!-- LINHA BASE: Copyright & CNPJ -->

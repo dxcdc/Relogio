@@ -1,6 +1,6 @@
 {% load static %}
 <style>
-/* ═══ FOOTER INSTITUCIONAL EM 2 LINHAS ═════════════════ */
+/* ═══ FOOTER INSTITUCIONAL ═════════════════════════════ */
 .public-footer {
   background: #080808; color: rgba(255,255,255,.55);
   padding: 28px 60px 20px;
@@ -8,11 +8,16 @@
   border-top: 1px solid rgba(255,255,255,.07);
 }
 
-/* LINHA 1: Logo + Texto + Redes Sociais no MESMO NÍVEL */
-.public-foot-row-1 {
+.public-foot-inner {
   display: flex; align-items: center; justify-content: space-between;
   gap: 20px; flex-wrap: nowrap;
-  padding-bottom: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+/* Bloco Esquerda: Marca + Contatos logo abaixo da logo */
+.public-foot-brand-group {
+  display: flex; flex-direction: column; gap: 10px;
 }
 .public-foot-brand-block {
   display: flex; align-items: center; gap: 12px;
@@ -22,15 +27,31 @@
 }
 .public-foot-desc {
   font-size: 13.5px; font-weight: 400;
-  color: rgba(255,255,255,.75); margin-bottom: 0;
+  color: rgba(255,255,255,.8); margin-bottom: 0;
   white-space: nowrap;
 }
+
+/* Contatos dispostos abaixo da logo/texto */
+.public-foot-contact {
+  display: flex; align-items: center; gap: 24px;
+  padding-left: 44px;
+}
+.public-foot-contact-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 500; color: rgba(255,255,255,.75);
+  text-decoration: none; transition: color .2s;
+  white-space: nowrap;
+}
+.public-foot-contact-item i { color: var(--green, #0dc02a); font-size: 14px; }
+.public-foot-contact-item:hover { color: #fff; }
+
+/* Bloco Direita: Redes Sociais */
 .public-foot-social-block {
   display: flex; align-items: center; gap: 8px;
   margin-left: auto; flex-shrink: 0;
 }
 .public-foot-soc {
-  width: 36px; height: 36px; border-radius: 10px;
+  width: 38px; height: 38px; border-radius: 10px;
   background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
   display: flex; align-items: center; justify-content: center;
   font-size: 15px; color: rgba(255,255,255,.75); text-decoration: none;
@@ -43,22 +64,6 @@
   transform: translateY(-2px);
 }
 
-/* LINHA 2: Contatos Centralizados */
-.public-foot-row-2 {
-  display: flex; align-items: center; justify-content: center;
-  gap: 32px; padding-top: 14px; padding-bottom: 20px;
-  border-top: 1px solid rgba(255,255,255,.05);
-  border-bottom: 1px solid rgba(255,255,255,.05);
-}
-.public-foot-contact-item {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 13px; font-weight: 500; color: rgba(255,255,255,.8);
-  text-decoration: none; transition: color .2s;
-  white-space: nowrap;
-}
-.public-foot-contact-item i { color: var(--green, #0dc02a); font-size: 14px; }
-.public-foot-contact-item:hover { color: #fff; }
-
 /* LINHA BASE: Copyright & CNPJ */
 .public-foot-bottom {
   display: flex; flex-direction: row; align-items: center; justify-content: center;
@@ -68,38 +73,40 @@
 
 @media(max-width:900px) {
   .public-footer { padding: 24px 20px 16px; }
-  .public-foot-row-1 { flex-direction: column; text-align: center; gap: 14px; }
+  .public-foot-inner { flex-direction: column; text-align: center; gap: 16px; }
+  .public-foot-brand-group { align-items: center; text-align: center; }
+  .public-foot-contact { padding-left: 0; justify-content: center; flex-wrap: wrap; }
   .public-foot-social-block { margin-left: 0; }
   .public-foot-desc { white-space: normal; }
-  .public-foot-row-2 { flex-direction: column; gap: 12px; }
   .public-foot-bottom { flex-direction: column; gap: 6px; }
 }
 </style>
 
 <footer class="public-footer">
-  <!-- LINHA 1: Logo + Texto + Redes Sociais no mesmo nível -->
-  <div class="public-foot-row-1">
-    <div class="public-foot-brand-block">
-      <img src="{% static 'img/cdc_icon.png' %}" alt="CDC" class="public-foot-logo">
-      <span class="public-foot-desc">A plataforma completa de RH para equipes do CDC.</span>
+  <div class="public-foot-inner">
+    <!-- Bloco Esquerda: Marca + Contatos logo em baixo da logo -->
+    <div class="public-foot-brand-group">
+      <div class="public-foot-brand-block">
+        <img src="{% static 'img/cdc_icon.png' %}" alt="CDC" class="public-foot-logo">
+        <span class="public-foot-desc">A plataforma completa de RH para equipes do CDC.</span>
+      </div>
+      <div class="public-foot-contact">
+        <a href="tel:8132246963" class="public-foot-contact-item">
+          <i class="bi bi-telephone-fill"></i>
+          (81) 3224-6963
+        </a>
+        <a href="mailto:rh@cdc.org.br" class="public-foot-contact-item">
+          <i class="bi bi-envelope-fill"></i>
+          rh@cdc.org.br
+        </a>
+      </div>
     </div>
 
+    <!-- Bloco Direita: Redes Sociais -->
     <div class="public-foot-social-block">
       <a class="public-foot-soc" href="https://www.linkedin.com/company/centro-de-desenvolvimento-e-cidadania/" target="_blank" rel="noopener" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
       <a class="public-foot-soc" href="https://www.instagram.com/cdc_osc/" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>
     </div>
-  </div>
-
-  <!-- LINHA 2: Contatos centralizados -->
-  <div class="public-foot-row-2">
-    <a href="tel:8132246963" class="public-foot-contact-item">
-      <i class="bi bi-telephone-fill"></i>
-      (81) 3224-6963
-    </a>
-    <a href="mailto:rh@cdc.org.br" class="public-foot-contact-item">
-      <i class="bi bi-envelope-fill"></i>
-      rh@cdc.org.br
-    </a>
   </div>
 
   <!-- LINHA BASE: Copyright & CNPJ -->
