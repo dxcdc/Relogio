@@ -1721,22 +1721,23 @@ function submitContact(e) {
   fillLight.position.set(-6, -2, -3);
   scene.add(fillLight);
 
-  // ── MAIN SHAPE: Torus Knot (elegant abstract form) ──
-  const knotGeo = new THREE.TorusKnotGeometry(1.4, .38, 180, 18, 2, 3);
-  const knotMat = new THREE.MeshPhongMaterial({
-    color: 0x0a0a1a,
-    specular: 0x00aa45,
-    shininess: 120,
-    wireframe: false,
+  // ── MAIN SHAPE: CDC Logo Planar Card ──
+  const textureLoader = new THREE.TextureLoader();
+  const cdcTexture = textureLoader.load('/static/img/cdc_icon.png');
+  
+  const knotGeo = new THREE.PlaneGeometry(2.5, 2.5);
+  const knotMat = new THREE.MeshBasicMaterial({
+    map: cdcTexture,
+    transparent: true,
+    side: THREE.DoubleSide
   });
   const knot = new THREE.Mesh(knotGeo, knotMat);
   knot.position.set(2, -.2, 0);
-  knot.castShadow = true;
   scene.add(knot);
 
-  // Wireframe overlay on the knot
-  const knotWireGeo = new THREE.TorusKnotGeometry(1.42, .38, 80, 10, 2, 3);
-  const knotWireMat = new THREE.MeshBasicMaterial({ color: 0x00aa45, wireframe: true, transparent: true, opacity: .08 });
+  // Criamos uma versão sutil de brilho atrás do logo
+  const knotWireGeo = new THREE.RingGeometry(1.4, 1.42, 64);
+  const knotWireMat = new THREE.MeshBasicMaterial({ color: 0x00aa45, transparent: true, opacity: .3 });
   const knotWire = new THREE.Mesh(knotWireGeo, knotWireMat);
   knotWire.position.copy(knot.position);
   scene.add(knotWire);
@@ -1793,8 +1794,8 @@ function submitContact(e) {
 
     t += .007;
 
-    knot.rotation.x = t * .4 + my * .12;
-    knot.rotation.y = t * .55 + mx * .15;
+    knot.rotation.y = Math.sin(t * 0.8) * 0.35 + mx * 0.25;
+    knot.rotation.x = Math.cos(t * 0.5) * 0.12 + my * 0.15;
     knotWire.rotation.copy(knot.rotation);
 
     ring1.rotation.z = t * .22;
