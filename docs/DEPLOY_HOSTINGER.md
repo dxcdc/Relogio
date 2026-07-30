@@ -32,14 +32,26 @@ curl -sSL https://raw.githubusercontent.com/dxcdc/Relogio/main/deploy/setup_vps.
 
 ## 🔍 O que o script de automação faz sozinho:
 
-1. **Instala o Nginx, Python 3, Git e Certbot SSL.**
+1. **Instala o Nginx, Python 3, Git e dependências de compilação.**
 2. **Clona o repositório oficial `https://github.com/dxcdc/Relogio.git`.**
-3. **Cria o ambiente virtual Python (`venv`) e instala todas as dependências (`requirements.txt` + `gunicorn`).**
-4. **Gera a chave secreta de produção (`DJANGO_SECRET_KEY`) e configura o arquivo `.env`.**
+3. **Cria o ambiente virtual Python (`venv`) e instala as dependências do `requirements.txt` + `gunicorn`.**
+4. **Gera a chave secreta de produção (`DJANGO_SECRET_KEY`) e configura o arquivo `.env` com pasta de logs.**
 5. **Executa a criação de tabelas no banco de dados (`migrate`) e coleta estáticos (`collectstatic`).**
 6. **Configura o serviço Gunicorn no Systemd (`systemctl enable relogio`).**
-7. **Configura o Nginx com Proxy Reverso para o socket UNIX.**
-8. **Emite e instala automaticamente o Certificado SSL HTTPS Gratuito via Let's Encrypt.**
+7. **Configura o Nginx com Proxy Reverso na porta `8080` (evitando conflito com a porta 80 do Easypanel/Traefik).**
+
+---
+
+## 🌐 Integração com o Easypanel / Traefik da VPS
+
+Como a VPS Hostinger gerencia as portas `80` e `443` externamente pelo **Traefik**, é necessário adicionar a regra de roteamento para direcionar `relogio.cdc.org.br` para a nossa porta `8080`.
+
+1. O script instala automaticamente a configuração de roteamento em `/etc/easypanel/traefik/config/relogio-custom.yaml`.
+2. A Cloudflare deve estar com o apontamento **A** configurado como **DNS Only (Nuvem Cinza)** ou devidamente roteada com regras na porta `8080`.
+
+> [!IMPORTANT]
+> Se você receber o erro **`ERR_TOO_MANY_REDIRECTS`** ao acessar o domínio, ou encontrar problemas de portas já em uso com o Easypanel, consulte o manual de soluções:
+> 👉 **[Resolução de Conflitos e Loop de Redirecionamento SSL](file:///home/vier/Documentos/Code/CDC/Core/CDC/docs/RESOLUCAO_CONFLITO_PORTAS_EASYPANEL.md)**
 
 ---
 
