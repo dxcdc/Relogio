@@ -6,7 +6,7 @@ After=network.target
 User=root
 Group=www-data
 WorkingDirectory=/var/www/relogio
-ExecStart=/var/www/relogio/venv/bin/gunicorn --workers 3 --bind unix:/run/relogio_cdc.sock cdcRH.wsgi:application
+ExecStart=/var/www/relogio/venv/bin/gunicorn --workers 3 --bind unix:/run/relogio_cdc.sock --bind 127.0.0.1:8008 cdcRH.wsgi:application
 
 Restart=always
 RestartSec=3s
