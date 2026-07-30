@@ -105,7 +105,7 @@ nav.sc {
   overflow: hidden;
   display: flex;
   background: var(--bg);
-  padding-top: 46px;
+  padding-top: 0;
 }
 
 /* Left text panel */
@@ -113,7 +113,7 @@ nav.sc {
   position: relative; z-index: 10;
   display: flex; flex-direction: column;
   justify-content: center;
-  padding: 10px 0 10px 60px;
+  padding: 0 0 0 60px;
   width: 44%;
   flex-shrink: 0;
 }
@@ -1709,10 +1709,10 @@ function submitContact(e) {
   fillLight.position.set(-6, -2, -3);
   scene.add(fillLight);
 
-  // ── LOGO GROUP (para mover e redimensionar a animação inteira) ──
+  // ── LOGO GROUP (para mover e posicionar a animação inteira no tamanho normal) ──
   const logoGroup = new THREE.Group();
   logoGroup.position.set(2.4, 0, 0); // Posição equilibrada no painel direito
-  logoGroup.scale.set(0.68, 0.68, 0.68); // Reduz o tamanho geral em 32% para um visual sofisticado e compacto
+  logoGroup.scale.set(1, 1, 1); // Restaura o tamanho de antes
   scene.add(logoGroup);
 
   // ── MAIN SHAPE: CDC Logo Planar Card ──
