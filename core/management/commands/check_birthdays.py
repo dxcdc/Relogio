@@ -90,7 +90,7 @@ class Command(BaseCommand):
                     defaults={
                         'first_name': 'Sistema', 
                         'last_name': 'CDC',
-                        'work_email': 'sistema@netline.com',
+                        'work_email': 'gt.transformadigital@cdc.org.br',
                         'is_time_tracking_exempt': True
                     }
                 )

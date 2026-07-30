@@ -11,7 +11,7 @@ def teste_email_resend(request):
 
     params = {
         "from": "Acme <onboarding@resend.dev>", 
-        "to": ["rhnetlinetelecom@gmail.com"], 
+        "to": ["rh@cdc.org.br"], 
         "subject": "Apenas teste",
         "html": html_content,
     }

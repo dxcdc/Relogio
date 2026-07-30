@@ -17,7 +17,7 @@ class RecruitmentTestCase(TestCase):
         # Create a mock user
         self.user = User.objects.create_user(
             username="test_admin", 
-            email="test_admin@netline.com.br", 
+            email="test_admin@cdc.com.br", 
             password="testpassword",
             role="Admin"  # Assuming role field exists on User
         )

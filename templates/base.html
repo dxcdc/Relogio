@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}CDC{% endblock %} | CDC Core</title>
-<link rel="icon" type="image/png" href="/static/img/netline_icon.png">
+<link rel="icon" type="image/png" href="/static/img/cdc_icon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -263,8 +263,8 @@
     
     <nav class="sidebar" id="sidebar">
         <style>
-            .logo-full { display: block; height: 36px; object-fit: contain; margin-right: 18px; }
-            .logo-icon { display: none; height: 32px; object-fit: contain; }
+            .logo-full { display: block; max-height: 72px; width: 100%; max-width: 220px; object-fit: contain; }
+            .logo-icon { display: none; height: 42px; object-fit: contain; }
             .sidebar.collapsed .logo-full { display: none; }
             .sidebar.collapsed .logo-icon { display: block; margin: 0 auto; }
             .sidebar.collapsed .sidebar-brand { padding: 20px 0; display: flex; justify-content: center; }
@@ -396,8 +396,8 @@
         </script>
         <div class="sidebar-brand">
             <div class="brand-logo" style="justify-content: center; width: 100%;">
-                <img src="/static/img/netline_logo_white.png" alt="CDC Logo" class="logo-full">
-                <img src="/static/img/netline_icon.png" alt="CDC Icon" class="logo-icon">
+                <img src="/static/img/cdc_logo_full.png" alt="CDC Logo" class="logo-full">
+                <img src="/static/img/cdc_icon.png" alt="CDC Icon" class="logo-icon">
             </div>
         </div>
 
@@ -417,7 +417,7 @@
                 {% if user.is_admin or user.is_hr %}
                 <div class="menu-item-group {% if 'buzz' in request.path and 'novidades' not in request.path and 'bugs' not in request.path and 'netgram-moderation' not in request.path %}active-group{% endif %}">
                     <a href="{% url 'buzz_feed' %}" class="menu-item {% if 'buzz' in request.path and 'novidades' not in request.path and 'bugs' not in request.path and 'denuncias' not in request.path and 'central-suporte' not in request.path and 'netgram-moderation' not in request.path %}active{% endif %} has-submenu">
-                        <span class="d-flex align-items-center"><i class="bi bi-chat-heart me-2"></i> Netgram</span>
+                        <span class="d-flex align-items-center"><i class="bi bi-chat-heart me-2"></i> Avisos</span>
                         <i class="bi bi-chevron-down submenu-arrow"></i>
                     </a>
                     <div class="submenu-wrapper">
@@ -431,7 +431,7 @@
                 </div>
                 {% else %}
                 <a href="{% url 'buzz_feed' %}" class="menu-item {% if 'buzz' in request.path and 'novidades' not in request.path and 'bugs' not in request.path and 'netgram-moderation' not in request.path %}active{% endif %}">
-                    <i class="bi bi-chat-heart"></i> Netgram
+                    <i class="bi bi-chat-heart"></i> Avisos
                 </a>
                 {% endif %}
                 {% endif %}
@@ -674,7 +674,7 @@
                         </a>
                         {% endif %}
                         <a href="{% url 'netgram_user_moderation' %}" class="menu-item {% if request.resolver_match.url_name == 'netgram_user_moderation' %}active{% endif %}" style="padding-left: 36px; font-size: 12.5px; opacity: 0.85;">
-                            <i class="bi bi-person-x" style="font-size: 13px;"></i> Moderação Netgram
+                            <i class="bi bi-person-x" style="font-size: 13px;"></i> Moderação de Avisos
                         </a>
                         {% if user_modules.integrations and user.role == 'Admin' %}
                         {% if EXIBIR_INTEGRACOES_WEB or user.is_superuser %}
@@ -736,8 +736,8 @@
                 </button>
                 <!-- Logo CDC na topbar — visível somente quando o sidebar está oculto (<992px) -->
                 <a href="{% url 'dashboard' %}" class="d-flex align-items-center gap-2 text-decoration-none d-lg-none" style="flex-shrink: 0;">
-                    <img src="/static/img/netline_icon.png" alt="CDC" style="height: 30px; width: 30px; object-fit: contain;">
-                    <span style="font-size: 15px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px;">CDC <span style="font-weight: 300; opacity: 0.5; margin-left: 2px;">RH</span></span>
+                    <img src="/static/img/cdc_icon.png" alt="CDC" style="height: 32px; width: auto; object-fit: contain;">
+                    <span style="font-size: 15px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px;">CDC <span style="font-weight: 300; opacity: 0.5; margin-left: 2px;">Core</span></span>
                 </a>
                 <div class="topbar-breadcrumb d-none d-lg-block flex-shrink-0">
                     {% block breadcrumb %}{% endblock %}

@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CDC Core — Sistema Corporativo para Provedoras</title>
-<link rel="icon" type="image/png" href="/static/img/netline_icon.png">
+<link rel="icon" type="image/png" href="/static/img/cdc_icon.png">
 <meta name="description" content="CDC Core — Gestão de pessoas para o ritmo 24/7 das unidades do Centro CDC.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;700;900&display=swap" rel="stylesheet">
@@ -560,7 +560,7 @@ section { position: relative; }
 
 <section class="cta-sec">
   <div class="wrap cta-inner" rv>
-    <div class="cta-bg-text">NETLINE</div>
+    <div class="cta-bg-text">CDC</div>
     <h2 class="cta-title">Pronto para<span>começar?</span></h2>
     <p class="cta-sub">Faça login agora e transforme a gestão de pessoas da sua provedora de internet.</p>
     <a href="/login/" class="btn-dark" style="margin:0 auto;font-size:13px;padding:20px 60px">
@@ -898,7 +898,7 @@ section { position: relative; }
       #rdp-aus > div:last-child > div:last-child { display: none !important; }
       #rdp-aus > div:first-child > span { font-size: 9px !important; padding: 5px 10px !important; }
 
-      /* Netgram: collapse sidebar */
+      /* Avisos: collapse sidebar */
       #rdp-net > div[style*="grid-template-columns"] {
         grid-template-columns: 1fr !important;
       }
@@ -922,8 +922,8 @@ section { position: relative; }
         <div class="rdash-top-clock">00:00:00 / 08:00:00</div>
         <div class="rdash-top-pill"><i class="bi bi-play-fill"></i> Iniciar</div>
         <div class="rdash-top-user">
-          <div class="rdash-top-av">JE</div>
-          JULIA ETIENE
+          <div class="rdash-top-av">FV</div>
+          Fernando Vier
         </div>
       </div>
 
@@ -931,13 +931,13 @@ section { position: relative; }
         
         <div class="rdash-sidebar">
           <div class="rdash-logo">
-            <img src="{% static 'img/netline_icon.png' %}" alt="CDC">
+            <img src="{% static 'img/cdc_icon.png' %}" alt="CDC">
             <div class="rdash-logo-name">CDC</div>
           </div>
 
           <div class="rds-label">Principal</div>
           <div class="rds-item act" id="rdsi-dash"><i class="bi bi-grid-1x2"></i>Dashboard</div>
-          <div class="rds-item" id="rdsi-net"><i class="bi bi-broadcast"></i>Netgram</div>
+          <div class="rds-item" id="rdsi-net"><i class="bi bi-broadcast"></i>Avisos</div>
           <div class="rds-item" id="rdsi-org"><i class="bi bi-diagram-3"></i>Organograma</div>
 
           <div class="rds-sep"></div>
@@ -949,8 +949,8 @@ section { position: relative; }
           <div class="rds-item" id="rdsi-fun"><i class="bi bi-people"></i>Minhas Trocas</div>
 
           <div class="rds-user">
-            <div class="rds-user-av">JE</div>
-            <div class="rds-user-name">JULIA ETIENE</div>
+            <div class="rds-user-av">FV</div>
+            <div class="rds-user-name">Fernando Vier</div>
           </div>
           <div class="rds-item" style="color:rgba(255,255,255,.3)"><i class="bi bi-box-arrow-right"></i>Sair</div>
         </div>
@@ -1009,12 +1009,12 @@ section { position: relative; }
           
           <div class="rd-panel" id="rdp-net">
             <div class="rdash-page-title" style="display:flex;align-items:center;gap:8px">
-              <i class="bi bi-broadcast" style="color:var(--green)"></i>Netgram
+              <i class="bi bi-broadcast" style="color:var(--green)"></i>Avisos
               <span style="font-size:10px;padding:3px 10px;border-radius:20px;background:rgba(0,170,69,.1);color:var(--green);font-weight:500">Social Feed</span>
             </div>
             <div style="background:linear-gradient(120deg,#7c3aed,#4f46e5);border-radius:12px;padding:14px 18px;color:#fff;margin-bottom:16px;font-size:11px;line-height:1.6">
-              <div style="font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px"><i class="bi bi-broadcast"></i>Sobre o Netgram</div>
-              O Netgram &eacute; o feed social interno da empresa. Conecte-se, compartilhe novidades e celebre conquistas todos os dias!
+              <div style="font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px"><i class="bi bi-broadcast"></i>Sobre o Avisos</div>
+              O Avisos &eacute; o feed social interno da empresa. Conecte-se, compartilhe novidades e celebre conquistas todos os dias!
             </div>
             <div style="display:grid;grid-template-columns:1fr 200px;gap:14px">
               <div>
@@ -1031,7 +1031,7 @@ section { position: relative; }
                 <div style="text-align:center;padding:40px 0;color:#ccc">
                   <i class="bi bi-chat-square-dots" style="font-size:32px;display:block;margin-bottom:10px"></i>
                   <div style="font-size:13px;font-weight:600;color:#bbb">Sem posts ainda</div>
-                  <div style="font-size:11px;margin-top:4px">Seja o primeiro a publicar no Netgram!</div>
+                  <div style="font-size:11px;margin-top:4px">Seja o primeiro a publicar em Avisos!</div>
                 </div>
               </div>
               <div class="rdash-card">
@@ -1380,8 +1380,8 @@ section { position: relative; }
           </div>
           <div class="ps-rows">
             <div class="ps-row">
-              <div class="ps-av" style="background:rgba(0,170,69,.15);color:var(--green)">JE</div>
-              <div class="ps-meta"><div class="ps-name">Julia Etiene</div><div class="ps-dept">Projeto Atitude - Recife | Breve</div></div>
+              <div class="ps-av" style="background:rgba(0,170,69,.15);color:var(--green)">FV</div>
+              <div class="ps-meta"><div class="ps-name">Fernando Vier</div><div class="ps-dept">Projeto Atitude - Recife | Breve</div></div>
               <div class="ps-chips">
                 <span class="chip ci">08:01</span><span class="chip co">12:00</span>
                 <span class="chip ci">13:00</span><span class="chip co">17:00</span>

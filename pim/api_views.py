@@ -539,7 +539,7 @@ class OnboardingAPIView(APIView):
                 email_msg = EmailMultiAlternatives(
                     subject="Bem-vindo(a) ao CDC. Suas credenciais de acesso",
                     body=f"Olá, {first_name}! Seu usuário é {username} e sua senha é {temp_password}.",
-                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@netlineplay.com.br'),
+                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@cdc.org.br'),
                     to=[email],
                 )
                 email_msg.attach_alternative(html_content, "text/html")

@@ -728,7 +728,7 @@ def password_reset_request(request):
             context_data = {
                 'user_name': user.first_name or user.username,
                 'code': code,
-                'logo_url': request.build_absolute_uri(static('img/netline_logo_white.png'))
+                'logo_url': request.build_absolute_uri(static('img/cdc_logo_full.png'))
             }
             
             try:

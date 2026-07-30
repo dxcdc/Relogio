@@ -44,7 +44,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.ngrok.io',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
-    'https://poeirao.netlineplay.com.br',
+    'https://poeirao.cdc.org.br',
     'https://177.12.121.46',
 ]
 
@@ -212,7 +212,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'netline-rh-cache',
+        'LOCATION': 'cdc-rh-cache',
     }
 }
 
@@ -240,7 +240,7 @@ DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "onboarding@resend.dev
 
 
 
-RESEND_TEST_EMAIL = os.environ.get("RESEND_TEST_EMAIL", "rhnetlinetelecom@gmail.com")
+RESEND_TEST_EMAIL = os.environ.get("RESEND_TEST_EMAIL", "rh@cdc.org.br")
 
     
 

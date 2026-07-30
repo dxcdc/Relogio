@@ -285,7 +285,7 @@ class PunchView(APIView):
                 try:
                     from geopy.geocoders import Nominatim
                     from attendance.models import AttendancePunch as _P
-                    geo = Nominatim(user_agent='netlinehr_app')
+                    geo = Nominatim(user_agent='cdcrh_app')
                     loc_data = geo.reverse((lat, lng), timeout=5, exactly_one=True)
                     if loc_data:
                         _P.objects.filter(pk=punch_id).update(location_address=loc_data.address)

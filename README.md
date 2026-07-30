@@ -1,56 +1,37 @@
-# CDC Core — Plataforma Operacional
+# CDC Relógio — Sistema de Ponto Eletrônico & Frequência
 
-Sistema central da **CDC** — plataforma Django multi-app para automação de operações internas: ponto eletrônico, monitoramento de contas Gmail e ferramentas de produtividade do dia a dia.
-
----
-
-## 🗂️ Apps do Projeto
-
-| App | Descrição | Status |
-| :--- | :--- | :--- |
-| `core` | Usuários, autenticação, middleware e APIs base | ✅ Ativo |
-| `pim` | Gestão de informações pessoais (PIM) | ✅ Ativo |
-| `attendance` | Registro e espelho de ponto eletrônico | ✅ Ativo |
-| `time_tracking` | Banco de horas e rastreamento de jornada | ✅ Ativo |
-| `leave` | Folgas, licenças e ausências | ✅ Ativo |
-| `buzz` | Feed de comunicação interna | ✅ Ativo |
-| `agenda` | Agendamento de salas, veículos e eventos | ✅ Ativo |
-| `claim` | Reembolsos e despesas corporativas | ✅ Ativo |
-| `payroll` | Folha de pagamento | ✅ Ativo |
-| `performance` | Avaliações de desempenho | ✅ Ativo |
-| `recruitment` | Recrutamento e seleção | ✅ Ativo |
-| `emails` | Templates e envio de e-mails | ✅ Ativo |
-| `admin_app` | Painel administrativo customizado | ✅ Ativo |
-
-### 🔜 Apps Planejados
-
-| App | Descrição | Status |
-| :--- | :--- | :--- |
-| `relogio` | Relógio de ponto mobile/web com geolocalização | 🔲 Planejado |
-| `gmail_monitor` | Acompanhamento e triagem de contas Gmail da equipe | 🔲 Planejado |
-| `toolbox` | Ferramentas avulsas de produtividade e automação do dia a dia | 🔲 Planejado |
+Sistema oficial de **Relógio de Ponto, Gestão de Frequência e Banco de Horas** do **Centro de Desenvolvimento e Cidadania (CDC)**.
 
 ---
 
-## 🛠️ Stack Tecnológico
+## ⏱️ Funcionalidades Principais
 
-- **Backend:** Python 3.x / Django 5.2
-- **Banco de Dados:** PostgreSQL (Neon Serverless)
+- **Registro de Ponto Inteligente:** Batidas de entrada, almoço e saída com geolocalização e registro de IP.
+- **Tratamento de Inconsistências:** Solicitação e aprovação de ajustes de batidas esquecidas com anexo de atestados.
+- **Espelho de Ponto Eletrônico:** Emissão mensal de folhas de frequência prontas para conferência e assinatura.
+- **Banco de Horas em Tempo Real:** Apuração automática de créditos e débitos de jornada.
+- **Escalas e Turnos Flexíveis:** Padrões de escala (12x36, 5x2, 6x1) com suporte a trocas de turno e substituições.
+- **Integração com Google Calendar:** Sincronização automática de escalas com calendários corporativos.
+
+---
+
+## 🛠️ Stack Tecnológica
+
+- **Backend:** Python 3.13 / Django 5.2
+- **Banco de Dados:** PostgreSQL (Neon Serverless) / SQLite (Fallback em Dev)
 - **Autenticação:** JWT (`djangorestframework-simplejwt`) + `django-axes`
-- **API:** Django REST Framework + drf-spectacular (OpenAPI)
-- **Armazenamento de Mídia:** Cloudinary
+- **API:** Django REST Framework + drf-spectacular (OpenAPI / Swagger)
+- **Notificações Push:** Firebase Cloud Messaging (FCM)
 - **E-mail:** Resend via `django-anymail`
-- **Push Notifications:** Firebase Cloud Messaging
-- **Multi-tenancy:** `django-tenants`
 
 ---
 
-## 🚀 Instalação Local
+## 🚀 Instalação e Execução Local
 
 ```bash
 # 1. Clone o repositório
-git clone git@github.com:dxcdc/Core.git
-cd Core
+git clone git@github.com:dxcdc/Relogio.git
+cd Relogio
 
 # 2. Crie e ative o ambiente virtual
 python -m venv venv
@@ -60,60 +41,35 @@ source venv/bin/activate        # Linux/macOS
 # 3. Instale as dependências
 pip install -r requirements.txt
 
-# 4. Configure as variáveis de ambiente
-cp .env.example .env
-# Edite o .env com as credenciais reais
-
-# 5. Rode as migrações
+# 4. Rode as migrações
 python manage.py migrate
 
-# 6. Crie um superusuário
-python manage.py createsuperuser
-
-# 7. Inicie o servidor
+# 5. Inicie o servidor local
 python manage.py runserver
 ```
 
----
-
-## 📁 Estrutura de Diretórios
-
-```text
-Core/
-├── CDC/          # Settings, URLs raiz, WSGI/ASGI
-├── core/               # App base: usuários, auth, middleware
-├── pim/                # Informações pessoais
-├── attendance/         # Ponto eletrônico
-├── time_tracking/      # Banco de horas
-├── leave/              # Folgas e licenças
-├── buzz/               # Feed interno
-├── agenda/             # Agendamentos
-├── claim/              # Reembolsos
-├── payroll/            # Folha de pagamento
-├── performance/        # Avaliações
-├── recruitment/        # Recrutamento
-├── emails/             # Templates de e-mail
-├── admin_app/          # Admin customizado
-├── templates/          # Templates HTML globais
-├── static/             # Arquivos estáticos
-├── media/              # Uploads (não versionado)
-├── manage.py
-├── requirements.txt
-├── .env.example        # Template de variáveis de ambiente
-├── .gitignore
-├── SECURITY.md
-└── LICENSE
-```
+Acesse no navegador: **`http://127.0.0.1:8000/`**
 
 ---
 
-## 🔐 Segurança
+## 📖 Documentação Completa
 
-Nunca suba arquivos `.env`, certificados `.pem` ou senhas para o Git.
-Consulte [SECURITY.md](SECURITY.md) para reportar vulnerabilidades.
+Acesse a pasta [`docs/funcionalidades/`](./docs/funcionalidades/) para visualizar os manuais procedimentais e diagramas de fluxo:
+
+- ⏱️ [Manual do Ponto Eletrônico & Banco de Horas](./docs/funcionalidades/01_ponto_e_frequencia.md)
+- 👥 [Manual de Cadastro de Funcionários & Organograma](./docs/funcionalidades/02_pim_colaboradores.md)
+- 🏖️ [Manual de Férias e Ausências](./docs/funcionalidades/03_folgas_e_licencas.md)
+- 📢 [Manual do Canal de Avisos](./docs/funcionalidades/04_avisos_e_comunicacao.md)
+
+---
+
+## 🔐 Segurança e Governança
+
+Consulte a política de segurança em [SECURITY.md](SECURITY.md).
+Nunca suba arquivos `.env`, certificados ou chaves privadas para o repositório.
 
 ---
 
 ## 📄 Licença
 
-Distribuído sob a licença definida em [LICENSE](LICENSE).
+Propriedade exclusiva do **Centro de Desenvolvimento e Cidadania - CDC**. Consulte [LICENSE](LICENSE).

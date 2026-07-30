@@ -624,7 +624,7 @@ def send_content_report_email(report):
                     msg = EmailMultiAlternatives(
                         subject=f"[CDC] Nova denúncia de conteúdo #{report.id}",
                         body=f"Uma nova denúncia (#{report.id}) de {report_type_display.lower()} foi recebida e requer moderação.",
-                        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@netlineplay.com.br'),
+                        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@cdc.org.br'),
                         to=admin_hr_emails
                     )
                     msg.attach_alternative(html_admin, "text/html")
@@ -668,7 +668,7 @@ def send_content_report_email(report):
                 msg = EmailMultiAlternatives(
                     subject=f"[Netgram] {subject}",
                     body=body_text,
-                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@netlineplay.com.br'),
+                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@cdc.org.br'),
                     to=[reporter_email]
                 )
                 msg.attach_alternative(html_reporter, "text/html")

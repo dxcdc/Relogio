@@ -133,7 +133,7 @@ class ForgotPasswordRequestView(APIView):
             recipient = user.email
             
             # Tenta pegar logo se possível
-            logo_url = request.build_absolute_uri(static('img/netline_logo_white.png'))
+            logo_url = request.build_absolute_uri(static('img/cdc_logo_full.png'))
 
             html_content = f"""
             <!DOCTYPE html>
@@ -187,7 +187,7 @@ class ForgotPasswordRequestView(APIView):
                                         
                                         <!-- Footer Text Green -->
                                         <p style="margin: 0; font-size: 12px; color: #00AA45; text-align: left; line-height: 1.5;">
-                                            Para maiores informações, entre em contato pelo Whatsapp 0800 281 4437 ou<br>acesse netlinetelecom.com.br.
+                                            Para maiores informações, entre em contato pelo Whatsapp 0800 281 4437 ou<br>acesse cdc.org.br.
                                         </p>
                                     </td>
                                 </tr>

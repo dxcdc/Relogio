@@ -625,7 +625,7 @@ def roster_calendar_feed(request, signed_token):
 
     # 1. Adicionar exceções de turno
     for ov in overrides:
-        uid = f"override-{ov.id}-{employee.id}@netlinerh.com.br"
+        uid = f"override-{ov.id}-{employee.id}@cdc.org.br"
         stamp = timezone.now().strftime("%Y%m%dT%H%M%SZ")
         
         if ov.override_type == ShiftOverride.TYPE_WORK:
@@ -683,7 +683,7 @@ def roster_calendar_feed(request, signed_token):
 
     # 2. Adicionar licenças aprovadas
     for lv in leaves:
-        uid = f"leave-{lv.id}-{employee.id}@netlinerh.com.br"
+        uid = f"leave-{lv.id}-{employee.id}@cdc.org.br"
         stamp = timezone.now().strftime("%Y%m%dT%H%M%SZ")
         
         start_str = lv.date.strftime("%Y%m%d")

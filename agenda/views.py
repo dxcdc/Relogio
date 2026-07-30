@@ -187,7 +187,7 @@ def send_event_invitation_emails(event, participants, is_update=False):
         location_str += event.city.name
 
     subject = f"[Atualização] {event.title}" if is_update else f"Convite: {event.title}"
-    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@netlineplay.com.br')
+    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@cdc.org.br')
 
     event_type_lower = event.event_type.lower() if event.event_type else ''
     is_recruitment = event_type_lower in ['entrevista', 'teste psicológico', 'teste prático']
@@ -221,7 +221,7 @@ def send_event_invitation_emails(event, participants, is_update=False):
                 plain_text_parts.append(f"Local: {location_str}\n")
             if event.meeting_link:
                 plain_text_parts.append(f"Link: {event.meeting_link}\n")
-            plain_text_parts.append("\nAcesse a agenda: https://poeirao.netlineplay.com.br/agenda/\n")
+            plain_text_parts.append("\nAcesse a agenda: https://poeirao.cdc.org.br/agenda/\n")
             plain_text = "".join(plain_text_parts)
 
             from emails.utils import send_custom_email
@@ -849,7 +849,7 @@ def export_event_ics(request, event_id):
         "CALSCALE:GREGORIAN",
         "METHOD:REQUEST",
         "BEGIN:VEVENT",
-        f"UID:{event.id}@netlinerh.com.br",
+        f"UID:{event.id}@cdc.org.br",
         f"DTSTAMP:{dtstamp}",
         f"DTSTART:{dtstart}",
         f"DTEND:{dtend}",
@@ -857,7 +857,7 @@ def export_event_ics(request, event_id):
         f"DESCRIPTION:{description}" if description else "",
         f"LOCATION:{location_str}" if location_str else "",
         f"URL:{event.meeting_link}" if event.meeting_link else "",
-        f"ORGANIZER;CN={organizer_name}:MAILTO:{event.organizer.work_email or 'rh@netlinerh.com.br'}" if event.organizer else "",
+        f"ORGANIZER;CN={organizer_name}:MAILTO:{event.organizer.work_email or 'rh@cdc.org.br'}" if event.organizer else "",
         "STATUS:CONFIRMED",
         "END:VEVENT",
         "END:VCALENDAR",

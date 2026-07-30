@@ -193,7 +193,7 @@ def trigger_birthday_notification(sender, user, request, **kwargs):
                         defaults={
                             'first_name': 'Sistema', 
                             'last_name': 'CDC',
-                            'work_email': 'sistema@netline.com',
+                            'work_email': 'gt.transformadigital@cdc.org.br',
                             'is_time_tracking_exempt': True
                         }
                     )
@@ -371,7 +371,7 @@ def create_buzz_post_for_announcement(sender, instance, created, **kwargs):
                     defaults={
                         'first_name': 'Sistema', 
                         'last_name': 'CDC',
-                        'work_email': 'sistema@netline.com',
+                        'work_email': 'gt.transformadigital@cdc.org.br',
                         'is_time_tracking_exempt': True
                     }
                 )

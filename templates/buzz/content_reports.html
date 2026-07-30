@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Denúncias do Netgram{% endblock %}
+{% block title %}Denúncias de Avisos{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -105,7 +105,7 @@
 {% block breadcrumb %}
 <a href="{% url 'changelog_list' %}" class="text-muted text-decoration-none">Novidades</a>
 <i class="bi bi-chevron-right mx-1 text-muted" style="font-size: 11px;"></i>
-<span style="color: var(--accent-color);">Denúncias do Netgram</span>
+<span style="color: var(--accent-color);">Denúncias de Avisos</span>
 {% endblock %}
 
 {% block content %}
@@ -117,7 +117,7 @@
             <i class="bi bi-flag-fill"></i>
         </div>
         <div>
-            <h1 class="page-title mb-0">Denúncias do Netgram</h1>
+            <h1 class="page-title mb-0">Denúncias de Avisos</h1>
             <p class="text-muted mb-0" style="font-size:13px;">
                 Denúncias pendentes devem ser analisadas em até <strong>24h</strong>
             </p>
@@ -359,10 +359,10 @@ function openDetail(id) {
         }).join('')}
         </div>`;
 
-    // Link para ver no Netgram
+    // Link para ver em Avisos
     const netgramLink = !r.content_deleted
         ? `<a href="/buzz/" target="_blank" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#10b981;text-decoration:none;font-weight:600;margin-top:6px;padding:4px 10px;background:#f0fdf4;border-radius:20px;transition:all 0.2s;" onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
-            <i class="bi bi-box-arrow-up-right" style="font-size:11px;"></i> Ver no Netgram
+            <i class="bi bi-box-arrow-up-right" style="font-size:11px;"></i> Ver nos Avisos
            </a>`
         : '';
 

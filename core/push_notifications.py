@@ -64,7 +64,7 @@ def send_push(user, title: str, body: str, data: dict = None) -> bool:
         android=messaging.AndroidConfig(
             priority='high',
             notification=messaging.AndroidNotification(
-                channel_id='netlinerh_channel_id',
+                channel_id='cdcrh_channel_id',
                 sound='default'
             )
         ),
@@ -135,7 +135,7 @@ def send_push_to_users(users, title: str, body: str, data: dict = None) -> int:
             android=messaging.AndroidConfig(
                 priority='high',
                 notification=messaging.AndroidNotification(
-                    channel_id='netlinerh_channel_id',
+                    channel_id='cdcrh_channel_id',
                     sound='default'
                 )
             ),
