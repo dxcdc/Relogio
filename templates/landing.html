@@ -1709,13 +1709,15 @@ function submitContact(e) {
    (estilo Sougen: objeto grande, elegante, flutuante)
 ═══════════════════════════════════════════════════ */
 (function() {
+  if (typeof THREE === 'undefined') { console.warn('Three.js não carregou'); return; }
   const wrap = document.getElementById('hero-3d');
-  if (!wrap) return;
+  const canvas = document.getElementById('hero-canvas');
+  if (!wrap || !canvas) return;
+  if (window.innerWidth <= 900) return; // skip on mobile
 
-  const W = wrap.clientWidth || window.innerWidth * .6;
   const H = window.innerHeight;
 
-  const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('hero-canvas'), antialias: true, alpha: true });
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, H);
   renderer.setClearColor(0xf0f0f0, 0);
@@ -1738,28 +1740,55 @@ function submitContact(e) {
   fillLight.position.set(-6, -2, -3);
   scene.add(fillLight);
 
-  // ── LOGO GROUP (para mover e posicionar a animação inteira no tamanho normal) ──
+  // ── LOGO GROUP ──
   const logoGroup = new THREE.Group();
-  logoGroup.position.set(2.4, 0, 0); // Posição equilibrada no painel direito
-  logoGroup.scale.set(1, 1, 1); // Restaura o tamanho de antes
+  logoGroup.position.set(2.4, 0, 0);
+  logoGroup.scale.set(1, 1, 1);
   scene.add(logoGroup);
 
+  // ── Fallback: gerar textura via canvas caso a imagem falhe ──
+  function createFallbackTexture() {
+    const c = document.createElement('canvas');
+    c.width = 512; c.height = 512;
+    const ctx = c.getContext('2d');
+    // Fundo circular com gradiente
+    const grad = ctx.createRadialGradient(256, 256, 60, 256, 256, 240);
+    grad.addColorStop(0, '#E84621');
+    grad.addColorStop(0.5, '#8B351E');
+    grad.addColorStop(1, 'rgba(139,53,30,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(256, 256, 240, 0, Math.PI * 2); ctx.fill();
+    // Texto CDC
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 140px Inter, Arial, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('CDC', 256, 256);
+    const tex = new THREE.CanvasTexture(c);
+    tex.needsUpdate = true;
+    return tex;
+  }
+
   // ── MAIN SHAPE: CDC Logo Planar Card ──
-  const textureLoader = new THREE.TextureLoader();
-  const cdcTexture = textureLoader.load('/static/img/cdc_icon.png');
-  
   const knotGeo = new THREE.PlaneGeometry(2.3, 2.3);
   const knotMat = new THREE.MeshBasicMaterial({
-    map: cdcTexture,
     transparent: true,
     side: THREE.DoubleSide
   });
   const knot = new THREE.Mesh(knotGeo, knotMat);
   logoGroup.add(knot);
 
+  // Tentar carregar textura do servidor, com fallback
+  const textureLoader = new THREE.TextureLoader();
+  textureLoader.load(
+    '/static/img/cdc_icon.png',
+    function(tex) { knotMat.map = tex; knotMat.needsUpdate = true; },
+    undefined,
+    function() { console.warn('Textura CDC falhou, usando fallback'); knotMat.map = createFallbackTexture(); knotMat.needsUpdate = true; }
+  );
+
   // Criamos uma versão sutil de brilho atrás do logo
-  const knotWireGeo = new THREE.RingGeometry(1.3, 1.32, 64);
-  const knotWireMat = new THREE.MeshBasicMaterial({ color: 0x00aa45, transparent: true, opacity: .3 });
+  const knotWireGeo = new THREE.RingGeometry(1.3, 1.35, 64);
+  const knotWireMat = new THREE.MeshBasicMaterial({ color: 0x00aa45, transparent: true, opacity: .4 });
   const knotWire = new THREE.Mesh(knotWireGeo, knotWireMat);
   logoGroup.add(knotWire);
 
@@ -1782,9 +1811,9 @@ function submitContact(e) {
   const sonda3 = new THREE.Mesh(s3Geo, s3Mat);
   logoGroup.add(sonda3);
 
-  // ── FLOATING RINGS ──
+  // ── FLOATING RINGS (mais visíveis) ──
   function addRing(r, tube, x, y, rotX, rotZ, color, opacity) {
-    const g = new THREE.TorusGeometry(r, tube, 4, 100);
+    const g = new THREE.TorusGeometry(r, tube, 8, 100);
     const m = new THREE.MeshBasicMaterial({ color, transparent: true, opacity });
     const mesh = new THREE.Mesh(g, m);
     mesh.position.set(x, y, 0);
@@ -1793,9 +1822,9 @@ function submitContact(e) {
     logoGroup.add(mesh);
     return mesh;
   }
-  const ring1 = addRing(2.0, .008, 0, 0, .5, .2, 0x00aa45, .3);
-  const ring2 = addRing(2.8, .006, -0.4, .4, 1.1, -.3, 0x020066, .18);
-  const ring3 = addRing(1.4, .006, 0.4, -.3, -.6, .8, 0x00aa45, .15);
+  const ring1 = addRing(2.0, .015, 0, 0, .5, .2, 0x00aa45, .4);
+  const ring2 = addRing(2.8, .012, -0.4, .4, 1.1, -.3, 0x020066, .25);
+  const ring3 = addRing(1.4, .012, 0.4, -.3, -.6, .8, 0x00aa45, .2);
 
   // ── FLOATING PARTICLES ──
   const pCount = 600;
@@ -1828,9 +1857,6 @@ function submitContact(e) {
   let t = 0;
   function animate() {
     requestAnimationFrame(animate);
-    
-    // Stop 3D rendering on mobile devices entirely to save battery and GPU
-    if (window.innerWidth <= 900) return;
 
     t += .007;
 
